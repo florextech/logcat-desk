@@ -6,18 +6,40 @@ interface StatusBadgeProps {
   label: string;
 }
 
-const toneByStatus: Record<SessionStatus, string> = {
-  idle: 'border-[var(--border)] bg-[rgb(17_21_19/0.82)] text-[var(--muted)]',
-  starting: 'border-sky-300/20 bg-sky-400/10 text-sky-200',
-  streaming: 'border-[rgb(189_241_70/0.28)] bg-[rgb(189_241_70/0.12)] text-[var(--brand-700)]',
-  paused: 'border-amber-400/20 bg-amber-500/10 text-amber-300',
-  stopped: 'border-[var(--border)] bg-[rgb(17_21_19/0.82)] text-[var(--muted)]',
-  error: 'border-red-400/20 bg-red-500/10 text-red-300',
-  disconnected: 'border-red-400/20 bg-red-500/10 text-red-300'
+const toneByStatus: Record<SessionStatus, { dot: string; text: string }> = {
+  idle: {
+    dot: 'bg-[rgb(120_131_122)]',
+    text: 'text-[var(--muted)]'
+  },
+  starting: {
+    dot: 'bg-sky-300',
+    text: 'text-sky-200'
+  },
+  streaming: {
+    dot: 'bg-[var(--brand-600)] shadow-[0_0_12px_rgba(189,241,70,0.7)]',
+    text: 'text-[var(--brand-700)]'
+  },
+  paused: {
+    dot: 'bg-amber-300',
+    text: 'text-amber-300'
+  },
+  stopped: {
+    dot: 'bg-[rgb(120_131_122)]',
+    text: 'text-[var(--muted)]'
+  },
+  error: {
+    dot: 'bg-red-400 shadow-[0_0_12px_rgba(239,68,68,0.5)]',
+    text: 'text-red-300'
+  },
+  disconnected: {
+    dot: 'bg-red-400 shadow-[0_0_12px_rgba(239,68,68,0.5)]',
+    text: 'text-red-300'
+  }
 };
 
 export const StatusBadge = ({ status, label }: StatusBadgeProps): JSX.Element => (
-  <div className={`rounded-full border px-4 py-2 text-sm font-semibold ${toneByStatus[status]}`}>
+  <div className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold ${toneByStatus[status].text}`}>
+    <span className={`h-2.5 w-2.5 rounded-full ${toneByStatus[status].dot}`} />
     {label}
   </div>
 );

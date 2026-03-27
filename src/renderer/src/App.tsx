@@ -1,8 +1,11 @@
 import { type JSX, useEffect, useMemo, useState } from 'react';
-import { AppSidebar } from '@renderer/components/app-sidebar';
+import { ActionsModal } from '@renderer/components/actions-modal';
 import { CommandBar } from '@renderer/components/command-bar';
+import { DeviceModal } from '@renderer/components/device-modal';
 import { EmptyState } from '@renderer/components/empty-state';
+import { IconButton } from '@renderer/components/icon-button';
 import { LogConsole } from '@renderer/components/log-console';
+import { SettingsModal } from '@renderer/components/settings-modal';
 import { StatusBadge } from '@renderer/components/status-badge';
 import { useAppBootstrap } from '@renderer/hooks/use-app-bootstrap';
 import { useLogcatEvents } from '@renderer/hooks/use-logcat-events';
@@ -37,6 +40,9 @@ export const App = (): JSX.Element => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSubmittingAdbPath, setIsSubmittingAdbPath] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isDevicesOpen, setIsDevicesOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
 
   useEffect(() => {
     setAdbPathDraft(settings.adbPath);
@@ -63,16 +69,10 @@ export const App = (): JSX.Element => {
     }, 250);
 
     return () => window.clearTimeout(timer);
-  }, [
-    ready,
-    selectedDeviceId,
-    filters,
-    settings.autoScroll,
-    setError,
-    setSettings
-  ]);
+  }, [ready, selectedDeviceId, filters, settings.autoScroll, setError, setSettings]);
 
   const filteredLogs = useMemo(() => filterLogs(logs, filters), [logs, filters]);
+  const selectedDevice = devices.find((device) => device.id === selectedDeviceId) ?? null;
 
   const refreshDeviceList = async (): Promise<void> => {
     setIsRefreshing(true);
@@ -191,68 +191,96 @@ export const App = (): JSX.Element => {
   const streaming = sessionState.status === 'streaming';
   const paused = sessionState.status === 'paused';
 
+  const deviceIcon = (
+    <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 24 24" width="16">
+      <rect height="14" rx="3" stroke="currentColor" strokeWidth="1.8" width="10" x="7" y="5" />
+      <path d="M10 2.5h4M10 21.5h4" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+    </svg>
+  );
+
+  const settingsIcon = (
+    <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 24 24" width="16">
+      <path
+        d="M12 8.5A3.5 3.5 0 1 0 12 15.5A3.5 3.5 0 1 0 12 8.5z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1 1 0 0 0 5 15.6a1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a2 2 0 1 1 0 4h-.2a1 1 0 0 0-.9.6Z"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+
+  const actionsIcon = (
+    <svg aria-hidden="true" fill="currentColor" height="16" viewBox="0 0 24 24" width="16">
+      <circle cx="5" cy="12" r="1.8" />
+      <circle cx="12" cy="12" r="1.8" />
+      <circle cx="19" cy="12" r="1.8" />
+    </svg>
+  );
+
   return (
     <div className="flx-screen min-h-screen bg-[var(--bg)] text-[var(--foreground)]">
-      <div className="mx-auto grid min-h-screen max-w-[1680px] grid-cols-[320px_minmax(0,1fr)] gap-5 px-5 py-5">
-        <AppSidebar
-          adbPath={adbPathDraft}
-          adbStatus={adbStatus}
-          devices={devices}
-          error={error}
-          isRefreshing={isRefreshing}
-          isSubmittingAdbPath={isSubmittingAdbPath}
-          onAdbPathChange={setAdbPathDraft}
-          onRefreshDevices={refreshDeviceList}
-          onSaveAdbPath={handleSaveAdbPath}
-          onSelectDevice={selectDevice}
-          selectedDeviceId={selectedDeviceId}
-          sessionState={sessionState}
-        />
-
-        <main className="flx-shell flex min-h-0 flex-col overflow-hidden">
-          <header className="border-b border-[var(--border)] bg-[linear-gradient(180deg,_rgba(27,40,18,0.42),_rgba(11,13,12,0.08))] px-6 py-5">
-            <div className="flex items-start justify-between gap-6">
-              <div className="max-w-2xl">
+      <div className="mx-auto flex min-h-screen max-w-[1480px] flex-col px-6 py-6">
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[28px] bg-transparent shadow-none">
+          <header className="bg-transparent px-6 py-4">
+            <div className="flex items-center justify-between gap-6">
+              <div className="max-w-[38rem]">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[var(--brand-500)]">
-                  Android Logcat
-                </p>
-                <h1 className="mt-3 font-display text-[2.45rem] font-semibold leading-[0.96] tracking-tight text-[var(--foreground)]">
-                  Consola rápida para leer logs Android.
-                </h1>
-                <p className="mt-3 max-w-xl text-sm leading-7 text-[var(--muted)]">
-                  Selecciona un dispositivo, inicia `logcat` y trabaja sobre una vista limpia.
+                  Logcat Desk
                 </p>
               </div>
 
-              <div className="flex items-center gap-3 self-start">
-                <StatusBadge status={sessionState.status} label={sessionState.message ?? 'Ready'} />
-                <div className="rounded-full border border-[var(--border)] bg-[rgb(17_21_19/0.76)] px-4 py-2 text-sm text-[var(--muted)]">
-                  {filteredLogs.length.toLocaleString()} visibles / {logs.length.toLocaleString()} total
+              <div className="rounded-full bg-[rgb(13_16_14/0.62)] px-2 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                <div className="flex items-center gap-1">
+                  <StatusBadge status={sessionState.status} label={sessionState.message ?? 'Ready'} />
+                  <span className="mx-1 h-5 w-px bg-[rgb(38_48_40)]" />
+                  <IconButton
+                    active={Boolean(selectedDeviceId)}
+                    icon={deviceIcon}
+                    label={selectedDevice ? selectedDevice.model ?? 'Device' : 'Device'}
+                    onClick={() => setIsDevicesOpen(true)}
+                  />
+                  <IconButton icon={settingsIcon} label="Settings" onClick={() => setIsSettingsOpen(true)} />
+                  <IconButton icon={actionsIcon} label="More" onClick={() => setIsActionsOpen(true)} />
                 </div>
               </div>
             </div>
+
+            <div className="mt-3 flex items-center gap-3 text-sm text-[var(--muted)]">
+              <span>
+                {selectedDevice
+                  ? `Dispositivo: ${selectedDevice.model ?? selectedDevice.id}`
+                  : 'Sin dispositivo seleccionado'}
+              </span>
+              <span className="text-[rgb(88_102_90)]">/</span>
+              <span>{filteredLogs.length.toLocaleString()} visibles</span>
+            </div>
           </header>
 
+          {error ? (
+            <div className="mx-6 mt-4 flex items-start gap-3 rounded-2xl border border-red-400/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">
+              <span className="mt-0.5 text-red-300">!</span>
+              <span>{error}</span>
+            </div>
+          ) : null}
+
           <CommandBar
-            autoScroll={settings.autoScroll}
             canStart={Boolean(selectedDeviceId) && adbStatus.available}
             filters={filters}
-            isExporting={isExporting}
             isPaused={paused}
             isStreaming={streaming}
-            onClearBuffer={handleClearBuffer}
-            onClearView={clearLogs}
-            onCopyVisible={handleCopyVisible}
-            onExportAll={() => exportLogs('all', 'log')}
-            onExportVisible={() => exportLogs('visible', 'txt')}
+            onOpenActions={() => setIsActionsOpen(true)}
             onPauseResume={handlePauseResume}
-            onSetAutoScroll={(value) => setAutoScroll(value)}
             onSetFilters={setFilters}
             onStart={handleStartSession}
             onStop={handleStopSession}
           />
 
-          <section className="min-h-0 flex-1 px-6 pb-6 pt-5">
+          <section className="min-h-0 flex-1 px-6 pb-6 pt-4">
             {filteredLogs.length === 0 ? (
               <EmptyState
                 hasDevice={Boolean(selectedDeviceId)}
@@ -260,10 +288,10 @@ export const App = (): JSX.Element => {
                 title={logs.length > 0 ? 'No logs match the current filters.' : 'No logs yet.'}
                 description={
                   logs.length > 0
-                    ? 'Relax the filters, search terms, or severity threshold.'
+                    ? 'Relaja los filtros o la severidad minima.'
                     : selectedDeviceId
-                      ? 'Start a live session to stream logcat in real time.'
-                      : 'Connect an Android device and choose it from the sidebar.'
+                      ? 'Inicia la captura para ver logcat en tiempo real.'
+                      : 'Abre el panel Device y selecciona un Android conectado.'
                 }
               />
             ) : (
@@ -277,6 +305,43 @@ export const App = (): JSX.Element => {
           </section>
         </main>
       </div>
+
+      {isDevicesOpen ? (
+        <DeviceModal
+          devices={devices}
+          isRefreshing={isRefreshing}
+          onClose={() => setIsDevicesOpen(false)}
+          onRefreshDevices={refreshDeviceList}
+          onSelectDevice={selectDevice}
+          selectedDeviceId={selectedDeviceId}
+          sessionState={sessionState}
+        />
+      ) : null}
+
+      {isSettingsOpen ? (
+        <SettingsModal
+          adbPath={adbPathDraft}
+          adbStatus={adbStatus}
+          autoScroll={settings.autoScroll}
+          isSubmittingAdbPath={isSubmittingAdbPath}
+          onAdbPathChange={setAdbPathDraft}
+          onClose={() => setIsSettingsOpen(false)}
+          onSaveAdbPath={handleSaveAdbPath}
+          onSetAutoScroll={(value) => setAutoScroll(value)}
+        />
+      ) : null}
+
+      {isActionsOpen ? (
+        <ActionsModal
+          isExporting={isExporting}
+          onClearBuffer={handleClearBuffer}
+          onClearView={clearLogs}
+          onClose={() => setIsActionsOpen(false)}
+          onCopyVisible={handleCopyVisible}
+          onExportAll={() => void exportLogs('all', 'log')}
+          onExportVisible={() => void exportLogs('visible', 'txt')}
+        />
+      ) : null}
     </div>
   );
 };

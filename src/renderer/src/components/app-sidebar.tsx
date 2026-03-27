@@ -81,10 +81,14 @@ export const AppSidebar = ({
         {adbStatus.resolvedPath ?? 'Usa PATH o configura la ruta manual.'}
       </p>
 
-      <label className="mt-4 block text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
+      <label
+        className="mt-4 block text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]"
+        htmlFor="sidebar-adb-path"
+      >
         Custom adb path
       </label>
       <input
+        id="sidebar-adb-path"
         className="flx-focus mt-2 w-full rounded-2xl border border-[var(--border)] bg-[rgb(11_13_12/0.88)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[rgb(189_241_70/0.42)]"
         placeholder="/opt/homebrew/bin/adb"
         value={adbPath}

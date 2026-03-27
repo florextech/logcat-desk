@@ -1,6 +1,6 @@
 import { clipboard, dialog, ipcMain } from 'electron';
 import type { BrowserWindow } from 'electron';
-import { clearLogcatBuffer } from '@main/services/adb/device-service';
+import { clearLogcatBuffer, listDevices } from '@main/services/adb/device-service';
 import { resolveAdbStatus } from '@main/services/adb/adb-resolver';
 import { ExportService } from '@main/services/export/export-service';
 import { LogcatSessionManager } from '@main/services/logcat/logcat-session-manager';
@@ -12,7 +12,6 @@ import type {
   ExportLogsInput,
   StartSessionInput
 } from '@shared/types';
-import { listDevices } from '@main/services/adb/device-service';
 
 interface RegisterIpcDependencies {
   mainWindow: BrowserWindow;

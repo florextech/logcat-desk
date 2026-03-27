@@ -83,6 +83,7 @@ button {
   border: 1px solid var(--border);
   border-radius: 1.5rem;
   background: rgb(17 21 19 / 0.78);
+  -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   box-shadow: 0 22px 80px rgba(4, 9, 5, 0.28);
 }
@@ -91,6 +92,7 @@ button {
   border: 1px solid var(--border);
   border-radius: 1.25rem;
   background: rgb(17 21 19 / 0.78);
+  -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   transition:
     border-color 0.2s ease,

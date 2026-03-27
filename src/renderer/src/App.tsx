@@ -56,22 +56,22 @@ export const App = (): JSX.Element => {
       return;
     }
 
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       electronApi
         .updateSettings({
           autoScroll: settings.autoScroll,
           lastDeviceId: selectedDeviceId,
           filters
         })
-        .then((updated) => {
+        .then((updated: typeof settings) => {
           setSettings(updated);
         })
-        .catch((updateError) => {
+        .catch((updateError: unknown) => {
           setError(updateError instanceof Error ? updateError.message : copy.errors.persistPreferences);
         });
     }, 250);
 
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   }, [copy.errors.persistPreferences, ready, selectedDeviceId, filters, settings.autoScroll, setError, setSettings]);
 
   const filteredLogs = useMemo(() => filterLogs(logs, filters), [logs, filters]);
@@ -152,10 +152,10 @@ export const App = (): JSX.Element => {
     try {
       await electronApi.clearLogcatBuffer({ deviceId: selectedDeviceId });
       clearLogs();
-    } catch (clearErrorState) {
+    } catch (error_) {
       setError(
-        clearErrorState instanceof Error
-          ? clearErrorState.message
+        error_ instanceof Error
+          ? error_.message
           : copy.errors.clearDeviceBuffer
       );
     }

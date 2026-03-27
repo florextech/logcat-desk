@@ -41,7 +41,8 @@ export const highlightText = (value: string, query: string): JSX.Element | strin
     return value;
   }
 
-  const matcher = new RegExp(`(${normalizedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig');
+  const escapedQuery = normalizedQuery.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+  const matcher = new RegExp(`(${escapedQuery})`, 'ig');
   const parts = value.split(matcher);
 
   return (

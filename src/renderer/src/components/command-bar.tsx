@@ -65,8 +65,8 @@ export const CommandBar = ({
       }
     };
 
-    window.addEventListener('mousedown', handlePointerDown);
-    return () => window.removeEventListener('mousedown', handlePointerDown);
+    globalThis.addEventListener('mousedown', handlePointerDown);
+    return () => globalThis.removeEventListener('mousedown', handlePointerDown);
   }, []);
 
   useEffect(() => {

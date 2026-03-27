@@ -109,10 +109,14 @@ export class LogcatSessionManager extends EventEmitter {
       this.updateState({
         status: 'disconnected',
         deviceId: this.state.deviceId,
-        message:
-          code === 0
-            ? 'Device disconnected.'
-            : `Logcat ended unexpectedly${signal ? ` (${signal})` : ''}.`
+        message: (() => {
+          if (code === 0) {
+            return 'Device disconnected.';
+          }
+
+          const signalSuffix = signal ? ` (${signal})` : '';
+          return `Logcat ended unexpectedly${signalSuffix}.`;
+        })()
       });
     });
   }
@@ -229,7 +233,7 @@ export class LogcatSessionManager extends EventEmitter {
   }
 
   private parseEntry(rawLine: string, deviceId: string): LogEntry {
-    const parsed = rawLine.match(THREADTIME_PATTERN);
+    const parsed = THREADTIME_PATTERN.exec(rawLine);
 
     if (!parsed) {
       return {

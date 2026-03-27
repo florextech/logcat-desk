@@ -18,6 +18,6 @@ describe('IconButton', () => {
       <IconButton active icon={<span>i</span>} label="Device" onClick={() => undefined} />
     );
 
-    expect(container.querySelector('.bg-\\[var\\(--brand-600\\)\\]')).not.toBeNull();
+    expect(container.querySelector(String.raw`.bg-\[var\(--brand-600\)\]`)).not.toBeNull();
   });
 });

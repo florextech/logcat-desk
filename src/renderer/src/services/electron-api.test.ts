@@ -4,7 +4,7 @@ import { defaultSettings } from '@shared/types';
 describe('renderer electronApi service', () => {
   beforeEach(() => {
     vi.resetModules();
-    Reflect.deleteProperty(window as Window & { logcatDesk?: unknown }, 'logcatDesk');
+    Reflect.deleteProperty(globalThis as typeof globalThis & { logcatDesk?: unknown }, 'logcatDesk');
   });
 
   it('falls back to a safe api when preload is unavailable', async () => {
@@ -53,7 +53,7 @@ describe('renderer electronApi service', () => {
     const exposedApi = {
       getSettings: vi.fn().mockResolvedValue(defaultSettings)
     } as unknown as Window['logcatDesk'];
-    (window as Window & { logcatDesk?: unknown }).logcatDesk = exposedApi;
+    (globalThis as typeof globalThis & { logcatDesk?: unknown }).logcatDesk = exposedApi;
 
     const module = await import('@renderer/services/electron-api');
 

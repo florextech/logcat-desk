@@ -196,3 +196,11 @@ button {
     radial-gradient(circle at 70% 80%, rgb(124 231 52 / 0.07), transparent 24%);
   pointer-events: none;
 }
+
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}

@@ -226,15 +226,17 @@ export const App = (): JSX.Element => {
     <div className="flx-screen min-h-screen bg-[var(--bg)] text-[var(--foreground)]">
       <div className="mx-auto flex min-h-screen max-w-[1480px] flex-col px-6 py-6">
         <main className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[28px] bg-transparent shadow-none">
-          <header className="bg-transparent px-6 py-4">
+          <div className="drag-region h-9" />
+
+          <header className="bg-transparent px-6 pb-4">
             <div className="flex items-center justify-between gap-6">
-              <div className="max-w-[38rem]">
+              <div className="drag-region max-w-[38rem]">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[var(--brand-500)]">
                   Logcat Desk
                 </p>
               </div>
 
-              <div className="rounded-full bg-[rgb(13_16_14/0.62)] px-2 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+              <div className="no-drag rounded-full bg-[rgb(13_16_14/0.62)] px-2 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                 <div className="flex items-center gap-1">
                   <StatusBadge status={sessionState.status} label={sessionState.message ?? 'Ready'} />
                   <span className="mx-1 h-5 w-px bg-[rgb(38_48_40)]" />
@@ -250,7 +252,7 @@ export const App = (): JSX.Element => {
               </div>
             </div>
 
-            <div className="mt-3 flex items-center gap-3 text-sm text-[var(--muted)]">
+            <div className="drag-region mt-3 flex items-center gap-3 text-sm text-[var(--muted)]">
               <span>
                 {selectedDevice
                   ? `Dispositivo: ${selectedDevice.model ?? selectedDevice.id}`

@@ -38,8 +38,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedDeviceId: null,
   sessionState: {
     status: 'idle',
-    deviceId: null,
-    message: 'Ready'
+    deviceId: null
   },
   error: null,
   setAdbStatus: (status) => set({ adbStatus: status }),

@@ -1,14 +1,4 @@
-import type { FilterState, LogEntry, LogLevelFilter } from '@shared/types';
-
-const levelOrder: Record<LogLevelFilter, number> = {
-  ALL: -1,
-  V: 0,
-  D: 1,
-  I: 2,
-  W: 3,
-  E: 4,
-  F: 5
-};
+import type { FilterState, LogEntry } from '@shared/types';
 
 const normalize = (value: string): string => value.trim().toLowerCase();
 
@@ -16,10 +6,9 @@ export const filterLogs = (logs: LogEntry[], filters: FilterState): LogEntry[] =
   const text = normalize(filters.text);
   const tag = normalize(filters.tag);
   const packageName = normalize(filters.packageName);
-  const minimumLevel = levelOrder[filters.minLevel];
 
   return logs.filter((entry) => {
-    if (minimumLevel >= 0 && levelOrder[entry.level] < minimumLevel) {
+    if (filters.minLevel !== 'ALL' && entry.level !== filters.minLevel) {
       return false;
     }
 

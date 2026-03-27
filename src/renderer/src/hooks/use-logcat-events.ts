@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
+import { useI18n } from '@renderer/i18n/provider';
 import { electronApi } from '@renderer/services/electron-api';
 import { useAppStore } from '@renderer/store/app-store';
 
 export const useLogcatEvents = (): void => {
+  const { copy } = useI18n();
   const { appendLogs, setError, setSessionState } = useAppStore();
 
   useEffect(() => {
@@ -14,7 +16,7 @@ export const useLogcatEvents = (): void => {
       setSessionState(state);
 
       if (state.status === 'error' || state.status === 'disconnected') {
-        setError(state.message ?? 'Logcat session ended unexpectedly.');
+        setError(state.message ?? copy.errors.sessionEndedUnexpectedly);
       }
     });
 
@@ -22,5 +24,5 @@ export const useLogcatEvents = (): void => {
       unsubscribeBatch();
       unsubscribeState();
     };
-  }, [appendLogs, setError, setSessionState]);
+  }, [appendLogs, copy.errors.sessionEndedUnexpectedly, setError, setSessionState]);
 };

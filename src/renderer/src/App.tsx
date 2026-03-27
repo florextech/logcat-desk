@@ -4,6 +4,7 @@ import { CommandBar } from '@renderer/components/command-bar';
 import { DeviceModal } from '@renderer/components/device-modal';
 import { EmptyState } from '@renderer/components/empty-state';
 import { IconButton } from '@renderer/components/icon-button';
+import { useI18n } from '@renderer/i18n/provider';
 import { LogConsole } from '@renderer/components/log-console';
 import { SettingsModal } from '@renderer/components/settings-modal';
 import { StatusBadge } from '@renderer/components/status-badge';
@@ -12,8 +13,10 @@ import { useLogcatEvents } from '@renderer/hooks/use-logcat-events';
 import { electronApi } from '@renderer/services/electron-api';
 import { useAppStore } from '@renderer/store/app-store';
 import { filterLogs } from '@renderer/utils/log-filtering';
+import type { Locale } from '@shared/types';
 
 export const App = (): JSX.Element => {
+  const { copy, locale } = useI18n();
   const {
     adbStatus,
     devices,
@@ -64,12 +67,12 @@ export const App = (): JSX.Element => {
           setSettings(updated);
         })
         .catch((updateError) => {
-          setError(updateError instanceof Error ? updateError.message : 'Failed to persist preferences.');
+          setError(updateError instanceof Error ? updateError.message : copy.errors.persistPreferences);
         });
     }, 250);
 
     return () => window.clearTimeout(timer);
-  }, [ready, selectedDeviceId, filters, settings.autoScroll, setError, setSettings]);
+  }, [copy.errors.persistPreferences, ready, selectedDeviceId, filters, settings.autoScroll, setError, setSettings]);
 
   const filteredLogs = useMemo(() => filterLogs(logs, filters), [logs, filters]);
   const selectedDevice = devices.find((device) => device.id === selectedDeviceId) ?? null;
@@ -81,7 +84,7 @@ export const App = (): JSX.Element => {
     try {
       await refreshDevices();
     } catch (refreshError) {
-      setError(refreshError instanceof Error ? refreshError.message : 'Failed to refresh devices.');
+      setError(refreshError instanceof Error ? refreshError.message : copy.errors.refreshDevices);
     } finally {
       setIsRefreshing(false);
     }
@@ -96,7 +99,7 @@ export const App = (): JSX.Element => {
       setSettings(nextSettings);
       await refreshDeviceList();
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Failed to save ADB path.');
+      setError(saveError instanceof Error ? saveError.message : copy.errors.saveAdbPath);
     } finally {
       setIsSubmittingAdbPath(false);
     }
@@ -104,7 +107,7 @@ export const App = (): JSX.Element => {
 
   const handleStartSession = async (): Promise<void> => {
     if (!selectedDeviceId) {
-      setError('Select an Android device first.');
+      setError(copy.errors.selectDeviceFirst);
       return;
     }
 
@@ -115,7 +118,7 @@ export const App = (): JSX.Element => {
       const nextState = await electronApi.startLogcat({ deviceId: selectedDeviceId });
       setSessionState(nextState);
     } catch (startError) {
-      setError(startError instanceof Error ? startError.message : 'Failed to start logcat.');
+      setError(startError instanceof Error ? startError.message : copy.errors.startLogcat);
     }
   };
 
@@ -124,7 +127,7 @@ export const App = (): JSX.Element => {
       const nextState = await electronApi.stopLogcat();
       setSessionState(nextState);
     } catch (stopError) {
-      setError(stopError instanceof Error ? stopError.message : 'Failed to stop logcat.');
+      setError(stopError instanceof Error ? stopError.message : copy.errors.stopLogcat);
     }
   };
 
@@ -136,13 +139,13 @@ export const App = (): JSX.Element => {
           : await electronApi.pauseLogcat();
       setSessionState(nextState);
     } catch (pauseError) {
-      setError(pauseError instanceof Error ? pauseError.message : 'Failed to update capture state.');
+      setError(pauseError instanceof Error ? pauseError.message : copy.errors.updateCaptureState);
     }
   };
 
   const handleClearBuffer = async (): Promise<void> => {
     if (!selectedDeviceId) {
-      setError('Select a device before clearing the logcat buffer.');
+      setError(copy.errors.selectDeviceBeforeClearBuffer);
       return;
     }
 
@@ -153,7 +156,7 @@ export const App = (): JSX.Element => {
       setError(
         clearErrorState instanceof Error
           ? clearErrorState.message
-          : 'Failed to clear the device logcat buffer.'
+          : copy.errors.clearDeviceBuffer
       );
     }
   };
@@ -174,7 +177,7 @@ export const App = (): JSX.Element => {
         content: scope === 'visible' ? filteredLogs.map((entry) => entry.raw).join('\n') : undefined
       });
     } catch (exportError) {
-      setError(exportError instanceof Error ? exportError.message : 'Failed to export logs.');
+      setError(exportError instanceof Error ? exportError.message : copy.errors.exportLogs);
     } finally {
       setIsExporting(false);
     }
@@ -184,12 +187,21 @@ export const App = (): JSX.Element => {
     try {
       await electronApi.copyToClipboard(filteredLogs.map((entry) => entry.raw).join('\n'));
     } catch (copyError) {
-      setError(copyError instanceof Error ? copyError.message : 'Failed to copy visible logs.');
+      setError(copyError instanceof Error ? copyError.message : copy.errors.copyVisibleLogs);
     }
+  };
+
+  const handleLocaleChange = async (nextLocale: Locale): Promise<void> => {
+    const nextSettings = await electronApi.updateSettings({ locale: nextLocale });
+    setSettings(nextSettings);
   };
 
   const streaming = sessionState.status === 'streaming';
   const paused = sessionState.status === 'paused';
+  const sessionLabel =
+    sessionState.status === 'error' || sessionState.status === 'disconnected'
+      ? sessionState.message ?? copy.status[sessionState.status]
+      : copy.status[sessionState.status];
 
   const deviceIcon = (
     <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 24 24" width="16">
@@ -232,22 +244,22 @@ export const App = (): JSX.Element => {
             <div className="flex items-center justify-between gap-6">
               <div className="drag-region max-w-[38rem]">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[var(--brand-500)]">
-                  Logcat Desk
+                  {copy.common.appName}
                 </p>
               </div>
 
               <div className="no-drag rounded-full bg-[rgb(13_16_14/0.62)] px-2 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                 <div className="flex items-center gap-1">
-                  <StatusBadge status={sessionState.status} label={sessionState.message ?? 'Ready'} />
+                  <StatusBadge status={sessionState.status} label={sessionLabel} />
                   <span className="mx-1 h-5 w-px bg-[rgb(38_48_40)]" />
                   <IconButton
                     active={Boolean(selectedDeviceId)}
                     icon={deviceIcon}
-                    label={selectedDevice ? selectedDevice.model ?? 'Device' : 'Device'}
+                    label={selectedDevice ? selectedDevice.model ?? copy.common.device : copy.common.device}
                     onClick={() => setIsDevicesOpen(true)}
                   />
-                  <IconButton icon={settingsIcon} label="Settings" onClick={() => setIsSettingsOpen(true)} />
-                  <IconButton icon={actionsIcon} label="More" onClick={() => setIsActionsOpen(true)} />
+                  <IconButton icon={settingsIcon} label={copy.common.settings} onClick={() => setIsSettingsOpen(true)} />
+                  <IconButton icon={actionsIcon} label={copy.common.more} onClick={() => setIsActionsOpen(true)} />
                 </div>
               </div>
             </div>
@@ -255,11 +267,11 @@ export const App = (): JSX.Element => {
             <div className="drag-region mt-3 flex items-center gap-3 text-sm text-[var(--muted)]">
               <span>
                 {selectedDevice
-                  ? `Dispositivo: ${selectedDevice.model ?? selectedDevice.id}`
-                  : 'Sin dispositivo seleccionado'}
+                  ? copy.header.selectedDevice(selectedDevice.model ?? selectedDevice.id)
+                  : copy.header.noDeviceSelected}
               </span>
               <span className="text-[rgb(88_102_90)]">/</span>
-              <span>{filteredLogs.length.toLocaleString()} visibles</span>
+              <span>{copy.header.visibleCount(filteredLogs.length.toLocaleString(locale))}</span>
             </div>
           </header>
 
@@ -287,13 +299,13 @@ export const App = (): JSX.Element => {
               <EmptyState
                 hasDevice={Boolean(selectedDeviceId)}
                 isStreaming={streaming || paused}
-                title={logs.length > 0 ? 'No logs match the current filters.' : 'No logs yet.'}
+                title={logs.length > 0 ? copy.empty.noLogsMatch : copy.empty.noLogsYet}
                 description={
                   logs.length > 0
-                    ? 'Relaja los filtros o la severidad minima.'
+                    ? copy.empty.relaxFilters
                     : selectedDeviceId
-                      ? 'Inicia la captura para ver logcat en tiempo real.'
-                      : 'Abre el panel Device y selecciona un Android conectado.'
+                      ? copy.empty.startSession
+                      : copy.empty.chooseDevice
                 }
               />
             ) : (
@@ -326,9 +338,11 @@ export const App = (): JSX.Element => {
           adbStatus={adbStatus}
           autoScroll={settings.autoScroll}
           isSubmittingAdbPath={isSubmittingAdbPath}
+          locale={settings.locale}
           onAdbPathChange={setAdbPathDraft}
           onClose={() => setIsSettingsOpen(false)}
           onSaveAdbPath={handleSaveAdbPath}
+          onSetLocale={(locale) => void handleLocaleChange(locale)}
           onSetAutoScroll={(value) => setAutoScroll(value)}
         />
       ) : null}

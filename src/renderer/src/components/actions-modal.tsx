@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { useI18n } from '@renderer/i18n/provider';
 import { ModalShell } from '@renderer/components/modal-shell';
 
 interface ActionsModalProps {
@@ -20,6 +21,7 @@ export const ActionsModal = ({
   onExportAll,
   onExportVisible
 }: ActionsModalProps): JSX.Element => {
+  const { copy } = useI18n();
   const ActionRow = ({
     hint,
     label,
@@ -47,28 +49,32 @@ export const ActionsModal = ({
       <span
         className={`rounded-full border border-[rgb(38_48_40/0.82)] bg-[rgb(17_21_19/0.84)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${accent}`}
       >
-        Run
+        {copy.common.run}
       </span>
     </button>
   );
 
   return (
-    <ModalShell maxWidthClass="max-w-xl" onClose={onClose} title="Acciones">
+    <ModalShell maxWidthClass="max-w-xl" onClose={onClose} title={copy.modals.actions.title}>
       <div className="space-y-5">
         <p className="text-sm leading-7 text-[var(--muted)]">
-          Acciones secundarias para limpiar, exportar o copiar la salida actual sin recargar la interfaz principal.
+          {copy.modals.actions.intro}
         </p>
 
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--brand-500)]">
-            Cleanup
+            {copy.modals.actions.cleanup}
           </p>
           <div className="mt-3 grid gap-3">
-            <ActionRow hint="Vaciar solo la consola visible." label="Clear View" onClick={onClearView} />
+            <ActionRow
+              hint={copy.modals.actions.clearViewHint}
+              label={copy.modals.actions.clearViewLabel}
+              onClick={onClearView}
+            />
             <ActionRow
               accent="text-amber-300"
-              hint="Limpiar el buffer real del dispositivo."
-              label="Clear Buffer"
+              hint={copy.modals.actions.clearBufferHint}
+              label={copy.modals.actions.clearBufferLabel}
               onClick={onClearBuffer}
             />
           </div>
@@ -76,22 +82,26 @@ export const ActionsModal = ({
 
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--brand-500)]">
-            Export
+            {copy.modals.actions.export}
           </p>
           <div className="mt-3 grid gap-3">
             <ActionRow
               disabled={isExporting}
-              hint="Guardar lo que tienes visible ahora mismo."
-              label="Export visible .txt"
+              hint={copy.modals.actions.exportVisibleHint}
+              label={copy.modals.actions.exportVisibleLabel}
               onClick={onExportVisible}
             />
             <ActionRow
               disabled={isExporting}
-              hint="Guardar la sesion completa capturada."
-              label="Export full .log"
+              hint={copy.modals.actions.exportFullHint}
+              label={copy.modals.actions.exportFullLabel}
               onClick={onExportAll}
             />
-            <ActionRow hint="Copiar los logs visibles al portapapeles." label="Copy visible" onClick={onCopyVisible} />
+            <ActionRow
+              hint={copy.modals.actions.copyVisibleHint}
+              label={copy.modals.actions.copyVisibleLabel}
+              onClick={onCopyVisible}
+            />
           </div>
         </div>
       </div>

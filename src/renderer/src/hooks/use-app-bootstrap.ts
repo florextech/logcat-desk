@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useI18n } from '@renderer/i18n/provider';
 import { electronApi } from '@renderer/services/electron-api';
 import { useAppStore } from '@renderer/store/app-store';
 
 export const useAppBootstrap = (): { ready: boolean; refreshDevices: () => Promise<void> } => {
   const [ready, setReady] = useState(false);
+  const { copy } = useI18n();
   const { setAdbStatus, setDevices, setError, setSettings } = useAppStore();
 
   const refreshDevices = async (): Promise<void> => {
@@ -12,7 +14,7 @@ export const useAppBootstrap = (): { ready: boolean; refreshDevices: () => Promi
     setDevices(response.devices, useAppStore.getState().selectedDeviceId);
 
     if (!response.adbStatus.available) {
-      setError(response.adbStatus.error ?? 'ADB is not available.');
+      setError(response.adbStatus.error ?? copy.errors.adbUnavailable);
     }
   };
 
@@ -43,12 +45,12 @@ export const useAppBootstrap = (): { ready: boolean; refreshDevices: () => Promi
         setDevices(response.devices, settings.lastDeviceId);
 
         if (!response.adbStatus.available) {
-          setError(response.adbStatus.error ?? 'ADB is not available.');
+          setError(response.adbStatus.error ?? copy.errors.adbUnavailable);
         }
       } catch (bootstrapError) {
         if (!cancelled) {
           setError(
-            bootstrapError instanceof Error ? bootstrapError.message : 'Failed to initialize the app.'
+            bootstrapError instanceof Error ? bootstrapError.message : copy.errors.initializeApp
           );
         }
       } finally {
@@ -63,7 +65,7 @@ export const useAppBootstrap = (): { ready: boolean; refreshDevices: () => Promi
     return () => {
       cancelled = true;
     };
-  }, [setAdbStatus, setDevices, setError, setSettings]);
+  }, [copy.errors.adbUnavailable, copy.errors.initializeApp, setAdbStatus, setDevices, setError, setSettings]);
 
   return { ready, refreshDevices };
 };

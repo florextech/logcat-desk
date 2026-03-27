@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import type { DeviceInfo, SessionState } from '@shared/types';
+import { useI18n } from '@renderer/i18n/provider';
 import { ModalShell } from '@renderer/components/modal-shell';
 
 interface DeviceModalProps {
@@ -32,13 +33,20 @@ export const DeviceModal = ({
   onSelectDevice,
   selectedDeviceId,
   sessionState
-}: DeviceModalProps): JSX.Element => (
-  <ModalShell onClose={onClose} title="Dispositivos">
+}: DeviceModalProps): JSX.Element => {
+  const { copy } = useI18n();
+  const sessionLabel =
+    sessionState.status === 'error' || sessionState.status === 'disconnected'
+      ? sessionState.message ?? copy.status[sessionState.status]
+      : copy.status[sessionState.status];
+
+  return (
+  <ModalShell onClose={onClose} title={copy.modals.devices.title}>
     <div className="flex items-center justify-between gap-4">
       <div>
-        <p className="text-sm font-medium text-[var(--foreground)]">{devices.length} conectados</p>
+        <p className="text-sm font-medium text-[var(--foreground)]">{copy.modals.devices.connectedCount(devices.length)}</p>
         <p className="mt-1 text-sm text-[var(--muted)]">
-          Selecciona el dispositivo con el que quieres trabajar.
+          {copy.modals.devices.intro}
         </p>
       </div>
       <button
@@ -46,14 +54,14 @@ export const DeviceModal = ({
         disabled={isRefreshing}
         onClick={onRefreshDevices}
       >
-        {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        {isRefreshing ? `${copy.common.refresh}...` : copy.common.refresh}
       </button>
     </div>
 
     <div className="mt-5 space-y-3">
       {devices.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[rgb(11_13_12/0.82)] px-4 py-6 text-sm text-[var(--muted)]">
-          No Android devices detected.
+          {copy.modals.devices.noDevices}
         </div>
       ) : (
         devices.map((device) => {
@@ -74,7 +82,7 @@ export const DeviceModal = ({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-medium text-[var(--foreground)]">
-                    {device.model ?? device.deviceName ?? 'Android device'}
+                    {device.model ?? device.deviceName ?? copy.modals.devices.defaultDeviceName}
                   </p>
                   <p className="mt-1 font-mono text-xs text-[var(--muted)]">{device.id}</p>
                   {device.product ? (
@@ -96,8 +104,8 @@ export const DeviceModal = ({
     </div>
 
     <div className="mt-5 rounded-2xl border border-[var(--border)] bg-[rgb(11_13_12/0.8)] px-4 py-4 text-sm text-[var(--muted)]">
-      <span className="font-medium text-[var(--foreground)]">Session:</span> {sessionState.status} ·{' '}
-      {sessionState.message ?? 'Ready'}
+      <span className="font-medium text-[var(--foreground)]">{copy.modals.devices.session}:</span> {sessionLabel}
     </div>
   </ModalShell>
-);
+  );
+};

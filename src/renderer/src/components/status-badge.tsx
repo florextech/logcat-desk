@@ -16,7 +16,7 @@ const toneByStatus: Record<SessionStatus, { dot: string; text: string }> = {
     text: 'text-sky-200'
   },
   streaming: {
-    dot: 'bg-[var(--brand-600)] shadow-[0_0_12px_rgba(189,241,70,0.7)]',
+    dot: 'bg-[var(--brand-600)] shadow-[0_0_12px_rgba(189,241,70,0.7)] animate-pulse',
     text: 'text-[var(--brand-700)]'
   },
   paused: {

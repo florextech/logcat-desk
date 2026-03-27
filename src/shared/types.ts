@@ -1,6 +1,7 @@
 export const LOG_LEVELS = ['V', 'D', 'I', 'W', 'E', 'F'] as const;
 export type LogLevel = (typeof LOG_LEVELS)[number];
 export type LogLevelFilter = 'ALL' | LogLevel;
+export type Locale = 'es' | 'en';
 
 export type SessionStatus =
   | 'idle'
@@ -50,6 +51,7 @@ export interface AppSettings {
   adbPath: string;
   autoScroll: boolean;
   lastDeviceId: string | null;
+  locale: Locale;
   filters: FilterState;
 }
 
@@ -129,5 +131,6 @@ export const defaultSettings: AppSettings = {
   adbPath: '',
   autoScroll: true,
   lastDeviceId: null,
+  locale: 'es',
   filters: defaultFilters
 };

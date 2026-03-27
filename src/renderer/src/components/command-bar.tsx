@@ -1,6 +1,7 @@
 import { type JSX, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { FilterState } from '@shared/types';
+import { useI18n } from '@renderer/i18n/provider';
 
 interface CommandBarProps {
   canStart: boolean;
@@ -20,16 +21,6 @@ const inputClassName =
 const actionClassName =
   'flx-btn flx-btn-secondary disabled:cursor-not-allowed disabled:opacity-50';
 
-const levelLabels: Record<FilterState['minLevel'], string> = {
-  ALL: 'All levels',
-  V: 'Verbose',
-  D: 'Debug',
-  I: 'Info',
-  W: 'Warn',
-  E: 'Error',
-  F: 'Fatal'
-};
-
 export const CommandBar = ({
   canStart,
   filters,
@@ -41,6 +32,7 @@ export const CommandBar = ({
   onStart,
   onStop
 }: CommandBarProps): JSX.Element => {
+  const { copy } = useI18n();
   const [isLevelOpen, setIsLevelOpen] = useState(false);
   const levelRef = useRef<HTMLDivElement | null>(null);
   const levelButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -97,41 +89,43 @@ export const CommandBar = ({
     };
   }, [isLevelOpen]);
 
+  const levelLabels: Record<FilterState['minLevel'], string> = copy.filters.levels;
+
   return (
     <div className="flx-card relative z-20 mx-6 mt-4 overflow-visible p-0">
       <div className="px-4 py-4">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--brand-500)]">
-            Filters
+            {copy.filters.title}
           </p>
-          <p className="text-xs text-[var(--muted)]">Texto, tag, package, busqueda y nivel</p>
+          <p className="text-xs text-[var(--muted)]">{copy.filters.helper}</p>
         </div>
 
         <div className="grid grid-cols-[1.35fr_0.95fr_0.95fr_0.95fr_0.78fr] gap-3">
           <input
             className={inputClassName}
-            placeholder="Texto libre o stack trace"
+            placeholder={copy.filters.textPlaceholder}
             value={filters.text}
             onChange={(event) => onSetFilters({ text: event.target.value })}
           />
 
           <input
             className={inputClassName}
-            placeholder="Tag"
+            placeholder={copy.filters.tagPlaceholder}
             value={filters.tag}
             onChange={(event) => onSetFilters({ tag: event.target.value })}
           />
 
           <input
             className={inputClassName}
-            placeholder="Package name"
+            placeholder={copy.filters.packagePlaceholder}
             value={filters.packageName}
             onChange={(event) => onSetFilters({ packageName: event.target.value })}
           />
 
           <input
             className={inputClassName}
-            placeholder="Buscar y resaltar"
+            placeholder={copy.filters.searchPlaceholder}
             value={filters.search}
             onChange={(event) => onSetFilters({ search: event.target.value })}
           />
@@ -162,20 +156,20 @@ export const CommandBar = ({
             disabled={!canStart || isStreaming || isPaused}
             onClick={onStart}
           >
-            Start Live Tail
+            {copy.toolbar.start}
           </button>
 
           <button className={actionClassName} disabled={!isStreaming && !isPaused} onClick={onStop}>
-            Stop
+            {copy.toolbar.stop}
           </button>
 
           <button className={actionClassName} disabled={!isStreaming && !isPaused} onClick={onPauseResume}>
-            {isPaused ? 'Resume' : 'Pause'}
+            {isPaused ? copy.toolbar.resume : copy.toolbar.pause}
           </button>
 
           <div className="ml-auto flex items-center gap-3">
             <button className={actionClassName} onClick={onOpenActions}>
-              More
+              {copy.common.more}
             </button>
           </div>
         </div>

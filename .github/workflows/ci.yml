@@ -42,7 +42,7 @@ jobs:
         run: npm run build
 
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage-report
@@ -72,7 +72,7 @@ jobs:
         run: npm run pack:mac
 
       - name: Upload macOS package smoke artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: logcat-desk-macos-app
           path: release/**

@@ -68,12 +68,40 @@ npm run dev
 npm run build
 ```
 
+4. Package a local macOS app bundle:
+
+```bash
+npm run pack:mac
+```
+
+5. Create macOS release artifacts (`.zip` + `.dmg`):
+
+```bash
+npm run dist:mac
+```
+
 ## Notes
 
 - The app does not depend on Android Studio at runtime.
 - `adb` can be discovered from `PATH`, `ANDROID_HOME`, `ANDROID_SDK_ROOT`, or configured manually in the sidebar.
 - Renderer code does not use `nodeIntegration`.
 - The main process batches log events before sending them to the renderer to keep the UI responsive.
+
+## GitHub workflows
+
+- `CI`: runs lint, coverage, build, and a macOS packaging smoke check.
+- `Release`: builds signed-or-unsigned macOS artifacts on tags like `v0.1.0` and attaches them to a GitHub Release.
+
+## Open source
+
+- Contribution guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Code of conduct: [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+- Security policy: [SECURITY.md](./SECURITY.md)
+- Support guide: [SUPPORT.md](./SUPPORT.md)
+
+## License
+
+The repository still needs an explicit open source license before external reuse is clearly permitted.
 
 ## Recommended next steps
 

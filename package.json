@@ -2,6 +2,7 @@
   "name": "logcat-desk",
   "productName": "Logcat Desk",
   "version": "0.1.0",
+  "author": "Florex Labs",
   "description": "A focused desktop logcat viewer for Android developers.",
   "main": "./out/main/index.js",
   "type": "module",
@@ -12,7 +13,9 @@
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "pack:mac": "npm run build && electron-builder --mac dir --publish never",
+    "dist:mac": "npm run build && electron-builder --mac zip dmg --publish never"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -33,6 +36,7 @@
     "@vitest/coverage-v8": "^4.1.2",
     "autoprefixer": "^10.4.20",
     "electron": "^37.2.0",
+    "electron-builder": "^26.8.1",
     "electron-vite": "^4.0.0",
     "jsdom": "^29.0.1",
     "postcss": "^8.5.3",
@@ -40,5 +44,26 @@
     "typescript": "^5.8.3",
     "vite": "^7.0.0",
     "vitest": "^4.1.2"
+  },
+  "build": {
+    "appId": "com.florexlabs.logcatdesk",
+    "productName": "Logcat Desk",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**/*",
+      "package.json",
+      "README.md"
+    ],
+    "asar": true,
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "zip",
+        "dmg"
+      ],
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    }
   }
 }

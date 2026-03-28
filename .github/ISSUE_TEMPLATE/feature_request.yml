@@ -1,0 +1,48 @@
+name: Feature request
+description: Propose an improvement or new feature for Logcat Desk
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for product or developer-experience improvements.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: What problem are you trying to solve?
+      placeholder: Describe the pain point clearly.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the change you want.
+      placeholder: Explain the expected behavior or workflow.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      placeholder: Describe other approaches you considered.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      placeholder: Mockups, references, technical notes, or examples.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Final checks
+      options:
+        - label: I searched for existing feature requests before opening this one.
+          required: true

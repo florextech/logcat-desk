@@ -1,0 +1,81 @@
+name: Bug report
+description: Report a bug or regression in Logcat Desk
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please include enough detail to reproduce it.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+      placeholder: A short description of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Exact steps to reproduce the issue.
+      placeholder: |
+        1. Open the app
+        2. Connect device
+        3. Start logcat
+        4. Observe error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: What happened instead?
+    validations:
+      required: true
+
+  - type: input
+    id: app_version
+    attributes:
+      label: App version
+      placeholder: e.g. 0.1.0
+
+  - type: input
+    id: macos_version
+    attributes:
+      label: macOS version
+      placeholder: e.g. macOS 15.4
+
+  - type: input
+    id: adb_version
+    attributes:
+      label: ADB version
+      placeholder: Output of `adb version`
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Screenshots, logs, or console output
+      description: Paste stack traces, terminal output, or attach screenshots if relevant.
+      render: shell
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Final checks
+      options:
+        - label: I searched for existing issues before opening this one.
+          required: true

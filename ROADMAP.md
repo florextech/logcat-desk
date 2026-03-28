@@ -18,4 +18,5 @@
 
 - App-level onboarding and diagnostics for adb setup
 - Optional crash pattern detection and smart highlights
+- AI-assisted log analysis for summarization, anomaly detection, and probable root-cause hints
 - Performance profiling for very high-volume log streams

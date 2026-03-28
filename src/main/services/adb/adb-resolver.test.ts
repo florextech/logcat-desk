@@ -1,7 +1,16 @@
 import { chmod, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { runCommandMock } = vi.hoisted(() => ({
+  runCommandMock: vi.fn()
+}));
+
+vi.mock('@main/services/adb/adb-command', () => ({
+  runCommand: runCommandMock
+}));
+
 import { resolveAdbStatus } from '@main/services/adb/adb-resolver';
 
 describe('resolveAdbStatus', () => {
@@ -16,7 +25,18 @@ describe('resolveAdbStatus', () => {
   };
 
   beforeEach(async () => {
-    process.env = { ...originalEnv, PATH: '/usr/bin:/bin' };
+    process.env = {
+      ...originalEnv,
+      PATH: '/usr/bin:/bin'
+    };
+    delete process.env.ANDROID_HOME;
+    delete process.env.ANDROID_SDK_ROOT;
+    runCommandMock.mockReset();
+    runCommandMock.mockResolvedValue({
+      code: 1,
+      stderr: '',
+      stdout: ''
+    });
     tempDir = await mkdtemp(join(tmpdir(), 'logcat-desk-adb-'));
   });
 
@@ -33,12 +53,18 @@ describe('resolveAdbStatus', () => {
       resolvedPath: preferred,
       source: 'settings'
     });
+
+    expect(runCommandMock).not.toHaveBeenCalled();
   });
 
   it('resolves adb from PATH when the configured path is invalid', async () => {
-    const binDir = join(tempDir, 'bin');
-    const pathAdb = await createExecutable(join(binDir, 'adb'));
-    process.env.PATH = `${binDir}:/usr/bin:/bin`;
+    const pathAdb = join(tempDir, 'bin', 'adb');
+    runCommandMock.mockResolvedValue({
+      code: 0,
+      stderr: '',
+      stdout: `${pathAdb}\n`
+    });
+    await createExecutable(pathAdb);
 
     await expect(resolveAdbStatus('/bad/adb')).resolves.toEqual({
       available: true,

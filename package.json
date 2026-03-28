@@ -4,6 +4,25 @@
   "version": "0.1.0",
   "author": "Florex Labs",
   "description": "A focused desktop logcat viewer for Android developers.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/florextech/logcat-desk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/florextech/logcat-desk/issues"
+  },
+  "homepage": "https://github.com/florextech/logcat-desk#readme",
+  "keywords": [
+    "electron",
+    "react",
+    "typescript",
+    "android",
+    "adb",
+    "logcat",
+    "macos",
+    "developer-tools"
+  ],
   "main": "./out/main/index.js",
   "type": "module",
   "scripts": {
@@ -54,7 +73,8 @@
     "files": [
       "out/**/*",
       "package.json",
-      "README.md"
+      "README.md",
+      "LICENSE"
     ],
     "asar": true,
     "mac": {

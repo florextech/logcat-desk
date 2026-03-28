@@ -1,5 +1,14 @@
 # Logcat Desk
 
+![CI](https://github.com/florextech/logcat-desk/actions/workflows/ci.yml/badge.svg)
+![Release](https://github.com/florextech/logcat-desk/actions/workflows/release.yml/badge.svg)
+![License](https://img.shields.io/github/license/florextech/logcat-desk)
+![Latest release](https://img.shields.io/github/v/release/florextech/logcat-desk)
+
+<p align="center">
+  <img src="./docs/assets/logcat-desk-logo.svg" alt="Logcat Desk logo" width="280" />
+</p>
+
 Logcat Desk is a desktop app for macOS focused on Android developers who want a fast `adb logcat` workflow without opening Android Studio.
 
 ## Stack
@@ -98,10 +107,12 @@ npm run dist:mac
 - Code of conduct: [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
 - Security policy: [SECURITY.md](./SECURITY.md)
 - Support guide: [SUPPORT.md](./SUPPORT.md)
+- Changelog: [CHANGELOG.md](./CHANGELOG.md)
+- Roadmap: [ROADMAP.md](./ROADMAP.md)
 
 ## License
 
-The repository still needs an explicit open source license before external reuse is clearly permitted.
+This project is released under the [MIT License](./LICENSE).
 
 ## Recommended next steps
 

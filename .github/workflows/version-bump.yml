@@ -47,7 +47,7 @@ jobs:
         run: npm run release:prepare -- "${{ inputs.version }}" "${{ inputs.release_date }}"
 
       - name: Create release PR
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: codex/release-v${{ inputs.version }}
           base: ${{ inputs.base_branch }}

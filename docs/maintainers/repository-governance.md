@@ -33,7 +33,7 @@ These names come from the jobs defined in [ci.yml](../../.github/workflows/ci.ym
 
 ## Suggested labels
 
-Create these repository labels so release drafts group changes correctly:
+Create these repository labels so GitHub-generated release notes stay grouped correctly:
 
 - `feature`
 - `enhancement`

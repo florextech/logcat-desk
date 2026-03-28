@@ -14,7 +14,7 @@ Use this checklist before making the repository public or announcing a major rel
 - Confirm `README.md` is current
 - Confirm `LICENSE` is present
 - Confirm `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, and `SUPPORT.md` are current
-- Review `.github/CODEOWNERS` and replace the default owner if needed
+- Review `.github/CODEOWNERS` and confirm the listed owners are correct
 
 ## Pull request and issue hygiene
 
@@ -34,7 +34,7 @@ Use this checklist before making the repository public or announcing a major rel
 ## Dependency and release maintenance
 
 - Enable Dependabot and review its first PRs
-- Confirm `Release Drafter` is grouping changes correctly from labels
+- Confirm GitHub-generated release notes are grouping changes correctly from labels
 - Test `Prepare Release PR` once before the first public release
 - Review signing and notarization setup in `macos-distribution.md`
 

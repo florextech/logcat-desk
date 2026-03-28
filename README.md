@@ -138,9 +138,6 @@ GitHub-generated release notes are configured through [.github/release.yml](./.g
 - Support guide: [SUPPORT.md](./SUPPORT.md)
 - Changelog: [CHANGELOG.md](./CHANGELOG.md)
 - Roadmap: [ROADMAP.md](./ROADMAP.md)
-- Repository governance: [docs/maintainers/repository-governance.md](./docs/maintainers/repository-governance.md)
-- GitHub launch checklist: [docs/maintainers/github-launch-checklist.md](./docs/maintainers/github-launch-checklist.md)
-- macOS distribution setup: [docs/maintainers/macos-distribution.md](./docs/maintainers/macos-distribution.md)
 
 ## License
 

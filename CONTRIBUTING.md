@@ -38,7 +38,7 @@ npm run pack:mac
 - Include screenshots or recordings for UI changes.
 - Add or update tests when behavior changes.
 - Update docs when user-facing behavior or setup changes.
-- Use repository labels when possible so release drafts stay categorized.
+- Use repository labels when possible so GitHub-generated release notes stay categorized.
 
 ## Coding expectations
 
@@ -62,5 +62,5 @@ npm run pack:mac
 ## Release flow
 
 - Maintainers can run `Prepare Release PR` from GitHub Actions to bump the version and seed a detailed changelog entry.
-- Final release notes are drafted automatically from merged PR labels through `Release Drafter`.
+- Final release notes are generated automatically from merged PR labels through GitHub release notes configuration.
 - Before tagging a release, replace all `Pending` placeholders in `CHANGELOG.md`.

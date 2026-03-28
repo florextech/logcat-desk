@@ -52,3 +52,5 @@ Create these repository labels so release drafts group changes correctly:
 3. Merge the release PR after the required checks pass.
 4. Create and push a tag like `v0.2.0`.
 5. Let the `Release` workflow publish the macOS artifacts.
+
+For signing and notarization setup, see [macos-distribution.md](./macos-distribution.md).

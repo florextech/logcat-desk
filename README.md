@@ -112,6 +112,7 @@ npm run dist:mac
 - Changelog: [CHANGELOG.md](./CHANGELOG.md)
 - Roadmap: [ROADMAP.md](./ROADMAP.md)
 - Repository governance: [docs/maintainers/repository-governance.md](./docs/maintainers/repository-governance.md)
+- macOS distribution setup: [docs/maintainers/macos-distribution.md](./docs/maintainers/macos-distribution.md)
 
 ## License
 

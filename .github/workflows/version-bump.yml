@@ -48,8 +48,8 @@ jobs:
         with:
           branch: codex/release-v${{ inputs.version }}
           base: ${{ inputs.base_branch }}
-          commit-message: chore(release): prepare v${{ inputs.version }}
-          title: chore(release): prepare v${{ inputs.version }}
+          commit-message: "chore(release): prepare v${{ inputs.version }}"
+          title: "chore(release): prepare v${{ inputs.version }}"
           labels: release
           body: |
             ## Summary

@@ -17,6 +17,10 @@ jobs:
   macos-release:
     name: Build macOS Release
     runs-on: macos-latest
+    environment: production
+    env:
+      HAS_MACOS_SIGNING: ${{ secrets.CSC_LINK != '' && secrets.CSC_KEY_PASSWORD != '' }}
+      HAS_MACOS_NOTARIZATION: ${{ secrets.APPLE_API_KEY_CONTENT != '' && secrets.APPLE_API_KEY_ID != '' && secrets.APPLE_API_ISSUER != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,10 +39,31 @@ jobs:
           npm run lint
           npm run test:coverage
 
-      - name: Build release artifacts
+      - name: Prepare App Store Connect API key
+        if: env.HAS_MACOS_NOTARIZATION == 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/private_keys"
+          APPLE_API_KEY_PATH="$RUNNER_TEMP/private_keys/AuthKey_${{ secrets.APPLE_API_KEY_ID }}.p8"
+          printf '%s' '${{ secrets.APPLE_API_KEY_CONTENT }}' > "$APPLE_API_KEY_PATH"
+          chmod 600 "$APPLE_API_KEY_PATH"
+          echo "APPLE_API_KEY=$APPLE_API_KEY_PATH" >> "$GITHUB_ENV"
+
+      - name: Build signed and notarized release artifacts
+        if: env.HAS_MACOS_SIGNING == 'true' && env.HAS_MACOS_NOTARIZATION == 'true'
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: npm run dist:mac
+
+      - name: Build unsigned fallback artifacts
+        if: env.HAS_MACOS_SIGNING != 'true' || env.HAS_MACOS_NOTARIZATION != 'true'
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
-        run: npm run dist:mac
+        run: |
+          echo "macOS signing or notarization secrets are missing. Building unsigned artifacts."
+          npm run dist:mac
 
       - name: Upload workflow artifacts
         uses: actions/upload-artifact@v4

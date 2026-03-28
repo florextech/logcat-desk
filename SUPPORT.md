@@ -25,6 +25,18 @@ A good report includes:
 - expected result
 - actual result
 
+## Unsigned macOS builds
+
+Until signed and notarized releases are available, some macOS downloads may be blocked by Gatekeeper.
+
+For trusted local testing only, you can remove the quarantine attribute:
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/Logcat Desk.app"
+```
+
+This is a temporary workaround for local builds and trusted release artifacts. It is not a replacement for proper signing and notarization.
+
 ## Not for public issues
 
 Do not use public issues for security disclosures. Follow [SECURITY.md](./SECURITY.md) instead.

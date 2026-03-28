@@ -1,0 +1,35 @@
+docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+          - "docs/**"
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/workflows/**"
+          - ".github/release-drafter.yml"
+          - ".github/labeler.yml"
+          - ".github/dependabot.yml"
+
+maintenance:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "package.json"
+          - "package-lock.json"
+          - ".editorconfig"
+          - ".gitattributes"
+
+feature:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/renderer/**"
+          - "src/main/**"
+          - "src/preload/**"
+          - "src/shared/**"
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.test.ts"
+          - "vitest.config.ts"

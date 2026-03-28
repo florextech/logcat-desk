@@ -44,6 +44,12 @@ Create these repository labels so release drafts group changes correctly:
 - `maintenance`
 - `breaking`
 - `release`
+- `dependencies`
+- `tests`
+- `security`
+- `help wanted`
+- `good first issue`
+- `skip-changelog`
 
 ## Release maintainers checklist
 
@@ -51,6 +57,7 @@ Create these repository labels so release drafts group changes correctly:
 2. Replace all `Pending` sections in `CHANGELOG.md` with final notes.
 3. Merge the release PR after the required checks pass.
 4. Create and push a tag like `v0.2.0`.
-5. Let the `Release` workflow publish the macOS artifacts.
+5. Let the `Release` workflow publish the macOS artifacts using GitHub-generated release notes.
 
 For signing and notarization setup, see [macos-distribution.md](./macos-distribution.md).
+For public launch readiness, see [github-launch-checklist.md](./github-launch-checklist.md).

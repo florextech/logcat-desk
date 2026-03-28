@@ -1,1 +1,8 @@
 blank_issues_enabled: false
+contact_links:
+  - name: Support guide
+    url: https://github.com/florextech/logcat-desk/blob/main/SUPPORT.md
+    about: Read the support workflow before opening a non-bug question.
+  - name: Security policy
+    url: https://github.com/florextech/logcat-desk/blob/main/SECURITY.md
+    about: Report security issues privately by following the security policy.

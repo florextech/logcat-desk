@@ -61,6 +61,16 @@ Paste the copied value into the `CSC_LINK` secret.
 - When secrets are configured, the `Release` workflow builds signed and notarized `.zip` and `.dmg` artifacts.
 - When secrets are missing, the same workflow still produces unsigned artifacts so releases are not blocked during setup.
 
+## Temporary testing workaround for unsigned builds
+
+If you need to test an unsigned build locally before signing and notarization are in place, macOS quarantine can be removed for a trusted app bundle:
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/Logcat Desk.app"
+```
+
+Use this only for trusted local testing. Do not treat it as a substitute for proper Apple signing and notarization.
+
 ## First signed release checklist
 
 1. Configure the secrets.

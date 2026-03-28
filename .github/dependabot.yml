@@ -1,0 +1,51 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Bogota
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - maintenance
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      react-stack:
+        patterns:
+          - react
+          - react-dom
+          - "@types/react*"
+          - "@testing-library/react"
+      build-tooling:
+        patterns:
+          - vite
+          - electron-vite
+          - electron-builder
+          - tailwindcss
+          - postcss
+          - autoprefixer
+      testing:
+        patterns:
+          - vitest
+          - "@vitest/*"
+          - jsdom
+          - "@testing-library/*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:30"
+      timezone: America/Bogota
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: chore
+      include: scope

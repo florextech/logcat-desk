@@ -89,6 +89,20 @@ npm run pack:mac
 npm run dist:mac
 ```
 
+## Temporary macOS workaround for unsigned builds
+
+Until signed and notarized releases are fully configured, macOS may block builds downloaded from the internet.
+
+If you trust the app and need to open an unsigned build locally, you can remove the quarantine attribute:
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/Logcat Desk.app"
+```
+
+You can also point the command at a build in `Downloads` or any other folder.
+
+This is only a temporary local workaround for trusted builds. It does not replace proper Apple signing and notarization.
+
 ## Notes
 
 - The app does not depend on Android Studio at runtime.
@@ -99,9 +113,12 @@ npm run dist:mac
 ## GitHub workflows
 
 - `CI`: runs lint, coverage, build, and a macOS packaging smoke check.
+- `Pull Request Labeler`: applies labels automatically from changed file paths.
 - `Prepare Release PR`: opens a release pull request with a version bump and detailed changelog scaffold.
-- `Release Drafter`: keeps a categorized draft release in sync from merged PR labels.
 - `Release`: builds signed-or-unsigned macOS artifacts on tags like `v0.1.0` and attaches them to a GitHub Release.
+- `Stale Issues and Pull Requests`: keeps inactive issues and PRs under control.
+
+GitHub-generated release notes are configured through [.github/release.yml](./.github/release.yml).
 
 ## Open source
 
@@ -112,6 +129,7 @@ npm run dist:mac
 - Changelog: [CHANGELOG.md](./CHANGELOG.md)
 - Roadmap: [ROADMAP.md](./ROADMAP.md)
 - Repository governance: [docs/maintainers/repository-governance.md](./docs/maintainers/repository-governance.md)
+- GitHub launch checklist: [docs/maintainers/github-launch-checklist.md](./docs/maintainers/github-launch-checklist.md)
 - macOS distribution setup: [docs/maintainers/macos-distribution.md](./docs/maintainers/macos-distribution.md)
 
 ## License

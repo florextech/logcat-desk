@@ -1,0 +1,31 @@
+name: Stale Issues and Pull Requests
+
+on:
+  schedule:
+    - cron: "0 15 * * 1"
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    name: Mark stale items
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark and close stale items
+        uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-issue-message: This issue has been automatically marked as stale due to inactivity. It will be closed if no further activity happens.
+          stale-pr-message: This pull request has been automatically marked as stale due to inactivity. It will be closed if no further activity happens.
+          close-issue-message: Closing this issue because it has been stale for an extended period without follow-up.
+          close-pr-message: Closing this pull request because it has been stale for an extended period without follow-up.
+          days-before-stale: 45
+          days-before-close: 10
+          exempt-issue-labels: security,bug,feature,help wanted,good first issue
+          exempt-pr-labels: release,work-in-progress

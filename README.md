@@ -11,6 +11,16 @@
 
 Logcat Desk is a desktop app for macOS focused on Android developers who want a fast `adb logcat` workflow without opening Android Studio.
 
+## App Preview
+
+### Live log streaming
+
+![Logcat Desk live log streaming](./docs/screenshots/logcat-desk-live.png)
+
+### Empty state
+
+![Logcat Desk empty state](./docs/screenshots/logcat-desk-empty.png)
+
 ## Stack
 
 - Electron

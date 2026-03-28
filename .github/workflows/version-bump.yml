@@ -1,0 +1,64 @@
+name: Prepare Release PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: SemVer version to prepare, for example 0.2.0
+        required: true
+        type: string
+      release_date:
+        description: Optional release date in YYYY-MM-DD. Defaults to today.
+        required: false
+        type: string
+      base_branch:
+        description: Base branch for the release PR
+        required: false
+        default: main
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare-release:
+    name: Prepare Release Pull Request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.base_branch }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prepare version and changelog
+        run: npm run release:prepare -- "${{ inputs.version }}" "${{ inputs.release_date }}"
+
+      - name: Create release PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: codex/release-v${{ inputs.version }}
+          base: ${{ inputs.base_branch }}
+          commit-message: chore(release): prepare v${{ inputs.version }}
+          title: chore(release): prepare v${{ inputs.version }}
+          labels: release
+          body: |
+            ## Summary
+
+            - bumps the app version to `${{ inputs.version }}`
+            - adds a detailed changelog template for the upcoming release
+
+            ## Maintainer checklist
+
+            - replace all `Pending` changelog bullets with the final notes
+            - confirm the release scope and version number
+            - merge only after CI is green

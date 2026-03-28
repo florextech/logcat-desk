@@ -99,6 +99,8 @@ npm run dist:mac
 ## GitHub workflows
 
 - `CI`: runs lint, coverage, build, and a macOS packaging smoke check.
+- `Prepare Release PR`: opens a release pull request with a version bump and detailed changelog scaffold.
+- `Release Drafter`: keeps a categorized draft release in sync from merged PR labels.
 - `Release`: builds signed-or-unsigned macOS artifacts on tags like `v0.1.0` and attaches them to a GitHub Release.
 
 ## Open source
@@ -109,6 +111,7 @@ npm run dist:mac
 - Support guide: [SUPPORT.md](./SUPPORT.md)
 - Changelog: [CHANGELOG.md](./CHANGELOG.md)
 - Roadmap: [ROADMAP.md](./ROADMAP.md)
+- Repository governance: [docs/maintainers/repository-governance.md](./docs/maintainers/repository-governance.md)
 
 ## License
 

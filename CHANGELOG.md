@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and versioning is intended to follow Semantic Versioning.
 
+## Release entry template
+
+Each release should document changes with the sections below:
+
+- `Added`
+- `Changed`
+- `Fixed`
+- `Documentation`
+- `CI`
+- `Notes`
+
 ## [0.1.0] - 2026-03-27
 
 ### Added
@@ -19,6 +30,15 @@ The format is based on Keep a Changelog, and versioning is intended to follow Se
 - English and Spanish UI support
 - Test suite with coverage thresholds and CI workflows
 - Open source contribution, support, security, and issue/PR templates
+- Branding assets, release workflows, and repository governance docs
+
+### Documentation
+
+- Added contributor-facing documentation for support, security, roadmap, and release process
+
+### CI
+
+- Added CI validation, macOS packaging smoke checks, release drafting, and release PR preparation workflows
 
 ### Notes
 

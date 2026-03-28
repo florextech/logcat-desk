@@ -38,6 +38,7 @@ npm run pack:mac
 - Include screenshots or recordings for UI changes.
 - Add or update tests when behavior changes.
 - Update docs when user-facing behavior or setup changes.
+- Use repository labels when possible so release drafts stay categorized.
 
 ## Coding expectations
 
@@ -56,3 +57,10 @@ npm run pack:mac
 - Maintainers may request changes before merge.
 - PRs should stay green in CI.
 - Breaking changes need explicit explanation in the PR description.
+- The `Validate` and `macOS Package Smoke` checks are intended to be required on `main`.
+
+## Release flow
+
+- Maintainers can run `Prepare Release PR` from GitHub Actions to bump the version and seed a detailed changelog entry.
+- Final release notes are drafted automatically from merged PR labels through `Release Drafter`.
+- Before tagging a release, replace all `Pending` placeholders in `CHANGELOG.md`.

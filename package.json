@@ -34,6 +34,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "brand:assets": "bash ./scripts/generate-mac-icon.sh",
+    "release:prepare": "node ./scripts/prepare-release.mjs",
     "pack:mac": "npm run brand:assets && npm run build && electron-builder --mac dir --publish never",
     "dist:mac": "npm run brand:assets && npm run build && electron-builder --mac zip dmg --publish never"
   },

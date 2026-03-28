@@ -95,10 +95,10 @@ export const CommandBar = ({
     <div className="flx-card relative z-20 mx-6 mt-4 overflow-visible p-0">
       <div className="px-4 py-4">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--brand-500)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--brand-500)">
             {copy.filters.title}
           </p>
-          <p className="text-xs text-[var(--muted)]">{copy.filters.helper}</p>
+          <p className="text-xs text-(--muted)">{copy.filters.helper}</p>
         </div>
 
         <div className="grid grid-cols-[1.35fr_0.95fr_0.95fr_0.95fr_0.78fr] gap-3">
@@ -143,13 +143,13 @@ export const CommandBar = ({
               type="button"
             >
               <span>{levelLabels[filters.minLevel]}</span>
-              <span className={`text-[var(--muted)] transition ${isLevelOpen ? 'rotate-180' : ''}`}>⌄</span>
+              <span className={`text-(--muted) transition ${isLevelOpen ? 'rotate-180' : ''}`}>⌄</span>
             </button>
           </div>
         </div>
       </div>
 
-      <div className="border-t border-[var(--border)] bg-[rgb(17_21_19/0.48)] px-4 py-3">
+      <div className="border-t border-(--border) bg-[rgb(17_21_19/0.48)] px-4 py-3">
         <div className="flex flex-wrap items-center gap-3">
           <button
             className="flx-btn flx-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
@@ -179,7 +179,7 @@ export const CommandBar = ({
         ? createPortal(
             <div
               ref={levelMenuRef}
-              className="fixed z-[120] overflow-hidden rounded-2xl border border-[rgb(38_48_40/0.92)] bg-[rgb(12_15_13/0.98)] p-1 shadow-[0_22px_60px_rgba(0,0,0,0.38)] backdrop-blur-xl"
+              className="fixed z-120 overflow-hidden rounded-2xl border border-[rgb(38_48_40/0.92)] bg-[rgb(12_15_13/0.98)] p-1 shadow-[0_22px_60px_rgba(0,0,0,0.38)] backdrop-blur-xl"
               style={{
                 top: menuRect.top,
                 left: menuRect.left,
@@ -193,8 +193,8 @@ export const CommandBar = ({
                     key={level}
                     className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm transition ${
                       active
-                        ? 'bg-[rgb(189_241_70/0.14)] font-semibold text-[var(--brand-700)]'
-                        : 'text-[var(--foreground)] hover:bg-[rgb(255_255_255/0.04)]'
+                        ? 'bg-[rgb(189_241_70/0.14)] font-semibold text-(--brand-700)'
+                        : 'text-(--foreground) hover:bg-[rgb(255_255_255/0.04)]'
                     }`}
                     onClick={() => {
                       onSetFilters({ minLevel: level });
@@ -203,7 +203,7 @@ export const CommandBar = ({
                     type="button"
                   >
                     <span>{levelLabels[level]}</span>
-                    {active ? <span className="text-[var(--brand-700)]">✓</span> : null}
+                    {active ? <span className="text-(--brand-700)">✓</span> : null}
                   </button>
                 );
               })}

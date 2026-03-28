@@ -12,25 +12,13 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "baseUrl": ".",
+    "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@main/*": [
-        "src/main/*"
-      ],
-      "@renderer/*": [
-        "src/renderer/src/*"
-      ],
-      "@shared/*": [
-        "src/shared/*"
-      ]
+      "@main/*": ["./src/main/*"],
+      "@renderer/*": ["./src/renderer/src/*"],
+      "@shared/*": ["./src/shared/*"]
     },
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "include": [
-    "electron.vite.config.ts",
-    "src/**/*.ts",
-    "src/**/*.tsx"
-  ]
+  "include": ["electron.vite.config.ts", "src/**/*.ts", "src/**/*.tsx"]
 }

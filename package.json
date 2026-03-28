@@ -33,8 +33,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "pack:mac": "npm run build && electron-builder --mac dir --publish never",
-    "dist:mac": "npm run build && electron-builder --mac zip dmg --publish never"
+    "brand:assets": "bash ./scripts/generate-mac-icon.sh",
+    "pack:mac": "npm run brand:assets && npm run build && electron-builder --mac dir --publish never",
+    "dist:mac": "npm run brand:assets && npm run build && electron-builder --mac zip dmg --publish never"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -68,7 +69,8 @@
     "appId": "com.florexlabs.logcatdesk",
     "productName": "Logcat Desk",
     "directories": {
-      "output": "release"
+      "output": "release",
+      "buildResources": "build"
     },
     "files": [
       "out/**/*",
@@ -79,6 +81,7 @@
     "asar": true,
     "mac": {
       "category": "public.app-category.developer-tools",
+      "icon": "build/icon.icns",
       "target": [
         "zip",
         "dmg"

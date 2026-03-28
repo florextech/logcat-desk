@@ -19,6 +19,7 @@ export interface I18nMessages {
   };
   status: Record<SessionStatus, string>;
   header: {
+    tagline: string;
     noDeviceSelected: string;
     selectedDevice: StringFactory<[name: string]>;
     visibleCount: StringFactory<[count: string]>;
@@ -136,6 +137,7 @@ const en: I18nMessages = {
     disconnected: 'Disconnected'
   },
   header: {
+    tagline: 'Android log streaming and filtering',
     noDeviceSelected: 'No device selected',
     selectedDevice: (name) => `Device: ${name}`,
     visibleCount: (count) => `${count} visible`
@@ -261,6 +263,7 @@ const es: I18nMessages = {
     disconnected: 'Desconectado'
   },
   header: {
+    tagline: 'Streaming y filtros de logs Android',
     noDeviceSelected: 'Sin dispositivo seleccionado',
     selectedDevice: (name) => `Dispositivo: ${name}`,
     visibleCount: (count) => `${count} visibles`

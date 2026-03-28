@@ -6,7 +6,7 @@
 ![Latest release](https://img.shields.io/github/v/release/florextech/logcat-desk)
 
 <p align="center">
-  <img src="./docs/assets/logcat-desk-logo.svg" alt="Logcat Desk logo" width="280" />
+  <img src="./docs/assets/logcat-desk-wordmark.svg" alt="Logcat Desk logo" width="720" />
 </p>
 
 Logcat Desk is a desktop app for macOS focused on Android developers who want a fast `adb logcat` workflow without opening Android Studio.

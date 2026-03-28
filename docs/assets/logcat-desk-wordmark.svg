@@ -1,0 +1,51 @@
+<svg width="1320" height="320" viewBox="0 0 1320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="shell" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(160 160) rotate(90) scale(132)">
+      <stop stop-color="#173D0B"/>
+      <stop offset="1" stop-color="#041606"/>
+    </radialGradient>
+    <radialGradient id="shellGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(160 160) rotate(90) scale(126)">
+      <stop stop-color="#B8FF2E" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#B8FF2E" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="brandText" x1="332" y1="74" x2="1154" y2="250" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D4FF4B"/>
+      <stop offset="1" stop-color="#8FE71D"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1320" height="320" rx="48" fill="#061408"/>
+  <rect x="28" y="28" width="264" height="264" rx="58" fill="url(#shell)"/>
+  <rect x="28" y="28" width="264" height="264" rx="58" fill="url(#shellGlow)"/>
+  <rect x="74" y="74" width="172" height="176" rx="30" fill="#051A07" stroke="#C0FF31" stroke-width="5"/>
+  <circle cx="104" cy="106" r="5" fill="#AFFF23"/>
+  <circle cx="120" cy="106" r="5" fill="#AFFF23"/>
+  <circle cx="136" cy="106" r="5" fill="#AFFF23"/>
+  <path d="M149 128C149 110.879 162.879 97 180 97C197.121 97 211 110.879 211 128H149Z" fill="#C0FF31"/>
+  <circle cx="170" cy="117" r="4.5" fill="#062E0A"/>
+  <circle cx="191" cy="117" r="4.5" fill="#062E0A"/>
+  <path d="M163 95L156 81" stroke="#C0FF31" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M198 95L205 81" stroke="#C0FF31" stroke-width="4.5" stroke-linecap="round"/>
+  <rect x="92" y="132" width="136" height="90" rx="18" fill="#0A220D" stroke="#8EEA1F" stroke-width="4"/>
+  <line x1="92" y1="152" x2="228" y2="152" stroke="#1E4C18" stroke-width="2"/>
+  <circle cx="106" cy="140" r="4.5" fill="#AFFF23"/>
+  <path d="M121 134L115 140L121 146" stroke="#AFFF23" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M131 134L137 140L131 146" stroke="#AFFF23" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="145" y1="145" x2="153" y2="145" stroke="#AFFF23" stroke-width="4" stroke-linecap="round"/>
+  <path d="M210 134L200 146" stroke="#8EEA1F" stroke-width="4" stroke-linecap="round"/>
+  <path d="M200 134L210 146" stroke="#8EEA1F" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="112" cy="175" r="5" fill="#AFFF23"/>
+  <circle cx="112" cy="195" r="5" fill="#AFFF23"/>
+  <circle cx="112" cy="215" r="5" fill="#AFFF23"/>
+  <rect x="126" y="170" width="57" height="8" rx="4" fill="#AFFF23"/>
+  <rect x="126" y="190" width="76" height="8" rx="4" fill="#AFFF23"/>
+  <rect x="126" y="210" width="47" height="8" rx="4" fill="#7BE31A"/>
+  <circle cx="197" cy="202" r="12" stroke="#C0FF31" stroke-width="5"/>
+  <path d="M206 211L215 220" stroke="#8EEA1F" stroke-width="5" stroke-linecap="round"/>
+
+  <text x="332" y="114" fill="#D6F7D7" font-family="Arial, Helvetica, sans-serif" font-size="28" letter-spacing="7">ANDROID LOG VIEWER</text>
+  <text x="332" y="185" fill="url(#brandText)" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="700">Logcat Desk</text>
+  <text x="336" y="236" fill="#A1B7A5" font-family="Arial, Helvetica, sans-serif" font-size="30">
+    Fast adb log streaming, filtering, and export for macOS developers.
+  </text>
+</svg>

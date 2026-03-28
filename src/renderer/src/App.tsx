@@ -8,6 +8,7 @@ import { useI18n } from '@renderer/i18n/provider';
 import { LogConsole } from '@renderer/components/log-console';
 import { SettingsModal } from '@renderer/components/settings-modal';
 import { StatusBadge } from '@renderer/components/status-badge';
+import logcatDeskMark from '@renderer/assets/logcat-desk-mark.svg';
 import { useAppBootstrap } from '@renderer/hooks/use-app-bootstrap';
 import { useLogcatEvents } from '@renderer/hooks/use-logcat-events';
 import { electronApi } from '@renderer/services/electron-api';
@@ -242,10 +243,20 @@ export const App = (): JSX.Element => {
 
           <header className="bg-transparent px-6 pb-4">
             <div className="flex items-center justify-between gap-6">
-              <div className="drag-region max-w-[38rem]">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[var(--brand-500)]">
-                  {copy.common.appName}
-                </p>
+              <div className="drag-region flex min-w-0 items-center gap-3">
+                <img
+                  alt={copy.common.appName}
+                  className="h-11 w-11 rounded-2xl shadow-[0_0_28px_rgba(185,255,46,0.18)]"
+                  src={logcatDeskMark}
+                />
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[var(--brand-500)]">
+                    {copy.common.appName}
+                  </p>
+                  <p className="mt-1 text-sm text-[var(--muted)]">
+                    {copy.header.tagline}
+                  </p>
+                </div>
               </div>
 
               <div className="no-drag rounded-full bg-[rgb(13_16_14/0.62)] px-2 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">

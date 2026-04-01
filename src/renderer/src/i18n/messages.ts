@@ -38,6 +38,7 @@ export interface I18nMessages {
     stop: string;
     pause: string;
     resume: string;
+    clearLogs: string;
   };
   console: {
     time: string;
@@ -46,6 +47,7 @@ export interface I18nMessages {
     message: string;
     copy: string;
     logOutput: string;
+    jumpToLatest: string;
   };
   empty: {
     noLogsYet: string;
@@ -163,7 +165,8 @@ const en: I18nMessages = {
     start: 'Start Live Tail',
     stop: 'Stop',
     pause: 'Pause',
-    resume: 'Resume'
+    resume: 'Resume',
+    clearLogs: 'Clear logs'
   },
   console: {
     time: 'Time',
@@ -171,7 +174,8 @@ const en: I18nMessages = {
     tagPid: 'Tag / pid',
     message: 'Message',
     copy: 'Copy',
-    logOutput: 'Log output'
+    logOutput: 'Log output',
+    jumpToLatest: 'Jump to latest log'
   },
   empty: {
     noLogsYet: 'No logs yet.',
@@ -289,7 +293,8 @@ const es: I18nMessages = {
     start: 'Iniciar Live Tail',
     stop: 'Detener',
     pause: 'Pausar',
-    resume: 'Reanudar'
+    resume: 'Reanudar',
+    clearLogs: 'Limpiar logs'
   },
   console: {
     time: 'Hora',
@@ -297,7 +302,8 @@ const es: I18nMessages = {
     tagPid: 'Tag / pid',
     message: 'Mensaje',
     copy: 'Copiar',
-    logOutput: 'Salida'
+    logOutput: 'Salida',
+    jumpToLatest: 'Ir al ultimo log'
   },
   empty: {
     noLogsYet: 'Aun no hay logs.',

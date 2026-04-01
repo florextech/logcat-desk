@@ -5,9 +5,11 @@ import { useI18n } from '@renderer/i18n/provider';
 
 interface CommandBarProps {
   canStart: boolean;
+  canClearLogs: boolean;
   filters: FilterState;
   isPaused: boolean;
   isStreaming: boolean;
+  onClearLogs: () => void;
   onOpenActions: () => void;
   onPauseResume: () => void;
   onSetFilters: (filters: Partial<FilterState>) => void;
@@ -23,9 +25,11 @@ const actionClassName =
 
 export const CommandBar = ({
   canStart,
+  canClearLogs,
   filters,
   isPaused,
   isStreaming,
+  onClearLogs,
   onOpenActions,
   onPauseResume,
   onSetFilters,
@@ -165,6 +169,10 @@ export const CommandBar = ({
 
           <button className={actionClassName} disabled={!isStreaming && !isPaused} onClick={onPauseResume}>
             {isPaused ? copy.toolbar.resume : copy.toolbar.pause}
+          </button>
+
+          <button className={actionClassName} disabled={!canClearLogs} onClick={onClearLogs}>
+            {copy.toolbar.clearLogs}
           </button>
 
           <div className="ml-auto flex items-center gap-3">

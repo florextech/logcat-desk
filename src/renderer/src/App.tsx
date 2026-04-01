@@ -295,9 +295,11 @@ export const App = (): JSX.Element => {
 
           <CommandBar
             canStart={Boolean(selectedDeviceId) && adbStatus.available}
+            canClearLogs={filteredLogs.length > 0}
             filters={filters}
             isPaused={paused}
             isStreaming={streaming}
+            onClearLogs={clearLogs}
             onOpenActions={() => setIsActionsOpen(true)}
             onPauseResume={handlePauseResume}
             onSetFilters={setFilters}

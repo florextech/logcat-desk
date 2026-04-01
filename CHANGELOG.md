@@ -8,27 +8,40 @@ The format is based on Keep a Changelog, and versioning is intended to follow Se
 
 ### Added
 
-- Pending
+- Added `Clear logs` action next to `Stop` / `Pause` to wipe the visible console output instantly.
+- Added smart log navigation with a floating `Jump to latest log` action when the user is not at the bottom.
+- Added update-check flow from the app (`Actions` modal) with GitHub latest-release lookup and direct release-page open.
+- Added automatic ADB discovery in common install paths (including Homebrew and Android SDK defaults), beyond PATH/env lookup.
+- Added auto-persist of detected ADB binary path so users do not need to configure it manually on first run.
 
 ### Changed
 
-- Pending
+- Changed auto-scroll behavior to follow new logs only when the user is already at the bottom.
+- Changed update dialogs to use fully localized labels/messages for available, up-to-date, and failure states.
+- Changed update-check timeout behavior to fail fast with an explicit user-facing message when the network hangs.
+- Changed semantic-version parsing in update checks to strictly require `major.minor.patch`.
 
 ### Fixed
 
-- Pending
+- Fixed log browsing UX regression where auto-scroll forced users back to the latest line while reviewing old logs.
+- Fixed duplicate update-check error surfaces by keeping update failure feedback in a single native dialog path.
+- Fixed semantic-version edge cases (for example `1.2.3.4` and empty segments like `1..3`) that could produce invalid comparisons.
+- Fixed coverage regressions by adding tests for update-dialog branches, timeout/error flows, and semver validation.
 
 ### Documentation
 
-- Pending
+- Added README app preview section and screenshots for live log view and empty state.
+- Updated maintainer-facing release/distribution documentation and CI/CD process notes.
 
 ### CI
 
-- Pending
+- Updated GitHub Actions dependencies (`actions/labeler`, `create-pull-request`, `upload-artifact`, `checkout`, `stale`).
+- Improved release/CI workflows for packaging and distribution checks.
 
 ### Notes
 
-- Replace placeholders with the final release notes before merging.
+- Update checks require internet access to GitHub Releases API.
+- Auto-detected ADB path can still be overridden manually from Settings if needed.
 
 ## Release entry template
 
@@ -70,4 +83,3 @@ Each release should document changes with the sections below:
 
 - macOS packaging is configured through `electron-builder`
 - release artifacts currently support unsigned macOS packaging out of the box
-

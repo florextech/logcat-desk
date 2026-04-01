@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and versioning is intended to follow Semantic Versioning.
 
+## [0.1.1] - 2026-04-01
+
+### Added
+
+- Pending
+
+### Changed
+
+- Pending
+
+### Fixed
+
+- Pending
+
+### Documentation
+
+- Pending
+
+### CI
+
+- Pending
+
+### Notes
+
+- Replace placeholders with the final release notes before merging.
+
 ## Release entry template
 
 Each release should document changes with the sections below:
@@ -44,3 +70,4 @@ Each release should document changes with the sections below:
 
 - macOS packaging is configured through `electron-builder`
 - release artifacts currently support unsigned macOS packaging out of the box
+

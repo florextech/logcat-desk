@@ -1,10 +1,12 @@
-import { clipboard, dialog, ipcMain } from 'electron';
+import { app, clipboard, dialog, ipcMain, shell } from 'electron';
 import type { BrowserWindow } from 'electron';
 import { clearLogcatBuffer, listDevices } from '@main/services/adb/device-service';
 import { resolveAdbStatus } from '@main/services/adb/adb-resolver';
 import { ExportService } from '@main/services/export/export-service';
 import { LogcatSessionManager } from '@main/services/logcat/logcat-session-manager';
 import { SettingsStore } from '@main/services/settings/settings-store';
+import { getUpdateCheckFailedCopy, getUpdateDialogCopy } from '@main/services/update/update-dialog-copy';
+import { UpdateService } from '@main/services/update/update-service';
 import { ipcChannels } from '@shared/ipc';
 import type {
   AppSettings,
@@ -18,6 +20,7 @@ interface RegisterIpcDependencies {
   settingsStore: SettingsStore;
   sessionManager: LogcatSessionManager;
   exportService: ExportService;
+  updateService: UpdateService;
 }
 
 const resolveConfiguredAdb = async (settingsStore: SettingsStore, customPath?: string) => {
@@ -35,7 +38,8 @@ export const registerIpc = ({
   mainWindow,
   settingsStore,
   sessionManager,
-  exportService
+  exportService,
+  updateService
 }: RegisterIpcDependencies): void => {
   const safeHandle = <TArgs extends unknown[], TResult>(
     channel: string,
@@ -104,6 +108,57 @@ export const registerIpc = ({
   safeHandle(ipcChannels.logcatClearBuffer, async (_, input: ClearBufferInput) => {
     const adbStatus = await resolveConfiguredAdb(settingsStore, input.adbPath);
     await clearLogcatBuffer(adbStatus.resolvedPath as string, input.deviceId);
+  });
+
+  safeHandle(ipcChannels.updatesCheck, async () => {
+    const settings = await settingsStore.getSettings();
+    const locale = settings.locale;
+    try {
+      const result = await updateService.checkLatestRelease(app.getVersion());
+      const copy = getUpdateDialogCopy(locale, result);
+
+      if (result.hasUpdate) {
+        const dialogResult = await dialog.showMessageBox(mainWindow, {
+          type: 'info',
+          title: copy.availableTitle,
+          message: copy.availableMessage,
+          detail: copy.availableDetail,
+          buttons: [copy.openDownloadLabel, copy.closeLabel],
+          defaultId: 0,
+          cancelId: 1
+        });
+
+        if (dialogResult.response === 0) {
+          await shell.openExternal(result.releaseUrl);
+        }
+      } else {
+        await dialog.showMessageBox(mainWindow, {
+          type: 'info',
+          title: copy.upToDateTitle,
+          message: copy.upToDateMessage,
+          buttons: [copy.closeLabel],
+          defaultId: 0
+        });
+      }
+
+      return result;
+    } catch (error_) {
+      const copy = getUpdateCheckFailedCopy(locale);
+      const message =
+        error_ instanceof Error
+          ? error_.message
+          : copy.checkFailedMessage;
+
+      await dialog.showMessageBox(mainWindow, {
+        type: 'error',
+        title: copy.checkFailedTitle,
+        message,
+        buttons: [copy.closeLabel],
+        defaultId: 0
+      });
+
+      throw error_;
+    }
   });
 
   safeHandle(ipcChannels.exportLogs, async (_, input: ExportLogsInput) => {

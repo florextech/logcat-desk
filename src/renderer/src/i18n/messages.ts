@@ -38,6 +38,7 @@ export interface I18nMessages {
     stop: string;
     pause: string;
     resume: string;
+    clearLogs: string;
   };
   console: {
     time: string;
@@ -46,6 +47,7 @@ export interface I18nMessages {
     message: string;
     copy: string;
     logOutput: string;
+    jumpToLatest: string;
   };
   empty: {
     noLogsYet: string;
@@ -70,6 +72,9 @@ export interface I18nMessages {
       exportFullHint: string;
       copyVisibleLabel: string;
       copyVisibleHint: string;
+      maintenance: string;
+      checkUpdatesLabel: string;
+      checkUpdatesHint: string;
     };
     settings: {
       title: string;
@@ -106,6 +111,7 @@ export interface I18nMessages {
     clearDeviceBuffer: string;
     exportLogs: string;
     copyVisibleLogs: string;
+    checkForUpdates: string;
     adbUnavailable: string;
     initializeApp: string;
     sessionEndedUnexpectedly: string;
@@ -163,7 +169,8 @@ const en: I18nMessages = {
     start: 'Start Live Tail',
     stop: 'Stop',
     pause: 'Pause',
-    resume: 'Resume'
+    resume: 'Resume',
+    clearLogs: 'Clear logs'
   },
   console: {
     time: 'Time',
@@ -171,7 +178,8 @@ const en: I18nMessages = {
     tagPid: 'Tag / pid',
     message: 'Message',
     copy: 'Copy',
-    logOutput: 'Log output'
+    logOutput: 'Log output',
+    jumpToLatest: 'Jump to latest log'
   },
   empty: {
     noLogsYet: 'No logs yet.',
@@ -195,7 +203,10 @@ const en: I18nMessages = {
       exportFullLabel: 'Export full .log',
       exportFullHint: 'Save the full captured session.',
       copyVisibleLabel: 'Copy visible',
-      copyVisibleHint: 'Copy visible logs to the clipboard.'
+      copyVisibleHint: 'Copy visible logs to the clipboard.',
+      maintenance: 'Maintenance',
+      checkUpdatesLabel: 'Check for updates',
+      checkUpdatesHint: 'Check GitHub for the latest available release.'
     },
     settings: {
       title: 'Settings',
@@ -232,6 +243,7 @@ const en: I18nMessages = {
     clearDeviceBuffer: 'Failed to clear the device logcat buffer.',
     exportLogs: 'Failed to export logs.',
     copyVisibleLogs: 'Failed to copy visible logs.',
+    checkForUpdates: 'Failed to check for updates.',
     adbUnavailable: 'ADB is not available.',
     initializeApp: 'Failed to initialize the app.',
     sessionEndedUnexpectedly: 'Logcat session ended unexpectedly.'
@@ -289,7 +301,8 @@ const es: I18nMessages = {
     start: 'Iniciar Live Tail',
     stop: 'Detener',
     pause: 'Pausar',
-    resume: 'Reanudar'
+    resume: 'Reanudar',
+    clearLogs: 'Limpiar logs'
   },
   console: {
     time: 'Hora',
@@ -297,7 +310,8 @@ const es: I18nMessages = {
     tagPid: 'Tag / pid',
     message: 'Mensaje',
     copy: 'Copiar',
-    logOutput: 'Salida'
+    logOutput: 'Salida',
+    jumpToLatest: 'Ir al ultimo log'
   },
   empty: {
     noLogsYet: 'Aun no hay logs.',
@@ -321,7 +335,10 @@ const es: I18nMessages = {
       exportFullLabel: 'Exportar completo .log',
       exportFullHint: 'Guardar la sesion completa capturada.',
       copyVisibleLabel: 'Copiar visible',
-      copyVisibleHint: 'Copiar los logs visibles al portapapeles.'
+      copyVisibleHint: 'Copiar los logs visibles al portapapeles.',
+      maintenance: 'Mantenimiento',
+      checkUpdatesLabel: 'Buscar actualizaciones',
+      checkUpdatesHint: 'Revisar en GitHub si hay una version mas reciente.'
     },
     settings: {
       title: 'Configuracion',
@@ -358,6 +375,7 @@ const es: I18nMessages = {
     clearDeviceBuffer: 'No se pudo limpiar el buffer de logcat del dispositivo.',
     exportLogs: 'No se pudieron exportar los logs.',
     copyVisibleLogs: 'No se pudieron copiar los logs visibles.',
+    checkForUpdates: 'No se pudo verificar si hay actualizaciones.',
     adbUnavailable: 'ADB no esta disponible.',
     initializeApp: 'No se pudo inicializar la aplicacion.',
     sessionEndedUnexpectedly: 'La sesion de logcat termino inesperadamente.'

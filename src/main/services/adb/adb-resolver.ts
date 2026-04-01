@@ -1,17 +1,21 @@
 import { constants } from 'node:fs';
 import { access } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { runCommand } from '@main/services/adb/adb-command';
 import type { AdbStatus } from '@shared/types';
+
+const uniqueCandidates = (candidates: string[]): string[] =>
+  [...new Set(candidates.map((candidate) => candidate.trim()).filter(Boolean))];
 
 const executableCandidatesFromEnv = (): string[] => {
   const envRoots = [process.env.ANDROID_HOME, process.env.ANDROID_SDK_ROOT].filter(
     Boolean
   ) as string[];
 
-  return envRoots.map((root) =>
+  return uniqueCandidates(envRoots.map((root) =>
     process.platform === 'win32' ? join(root, 'platform-tools', 'adb.exe') : join(root, 'platform-tools', 'adb')
-  );
+  ));
 };
 
 const isExecutable = async (candidate: string): Promise<boolean> => {
@@ -35,11 +39,57 @@ const resolveFromPath = async (): Promise<string | null> => {
   return candidate ?? null;
 };
 
-export const resolveAdbStatus = async (preferredPath?: string): Promise<AdbStatus> => {
+const executableCandidatesFromCommonLocations = (): string[] => {
+  const home = homedir();
+
+  if (process.platform === 'darwin') {
+    return uniqueCandidates([
+      '/opt/homebrew/bin/adb',
+      '/usr/local/bin/adb',
+      join(home, 'Library', 'Android', 'sdk', 'platform-tools', 'adb'),
+      join(home, 'Android', 'Sdk', 'platform-tools', 'adb')
+    ]);
+  }
+
+  if (process.platform === 'win32') {
+    const localAppData = process.env.LOCALAPPDATA ?? join(home, 'AppData', 'Local');
+    const userProfile = process.env.USERPROFILE ?? home;
+
+    return uniqueCandidates([
+      join(localAppData, 'Android', 'Sdk', 'platform-tools', 'adb.exe'),
+      join(userProfile, 'AppData', 'Local', 'Android', 'Sdk', 'platform-tools', 'adb.exe'),
+      String.raw`C:\Android\platform-tools\adb.exe`
+    ]);
+  }
+
+  return uniqueCandidates([
+    '/usr/local/bin/adb',
+    '/usr/bin/adb',
+    join(home, 'Android', 'Sdk', 'platform-tools', 'adb'),
+    join(home, '.local', 'android-sdk', 'platform-tools', 'adb')
+  ]);
+};
+
+interface ResolveAdbStatusOptions {
+  commonCandidates?: string[];
+  envCandidates?: string[];
+  isExecutableFn?: (candidate: string) => Promise<boolean>;
+  resolveFromPathFn?: () => Promise<string | null>;
+}
+
+export const resolveAdbStatus = async (
+  preferredPath?: string,
+  options: ResolveAdbStatusOptions = {}
+): Promise<AdbStatus> => {
+  const isExecutableCheck = options.isExecutableFn ?? isExecutable;
+  const resolvePath = options.resolveFromPathFn ?? resolveFromPath;
+  const envCandidates = uniqueCandidates(options.envCandidates ?? executableCandidatesFromEnv());
+  const commonCandidates = uniqueCandidates(options.commonCandidates ?? executableCandidatesFromCommonLocations());
+
   if (preferredPath?.trim()) {
     const explicitPath = preferredPath.trim();
 
-    if (await isExecutable(explicitPath)) {
+    if (await isExecutableCheck(explicitPath)) {
       return {
         available: true,
         resolvedPath: explicitPath,
@@ -48,8 +98,8 @@ export const resolveAdbStatus = async (preferredPath?: string): Promise<AdbStatu
     }
   }
 
-  const pathCandidate = await resolveFromPath();
-  if (pathCandidate && (await isExecutable(pathCandidate))) {
+  const pathCandidate = await resolvePath();
+  if (pathCandidate && (await isExecutableCheck(pathCandidate))) {
     return {
       available: true,
       resolvedPath: pathCandidate,
@@ -57,12 +107,22 @@ export const resolveAdbStatus = async (preferredPath?: string): Promise<AdbStatu
     };
   }
 
-  for (const envCandidate of executableCandidatesFromEnv()) {
-    if (await isExecutable(envCandidate)) {
+  for (const envCandidate of envCandidates) {
+    if (await isExecutableCheck(envCandidate)) {
       return {
         available: true,
         resolvedPath: envCandidate,
         source: 'env'
+      };
+    }
+  }
+
+  for (const commonCandidate of commonCandidates) {
+    if (await isExecutableCheck(commonCandidate)) {
+      return {
+        available: true,
+        resolvedPath: commonCandidate,
+        source: 'common'
       };
     }
   }
@@ -77,6 +137,6 @@ export const resolveAdbStatus = async (preferredPath?: string): Promise<AdbStatu
     source: 'missing',
     error:
       preferredError ??
-      'ADB was not found in PATH. Install Android platform-tools or configure the binary path manually.'
+      'ADB was not found in PATH, Android SDK env vars, or common install locations. Install Android platform-tools or configure the binary path manually.'
   };
 };

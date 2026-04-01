@@ -44,6 +44,7 @@ export const App = (): JSX.Element => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSubmittingAdbPath, setIsSubmittingAdbPath] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
   const [isDevicesOpen, setIsDevicesOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
@@ -192,6 +193,20 @@ export const App = (): JSX.Element => {
     }
   };
 
+  const handleCheckForUpdates = async (): Promise<void> => {
+    setIsCheckingUpdates(true);
+    clearError();
+    setIsActionsOpen(false);
+
+    try {
+      await electronApi.checkForUpdates();
+    } catch {
+      // Main process already handles update-check errors with a native dialog.
+    } finally {
+      setIsCheckingUpdates(false);
+    }
+  };
+
   const handleLocaleChange = async (nextLocale: Locale): Promise<void> => {
     const nextSettings = await electronApi.updateSettings({ locale: nextLocale });
     setSettings(nextSettings);
@@ -213,16 +228,12 @@ export const App = (): JSX.Element => {
 
   const settingsIcon = (
     <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 24 24" width="16">
+      <circle cx="12" cy="12" r="3.2" stroke="currentColor" strokeWidth="1.8" />
       <path
-        d="M12 8.5A3.5 3.5 0 1 0 12 15.5A3.5 3.5 0 1 0 12 8.5z"
+        d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2M5.9 5.9l1.6 1.6M16.5 16.5l1.6 1.6M18.1 5.9l-1.6 1.6M7.5 16.5l-1.6 1.6"
         stroke="currentColor"
-        strokeWidth="1.8"
-      />
-      <path
-        d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1 1 0 0 0 5 15.6a1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a2 2 0 1 1 0 4h-.2a1 1 0 0 0-.9.6Z"
-        stroke="currentColor"
-        strokeLinejoin="round"
-        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeWidth="1.7"
       />
     </svg>
   );
@@ -295,9 +306,11 @@ export const App = (): JSX.Element => {
 
           <CommandBar
             canStart={Boolean(selectedDeviceId) && adbStatus.available}
+            canClearLogs={filteredLogs.length > 0}
             filters={filters}
             isPaused={paused}
             isStreaming={streaming}
+            onClearLogs={clearLogs}
             onOpenActions={() => setIsActionsOpen(true)}
             onPauseResume={handlePauseResume}
             onSetFilters={setFilters}
@@ -360,7 +373,9 @@ export const App = (): JSX.Element => {
 
       {isActionsOpen ? (
         <ActionsModal
+          isCheckingUpdates={isCheckingUpdates}
           isExporting={isExporting}
+          onCheckForUpdates={() => void handleCheckForUpdates()}
           onClearBuffer={handleClearBuffer}
           onClearView={clearLogs}
           onClose={() => setIsActionsOpen(false)}

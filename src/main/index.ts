@@ -4,6 +4,7 @@ import { registerIpc } from '@main/ipc/register-ipc';
 import { ExportService } from '@main/services/export/export-service';
 import { LogcatSessionManager } from '@main/services/logcat/logcat-session-manager';
 import { SettingsStore } from '@main/services/settings/settings-store';
+import { UpdateService } from '@main/services/update/update-service';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -29,12 +30,14 @@ const createMainWindow = async (): Promise<void> => {
   const settingsStore = new SettingsStore();
   const sessionManager = new LogcatSessionManager();
   const exportService = new ExportService(sessionManager);
+  const updateService = new UpdateService();
 
   registerIpc({
     mainWindow: window,
     settingsStore,
     sessionManager,
-    exportService
+    exportService,
+    updateService
   });
 
   window.on('closed', () => {

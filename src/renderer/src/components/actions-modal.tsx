@@ -3,7 +3,9 @@ import { useI18n } from '@renderer/i18n/provider';
 import { ModalShell } from '@renderer/components/modal-shell';
 
 interface ActionsModalProps {
+  isCheckingUpdates: boolean;
   isExporting: boolean;
+  onCheckForUpdates: () => void;
   onClearBuffer: () => void;
   onClearView: () => void;
   onClose: () => void;
@@ -49,7 +51,9 @@ const ActionRow = ({
 );
 
 export const ActionsModal = ({
+  isCheckingUpdates,
   isExporting,
+  onCheckForUpdates,
   onClearBuffer,
   onClearView,
   onClose,
@@ -82,6 +86,21 @@ export const ActionsModal = ({
               hint={copy.modals.actions.clearBufferHint}
               label={copy.modals.actions.clearBufferLabel}
               onClick={onClearBuffer}
+              runLabel={copy.common.run}
+            />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--brand-500)]">
+            {copy.modals.actions.maintenance}
+          </p>
+          <div className="mt-3 grid gap-3">
+            <ActionRow
+              disabled={isCheckingUpdates}
+              hint={copy.modals.actions.checkUpdatesHint}
+              label={copy.modals.actions.checkUpdatesLabel}
+              onClick={onCheckForUpdates}
               runLabel={copy.common.run}
             />
           </div>

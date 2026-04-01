@@ -20,7 +20,13 @@ export const normalizeVersion = (value: string): string =>
 const parseSemver = (value: string): ParsedVersion => {
   const normalized = normalizeVersion(value);
   const [core, preReleaseRaw] = normalized.split('-', 2);
-  const [majorRaw, minorRaw, patchRaw] = core.split('.');
+  const coreSegments = core.split('.');
+
+  if (coreSegments.length !== 3 || coreSegments.some((segment) => segment.length === 0)) {
+    throw new Error(`Invalid semantic version: ${value}`);
+  }
+
+  const [majorRaw, minorRaw, patchRaw] = coreSegments;
   const major = Number(majorRaw);
   const minor = Number(minorRaw);
   const patch = Number(patchRaw);
@@ -114,20 +120,39 @@ export const compareSemver = (leftVersion: string, rightVersion: string): number
 export class UpdateService {
   constructor(
     private readonly repository = 'florextech/logcat-desk',
-    private readonly fetchImpl: typeof fetch = fetch
+    private readonly fetchImpl: typeof fetch = fetch,
+    private readonly timeoutMs = 8000
   ) {}
 
   async checkLatestRelease(currentVersion: string): Promise<UpdateCheckResult> {
     const current = normalizeVersion(currentVersion);
-    const response = await this.fetchImpl(
-      `https://api.github.com/repos/${this.repository}/releases/latest`,
-      {
-        headers: {
-          Accept: 'application/vnd.github+json',
-          'User-Agent': 'logcat-desk'
+    const timeoutController = new AbortController();
+    const timeoutId = setTimeout(() => timeoutController.abort(), this.timeoutMs);
+    let response: Response;
+
+    try {
+      response = await this.fetchImpl(
+        `https://api.github.com/repos/${this.repository}/releases/latest`,
+        {
+          headers: {
+            Accept: 'application/vnd.github+json',
+            'User-Agent': 'logcat-desk'
+          },
+          signal: timeoutController.signal
         }
+      );
+    } catch (error_) {
+      if (
+        timeoutController.signal.aborted ||
+        (error_ instanceof Error && error_.name === 'AbortError')
+      ) {
+        throw new Error('Update check timed out. Please try again.');
       }
-    );
+
+      throw error_;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       throw new Error(`Unable to check updates right now (HTTP ${response.status}).`);

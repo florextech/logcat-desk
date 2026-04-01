@@ -21,6 +21,8 @@ describe('update service', () => {
 
   it('throws when semantic versions are invalid', () => {
     expect(() => compareSemver('1.2', '1.2.0')).toThrow('Invalid semantic version: 1.2');
+    expect(() => compareSemver('1.2.3.4', '1.2.3')).toThrow('Invalid semantic version: 1.2.3.4');
+    expect(() => compareSemver('1..3', '1.2.3')).toThrow('Invalid semantic version: 1..3');
   });
 
   it('reports update availability from latest GitHub release', async () => {
@@ -78,6 +80,25 @@ describe('update service', () => {
 
     await expect(service.checkLatestRelease('0.1.0')).rejects.toThrow(
       'The release feed did not include a valid version payload.'
+    );
+  });
+
+  it('times out update checks that hang and returns a friendly error', async () => {
+    const fetchMock = vi.fn(
+      (_input: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          const signal = init?.signal as AbortSignal;
+          signal.addEventListener('abort', () => {
+            const abortError = new Error('aborted');
+            abortError.name = 'AbortError';
+            reject(abortError);
+          });
+        })
+    );
+    const service = new UpdateService('florextech/logcat-desk', fetchMock as typeof fetch, 10);
+
+    await expect(service.checkLatestRelease('0.1.0')).rejects.toThrow(
+      'Update check timed out. Please try again.'
     );
   });
 });

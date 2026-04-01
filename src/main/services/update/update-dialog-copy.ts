@@ -56,8 +56,8 @@ export const getUpdateDialogCopy = (locale: Locale, result: UpdateCheckResult): 
 
 export const getUpdateCheckFailedCopy = (locale: Locale): Pick<
   UpdateDialogCopy,
-  'checkFailedTitle' | 'checkFailedMessage'
+  'checkFailedTitle' | 'checkFailedMessage' | 'closeLabel'
 > => {
-  const { checkFailedTitle, checkFailedMessage } = getBaseUpdateDialogCopy(locale);
-  return { checkFailedTitle, checkFailedMessage };
+  const { checkFailedTitle, checkFailedMessage, closeLabel } = getBaseUpdateDialogCopy(locale);
+  return { checkFailedTitle, checkFailedMessage, closeLabel };
 };

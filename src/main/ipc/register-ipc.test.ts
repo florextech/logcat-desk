@@ -177,7 +177,13 @@ describe('registerIpc', () => {
       releaseUrl: 'https://github.com/florextech/logcat-desk/releases/latest'
     });
     expect(updateService.checkLatestRelease).toHaveBeenCalledWith('0.1.0');
-    expect(dialogObject.showMessageBox).toHaveBeenCalled();
+    expect(dialogObject.showMessageBox).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        title: 'Sin actualizaciones',
+        buttons: ['Cerrar']
+      })
+    );
 
     await expect(
       handlers.get(ipcChannels.exportLogs)?.({}, { scope: 'visible', format: 'txt', suggestedName: 'demo' })
@@ -308,7 +314,8 @@ describe('registerIpc', () => {
       expect.objectContaining({
         type: 'error',
         title: 'Failed to check for updates',
-        message: 'network down'
+        message: 'network down',
+        buttons: ['Close']
       })
     );
   });
@@ -334,7 +341,8 @@ describe('registerIpc', () => {
       expect.objectContaining({
         type: 'error',
         title: 'Error al buscar actualizaciones',
-        message: 'No se pudo completar la verificacion de actualizaciones.'
+        message: 'No se pudo completar la verificacion de actualizaciones.',
+        buttons: ['Cerrar']
       })
     );
   });

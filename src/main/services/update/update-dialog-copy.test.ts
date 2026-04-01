@@ -28,11 +28,13 @@ describe('update dialog copy', () => {
   it('returns localized failed-check copy', () => {
     expect(getUpdateCheckFailedCopy('es')).toEqual({
       checkFailedTitle: 'Error al buscar actualizaciones',
-      checkFailedMessage: 'No se pudo completar la verificacion de actualizaciones.'
+      checkFailedMessage: 'No se pudo completar la verificacion de actualizaciones.',
+      closeLabel: 'Cerrar'
     });
     expect(getUpdateCheckFailedCopy('en')).toEqual({
       checkFailedTitle: 'Failed to check for updates',
-      checkFailedMessage: 'Could not complete the update check.'
+      checkFailedMessage: 'Could not complete the update check.',
+      closeLabel: 'Close'
     });
   });
 });

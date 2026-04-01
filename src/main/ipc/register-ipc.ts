@@ -136,7 +136,7 @@ export const registerIpc = ({
           type: 'info',
           title: copy.upToDateTitle,
           message: copy.upToDateMessage,
-          buttons: ['OK'],
+          buttons: [copy.closeLabel],
           defaultId: 0
         });
       }
@@ -153,7 +153,7 @@ export const registerIpc = ({
         type: 'error',
         title: copy.checkFailedTitle,
         message,
-        buttons: ['OK'],
+        buttons: [copy.closeLabel],
         defaultId: 0
       });
 

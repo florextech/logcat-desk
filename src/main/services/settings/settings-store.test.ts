@@ -46,6 +46,9 @@ describe('SettingsStore', () => {
         locale: 'en',
         filters: {
           text: 'crash'
+        },
+        logAnalysis: {
+          enableGrouping: true
         }
       }),
       'utf8'
@@ -62,6 +65,10 @@ describe('SettingsStore', () => {
       filters: {
         ...defaultSettings.filters,
         text: 'crash'
+      },
+      logAnalysis: {
+        ...defaultSettings.logAnalysis,
+        enableGrouping: true
       }
     });
     expect(second).toBe(first);
@@ -91,5 +98,25 @@ describe('SettingsStore', () => {
     await expect(readFile(join(tempDir, 'settings.json'), 'utf8')).resolves.toBe(
       JSON.stringify(updated, null, 2)
     );
+  });
+
+  it('updates nested log-analysis settings while preserving other flags', async () => {
+    const store = new SettingsStore();
+    await store.getSettings();
+
+    const updated = await store.update({
+      logAnalysis: {
+        ...defaultSettings.logAnalysis,
+        enableGrouping: true
+      }
+    });
+
+    expect(updated).toEqual({
+      ...defaultSettings,
+      logAnalysis: {
+        ...defaultSettings.logAnalysis,
+        enableGrouping: true
+      }
+    });
   });
 });

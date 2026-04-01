@@ -1,5 +1,14 @@
 import { create } from 'zustand';
-import { defaultSettings, type AdbStatus, type AppSettings, type DeviceInfo, type FilterState, type LogEntry, type SessionState } from '@shared/types';
+import {
+  defaultSettings,
+  type AdbStatus,
+  type AppSettings,
+  type DeviceInfo,
+  type FilterState,
+  type LogAnalysisConfig,
+  type LogEntry,
+  type SessionState
+} from '@shared/types';
 
 const MAX_RENDERED_LOGS = 5000;
 
@@ -18,6 +27,7 @@ interface AppState {
   clearLogs: () => void;
   setFilters: (partial: Partial<FilterState>) => void;
   setAutoScroll: (value: boolean) => void;
+  setLogAnalysis: (partial: Partial<LogAnalysisConfig>) => void;
   setSettings: (settings: AppSettings) => void;
   setSessionState: (state: SessionState) => void;
   selectDevice: (deviceId: string) => void;
@@ -77,6 +87,16 @@ export const useAppStore = create<AppState>((set, get) => ({
       settings: {
         ...state.settings,
         autoScroll: value
+      }
+    })),
+  setLogAnalysis: (partial) =>
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        logAnalysis: {
+          ...state.settings.logAnalysis,
+          ...partial
+        }
       }
     })),
   setSettings: (settings) =>

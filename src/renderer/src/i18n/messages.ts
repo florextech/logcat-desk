@@ -87,6 +87,10 @@ export interface I18nMessages {
       saveAdbPath: string;
       autoScrollTitle: string;
       autoScrollHint: string;
+      enableHighlightTitle: string;
+      enableHighlightHint: string;
+      enableGroupingTitle: string;
+      enableGroupingHint: string;
       languageTitle: string;
       languageHint: string;
     };
@@ -219,6 +223,10 @@ const en: I18nMessages = {
       saveAdbPath: 'Save ADB path',
       autoScrollTitle: 'Auto-scroll',
       autoScrollHint: 'Automatically follow new incoming logs.',
+      enableHighlightTitle: 'Smart highlight',
+      enableHighlightHint: 'Auto-classify and emphasize important errors and warnings.',
+      enableGroupingTitle: 'Error grouping',
+      enableGroupingHint: 'Group similar logs and allow expanding each group.',
       languageTitle: 'Language',
       languageHint: 'Choose the interface language.'
     },
@@ -351,6 +359,10 @@ const es: I18nMessages = {
       saveAdbPath: 'Guardar ruta de ADB',
       autoScrollTitle: 'Auto-scroll',
       autoScrollHint: 'Seguir automaticamente los logs nuevos.',
+      enableHighlightTitle: 'Resaltado inteligente',
+      enableHighlightHint: 'Clasificar y enfatizar automaticamente errores y advertencias importantes.',
+      enableGroupingTitle: 'Agrupar errores',
+      enableGroupingHint: 'Agrupar logs similares y permitir expandir cada grupo.',
       languageTitle: 'Idioma',
       languageHint: 'Elige el idioma de la interfaz.'
     },

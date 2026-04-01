@@ -76,12 +76,17 @@ describe('app store', () => {
   it('merges filters and updates auto-scroll', () => {
     useAppStore.getState().setFilters({ text: 'crash', minLevel: 'E' });
     useAppStore.getState().setAutoScroll(false);
+    useAppStore.getState().setLogAnalysis({ enableGrouping: true });
 
     expect(useAppStore.getState().filters).toMatchObject({
       text: 'crash',
       minLevel: 'E'
     });
     expect(useAppStore.getState().settings.autoScroll).toBe(false);
+    expect(useAppStore.getState().settings.logAnalysis).toEqual({
+      ...defaultSettings.logAnalysis,
+      enableGrouping: true
+    });
   });
 
   it('updates adb status, session state, selected device and error state', () => {

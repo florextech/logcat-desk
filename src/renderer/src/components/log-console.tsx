@@ -1,12 +1,14 @@
 import { type JSX, useEffect, useRef, useState } from 'react';
 import type { LogEntry } from '@shared/types';
 import { useI18n } from '@renderer/i18n/provider';
-import { getLevelTone, highlightText } from '@renderer/utils/log-format';
+import type { EnrichedLog } from '@renderer/utils/log-analysis/types';
+import { getLevelTone, getSeverityTone, highlightText } from '@renderer/utils/log-format';
 
 interface LogConsoleProps {
   autoScroll: boolean;
   logs: LogEntry[];
   searchQuery: string;
+  enableHighlight?: boolean;
   onCopyLine: (line: string) => Promise<void>;
 }
 
@@ -14,6 +16,7 @@ export const LogConsole = ({
   autoScroll,
   logs,
   searchQuery,
+  enableHighlight = true,
   onCopyLine
 }: LogConsoleProps): JSX.Element => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -87,7 +90,11 @@ export const LogConsole = ({
         }}
       >
         {logs.map((log) => {
-          const tone = getLevelTone(log.level, log.emphasis);
+          const maybeEnriched = log as Partial<EnrichedLog>;
+          const tone =
+            enableHighlight && maybeEnriched.highlight && maybeEnriched.severity
+              ? getSeverityTone(maybeEnriched.severity)
+              : getLevelTone(log.level, log.emphasis);
 
           return (
             <div
@@ -103,6 +110,11 @@ export const LogConsole = ({
                 {log.pid ? <span className="ml-2 text-[rgb(118_183_61)]">#{log.pid}</span> : null}
               </div>
               <div className="break-words text-[var(--foreground)]">
+                {enableHighlight && maybeEnriched.highlight && maybeEnriched.category ? (
+                  <span className="mr-2 rounded-full border border-[rgb(255_255_255/0.1)] bg-[rgb(255_255_255/0.04)] px-2 py-[1px] text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
+                    {maybeEnriched.category}
+                  </span>
+                ) : null}
                 {highlightText(log.message || log.raw, searchQuery)}
               </div>
               <button

@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import type { AdbStatus, Locale } from '@shared/types';
+import type { AdbStatus, Locale, LogAnalysisConfig } from '@shared/types';
 import { useI18n } from '@renderer/i18n/provider';
 import { ModalShell } from '@renderer/components/modal-shell';
 
@@ -7,6 +7,7 @@ interface SettingsModalProps {
   adbPath: string;
   adbStatus: AdbStatus;
   autoScroll: boolean;
+  logAnalysis: LogAnalysisConfig;
   isSubmittingAdbPath: boolean;
   locale: Locale;
   onAdbPathChange: (value: string) => void;
@@ -14,19 +15,22 @@ interface SettingsModalProps {
   onSaveAdbPath: () => void;
   onSetLocale: (locale: Locale) => void;
   onSetAutoScroll: (value: boolean) => void;
+  onSetLogAnalysis: (partial: Partial<LogAnalysisConfig>) => void;
 }
 
 export const SettingsModal = ({
   adbPath,
   adbStatus,
   autoScroll,
+  logAnalysis,
   isSubmittingAdbPath,
   locale,
   onAdbPathChange,
   onClose,
   onSaveAdbPath,
   onSetLocale,
-  onSetAutoScroll
+  onSetAutoScroll,
+  onSetLogAnalysis
 }: SettingsModalProps): JSX.Element => {
   const { copy } = useI18n();
 
@@ -106,6 +110,32 @@ export const SettingsModal = ({
           className="h-5 w-5 rounded border-[var(--border)] bg-[rgb(11_13_12/0.9)] accent-[var(--brand-600)]"
           type="checkbox"
           onChange={(event) => onSetAutoScroll(event.target.checked)}
+        />
+      </label>
+
+      <label className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[rgb(11_13_12/0.82)] px-4 py-4">
+        <div>
+          <p className="text-sm font-medium text-[var(--foreground)]">{copy.modals.settings.enableHighlightTitle}</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">{copy.modals.settings.enableHighlightHint}</p>
+        </div>
+        <input
+          checked={logAnalysis.enableHighlight}
+          className="h-5 w-5 rounded border-[var(--border)] bg-[rgb(11_13_12/0.9)] accent-[var(--brand-600)]"
+          type="checkbox"
+          onChange={(event) => onSetLogAnalysis({ enableHighlight: event.target.checked })}
+        />
+      </label>
+
+      <label className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[rgb(11_13_12/0.82)] px-4 py-4">
+        <div>
+          <p className="text-sm font-medium text-[var(--foreground)]">{copy.modals.settings.enableGroupingTitle}</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">{copy.modals.settings.enableGroupingHint}</p>
+        </div>
+        <input
+          checked={logAnalysis.enableGrouping}
+          className="h-5 w-5 rounded border-[var(--border)] bg-[rgb(11_13_12/0.9)] accent-[var(--brand-600)]"
+          type="checkbox"
+          onChange={(event) => onSetLogAnalysis({ enableGrouping: event.target.checked })}
         />
       </label>
       </div>

@@ -3,6 +3,7 @@ import { ActionsModal } from '@renderer/components/actions-modal';
 import { CommandBar } from '@renderer/components/command-bar';
 import { DeviceModal } from '@renderer/components/device-modal';
 import { EmptyState } from '@renderer/components/empty-state';
+import { GroupedLogConsole } from '@renderer/components/grouped-log-console';
 import { IconButton } from '@renderer/components/icon-button';
 import { useI18n } from '@renderer/i18n/provider';
 import { LogConsole } from '@renderer/components/log-console';
@@ -13,6 +14,7 @@ import { useAppBootstrap } from '@renderer/hooks/use-app-bootstrap';
 import { useLogcatEvents } from '@renderer/hooks/use-logcat-events';
 import { electronApi } from '@renderer/services/electron-api';
 import { useAppStore } from '@renderer/store/app-store';
+import { processLogsForRender } from '@renderer/utils/log-analysis/log-processing';
 import { filterLogs } from '@renderer/utils/log-filtering';
 import type { Locale } from '@shared/types';
 
@@ -32,6 +34,7 @@ export const App = (): JSX.Element => {
     setFilters,
     clearLogs,
     setAutoScroll,
+    setLogAnalysis,
     setSettings,
     setSessionState,
     selectDevice
@@ -63,7 +66,8 @@ export const App = (): JSX.Element => {
         .updateSettings({
           autoScroll: settings.autoScroll,
           lastDeviceId: selectedDeviceId,
-          filters
+          filters,
+          logAnalysis: settings.logAnalysis
         })
         .then((updated: typeof settings) => {
           setSettings(updated);
@@ -74,9 +78,25 @@ export const App = (): JSX.Element => {
     }, 250);
 
     return () => globalThis.clearTimeout(timer);
-  }, [copy.errors.persistPreferences, ready, selectedDeviceId, filters, settings.autoScroll, setError, setSettings]);
+  }, [
+    copy.errors.persistPreferences,
+    ready,
+    selectedDeviceId,
+    filters,
+    settings.autoScroll,
+    settings.logAnalysis,
+    setError,
+    setSettings
+  ]);
 
   const filteredLogs = useMemo(() => filterLogs(logs, filters), [logs, filters]);
+  const processedLogs = useMemo(
+    () =>
+      processLogsForRender(filteredLogs, {
+        enableGrouping: settings.logAnalysis.enableGrouping
+      }),
+    [filteredLogs, settings.logAnalysis.enableGrouping]
+  );
   const selectedDevice = devices.find((device) => device.id === selectedDeviceId) ?? null;
 
   const refreshDeviceList = async (): Promise<void> => {
@@ -333,12 +353,23 @@ export const App = (): JSX.Element => {
                 }
               />
             ) : (
-              <LogConsole
-                autoScroll={settings.autoScroll}
-                logs={filteredLogs}
-                searchQuery={filters.search}
-                onCopyLine={(line) => electronApi.copyToClipboard(line)}
-              />
+              settings.logAnalysis.enableGrouping ? (
+                <GroupedLogConsole
+                  autoScroll={settings.autoScroll}
+                  enableHighlight={settings.logAnalysis.enableHighlight}
+                  groups={processedLogs.groupedLogs}
+                  searchQuery={filters.search}
+                  onCopyLine={(line) => electronApi.copyToClipboard(line)}
+                />
+              ) : (
+                <LogConsole
+                  autoScroll={settings.autoScroll}
+                  enableHighlight={settings.logAnalysis.enableHighlight}
+                  logs={settings.logAnalysis.enableHighlight ? processedLogs.enrichedLogs : filteredLogs}
+                  searchQuery={filters.search}
+                  onCopyLine={(line) => electronApi.copyToClipboard(line)}
+                />
+              )
             )}
           </section>
         </main>
@@ -361,11 +392,13 @@ export const App = (): JSX.Element => {
           adbPath={adbPathDraft}
           adbStatus={adbStatus}
           autoScroll={settings.autoScroll}
+          logAnalysis={settings.logAnalysis}
           isSubmittingAdbPath={isSubmittingAdbPath}
           locale={settings.locale}
           onAdbPathChange={setAdbPathDraft}
           onClose={() => setIsSettingsOpen(false)}
           onSaveAdbPath={handleSaveAdbPath}
+          onSetLogAnalysis={setLogAnalysis}
           onSetLocale={(locale) => void handleLocaleChange(locale)}
           onSetAutoScroll={(value) => setAutoScroll(value)}
         />

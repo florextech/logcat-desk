@@ -32,6 +32,10 @@ export class SettingsStore {
       filters: {
         ...current.filters,
         ...partial.filters
+      },
+      logAnalysis: {
+        ...current.logAnalysis,
+        ...partial.logAnalysis
       }
     });
 
@@ -47,6 +51,10 @@ export class SettingsStore {
       filters: {
         ...defaultSettings.filters,
         ...partial.filters
+      },
+      logAnalysis: {
+        ...defaultSettings.logAnalysis,
+        ...partial.logAnalysis
       }
     };
   }

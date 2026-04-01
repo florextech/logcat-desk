@@ -53,6 +53,12 @@ export interface AppSettings {
   lastDeviceId: string | null;
   locale: Locale;
   filters: FilterState;
+  logAnalysis: LogAnalysisConfig;
+}
+
+export interface LogAnalysisConfig {
+  enableGrouping: boolean;
+  enableHighlight: boolean;
 }
 
 export interface AdbStatus {
@@ -135,10 +141,16 @@ export const defaultFilters: FilterState = {
   search: ''
 };
 
+export const defaultLogAnalysisConfig: LogAnalysisConfig = {
+  enableGrouping: false,
+  enableHighlight: true
+};
+
 export const defaultSettings: AppSettings = {
   adbPath: '',
   autoScroll: true,
   lastDeviceId: null,
   locale: 'es',
-  filters: defaultFilters
+  filters: defaultFilters,
+  logAnalysis: defaultLogAnalysisConfig
 };

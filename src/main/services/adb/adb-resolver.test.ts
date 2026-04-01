@@ -66,7 +66,7 @@ describe('resolveAdbStatus', () => {
     });
     await createExecutable(pathAdb);
 
-    await expect(resolveAdbStatus('/bad/adb')).resolves.toEqual({
+    await expect(resolveAdbStatus('/bad/adb', { commonCandidates: [] })).resolves.toEqual({
       available: true,
       resolvedPath: pathAdb,
       source: 'path'
@@ -78,15 +78,28 @@ describe('resolveAdbStatus', () => {
     const envAdb = await createExecutable(join(sdkRoot, 'platform-tools', 'adb'));
     process.env.ANDROID_HOME = sdkRoot;
 
-    await expect(resolveAdbStatus()).resolves.toEqual({
+    await expect(resolveAdbStatus(undefined, { commonCandidates: [] })).resolves.toEqual({
       available: true,
       resolvedPath: envAdb,
       source: 'env'
     });
   });
 
+  it('resolves adb from common locations when PATH and env are unavailable', async () => {
+    process.env.HOME = tempDir;
+    const commonAdb = await createExecutable(
+      join(tempDir, 'Library', 'Android', 'sdk', 'platform-tools', 'adb')
+    );
+
+    await expect(resolveAdbStatus(undefined, { commonCandidates: [commonAdb], envCandidates: [] })).resolves.toEqual({
+      available: true,
+      resolvedPath: commonAdb,
+      source: 'common'
+    });
+  });
+
   it('returns a configured-path error when the explicit adb path is missing', async () => {
-    const status = await resolveAdbStatus('/missing/adb');
+    const status = await resolveAdbStatus('/missing/adb', { commonCandidates: [], envCandidates: [] });
 
     expect(status).toEqual({
       available: false,
@@ -97,10 +110,10 @@ describe('resolveAdbStatus', () => {
   });
 
   it('returns a generic error when no adb candidate is found', async () => {
-    const status = await resolveAdbStatus();
+    const status = await resolveAdbStatus(undefined, { commonCandidates: [], envCandidates: [] });
 
     expect(status.available).toBe(false);
     expect(status.source).toBe('missing');
-    expect(status.error).toContain('ADB was not found in PATH');
+    expect(status.error).toContain('common install locations');
   });
 });

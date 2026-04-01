@@ -58,7 +58,7 @@ export interface AppSettings {
 export interface AdbStatus {
   available: boolean;
   resolvedPath: string | null;
-  source: 'settings' | 'path' | 'env' | 'missing';
+  source: 'settings' | 'path' | 'env' | 'common' | 'missing';
   error?: string;
 }
 

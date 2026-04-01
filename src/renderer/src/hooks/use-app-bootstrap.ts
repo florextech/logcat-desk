@@ -8,10 +8,31 @@ export const useAppBootstrap = (): { ready: boolean; refreshDevices: () => Promi
   const { copy } = useI18n();
   const { setAdbStatus, setDevices, setError, setSettings } = useAppStore();
 
+  const persistDetectedAdbPath = async (
+    sourcePath: string,
+    currentPath: string,
+    isCancelled?: () => boolean
+  ): Promise<void> => {
+    if (!sourcePath || sourcePath === currentPath.trim()) {
+      return;
+    }
+
+    const updated = await electronApi.updateSettings({ adbPath: sourcePath });
+    if (isCancelled?.()) {
+      return;
+    }
+
+    setSettings(updated);
+  };
+
   const refreshDevices = async (): Promise<void> => {
     const response = await electronApi.listDevices();
     setAdbStatus(response.adbStatus);
     setDevices(response.devices, useAppStore.getState().selectedDeviceId);
+
+    if (response.adbStatus.available && response.adbStatus.source !== 'settings' && response.adbStatus.resolvedPath) {
+      await persistDetectedAdbPath(response.adbStatus.resolvedPath, useAppStore.getState().settings.adbPath);
+    }
 
     if (!response.adbStatus.available) {
       setError(response.adbStatus.error ?? copy.errors.adbUnavailable);
@@ -35,6 +56,10 @@ export const useAppBootstrap = (): { ready: boolean; refreshDevices: () => Promi
         setSettings(settings);
         setAdbStatus(adbStatus);
 
+        if (adbStatus.available && adbStatus.source !== 'settings' && adbStatus.resolvedPath) {
+          await persistDetectedAdbPath(adbStatus.resolvedPath, settings.adbPath, () => cancelled);
+        }
+
         const response = await electronApi.listDevices();
 
         if (cancelled) {
@@ -43,6 +68,14 @@ export const useAppBootstrap = (): { ready: boolean; refreshDevices: () => Promi
 
         setAdbStatus(response.adbStatus);
         setDevices(response.devices, settings.lastDeviceId);
+
+        if (response.adbStatus.available && response.adbStatus.source !== 'settings' && response.adbStatus.resolvedPath) {
+          await persistDetectedAdbPath(
+            response.adbStatus.resolvedPath,
+            useAppStore.getState().settings.adbPath,
+            () => cancelled
+          );
+        }
 
         if (!response.adbStatus.available) {
           setError(response.adbStatus.error ?? copy.errors.adbUnavailable);

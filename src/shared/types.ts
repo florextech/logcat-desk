@@ -99,6 +99,13 @@ export interface ExportLogsResult {
   filePath?: string;
 }
 
+export interface UpdateCheckResult {
+  currentVersion: string;
+  latestVersion: string;
+  hasUpdate: boolean;
+  releaseUrl: string;
+}
+
 export interface LogBatchPayload {
   entries: LogEntry[];
 }
@@ -113,6 +120,7 @@ export interface RendererApi {
   pauseLogcat: () => Promise<SessionState>;
   resumeLogcat: () => Promise<SessionState>;
   clearLogcatBuffer: (input: ClearBufferInput) => Promise<void>;
+  checkForUpdates: () => Promise<UpdateCheckResult>;
   exportLogs: (input: ExportLogsInput) => Promise<ExportLogsResult>;
   copyToClipboard: (text: string) => Promise<void>;
   onLogBatch: (listener: (payload: LogBatchPayload) => void) => () => void;

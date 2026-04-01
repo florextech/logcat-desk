@@ -12,6 +12,7 @@ const api: RendererApi = {
   pauseLogcat: () => ipcRenderer.invoke(ipcChannels.logcatPause),
   resumeLogcat: () => ipcRenderer.invoke(ipcChannels.logcatResume),
   clearLogcatBuffer: (input) => ipcRenderer.invoke(ipcChannels.logcatClearBuffer, input),
+  checkForUpdates: () => ipcRenderer.invoke(ipcChannels.updatesCheck),
   exportLogs: (input) => ipcRenderer.invoke(ipcChannels.exportLogs, input),
   copyToClipboard: (text) => ipcRenderer.invoke(ipcChannels.clipboardCopy, text),
   onLogBatch: (listener) => {

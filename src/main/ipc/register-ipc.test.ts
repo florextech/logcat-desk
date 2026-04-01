@@ -4,7 +4,9 @@ import { ipcChannels } from '@shared/ipc';
 
 const { clipboardWriteTextMock, dialogObject, handleMock, removeHandlerMock } = vi.hoisted(() => ({
   clipboardWriteTextMock: vi.fn(),
-  dialogObject: {},
+  dialogObject: {
+    showMessageBox: vi.fn()
+  },
   handleMock: vi.fn(),
   removeHandlerMock: vi.fn()
 }));
@@ -20,10 +22,16 @@ const {
 }));
 
 vi.mock('electron', () => ({
+  app: {
+    getVersion: vi.fn(() => '0.1.0')
+  },
   clipboard: {
     writeText: clipboardWriteTextMock
   },
   dialog: dialogObject,
+  shell: {
+    openExternal: vi.fn()
+  },
   ipcMain: {
     handle: handleMock,
     removeHandler: removeHandlerMock
@@ -87,6 +95,14 @@ describe('registerIpc', () => {
     const exportService = {
       exportWithDialog: vi.fn().mockResolvedValue({ canceled: false, filePath: '/tmp/logs.txt' })
     };
+    const updateService = {
+      checkLatestRelease: vi.fn().mockResolvedValue({
+        currentVersion: '0.1.0',
+        latestVersion: '0.1.0',
+        hasUpdate: false,
+        releaseUrl: 'https://github.com/florextech/logcat-desk/releases/latest'
+      })
+    };
 
     resolveAdbStatusMock.mockResolvedValue({
       available: true,
@@ -99,12 +115,14 @@ describe('registerIpc', () => {
       mainWindow: mainWindow as never,
       settingsStore: settingsStore as never,
       sessionManager: sessionManager as never,
-      exportService: exportService as never
+      exportService: exportService as never,
+      updateService: updateService as never
     });
 
     expect(removeHandlerMock).toHaveBeenCalled();
     expect(handlers.has(ipcChannels.settingsGet)).toBe(true);
     expect(handlers.has(ipcChannels.logcatStart)).toBe(true);
+    expect(handlers.has(ipcChannels.updatesCheck)).toBe(true);
 
     listeners['log-batch']?.({ entries: [{ id: '1' }] });
     listeners['session-state']?.({ status: 'streaming' });
@@ -146,6 +164,15 @@ describe('registerIpc', () => {
     await handlers.get(ipcChannels.logcatClearBuffer)?.({}, { deviceId: 'device-1' });
     expect(clearLogcatBufferMock).toHaveBeenCalledWith('/resolved/adb', 'device-1');
 
+    await expect(handlers.get(ipcChannels.updatesCheck)?.({})).resolves.toEqual({
+      currentVersion: '0.1.0',
+      latestVersion: '0.1.0',
+      hasUpdate: false,
+      releaseUrl: 'https://github.com/florextech/logcat-desk/releases/latest'
+    });
+    expect(updateService.checkLatestRelease).toHaveBeenCalledWith('0.1.0');
+    expect(dialogObject.showMessageBox).toHaveBeenCalled();
+
     await expect(
       handlers.get(ipcChannels.exportLogs)?.({}, { scope: 'visible', format: 'txt', suggestedName: 'demo' })
     ).resolves.toEqual({ canceled: false, filePath: '/tmp/logs.txt' });
@@ -175,7 +202,8 @@ describe('registerIpc', () => {
       mainWindow: { webContents: { send: vi.fn() } } as never,
       settingsStore: settingsStore as never,
       sessionManager: { on: vi.fn() } as never,
-      exportService: { exportWithDialog: vi.fn() } as never
+      exportService: { exportWithDialog: vi.fn() } as never,
+      updateService: { checkLatestRelease: vi.fn() } as never
     });
 
     await expect(handlers.get(ipcChannels.devicesList)?.({})).resolves.toEqual({

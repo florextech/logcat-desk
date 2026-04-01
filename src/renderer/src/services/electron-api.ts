@@ -6,7 +6,8 @@ import type {
   ExportLogsResult,
   LogBatchPayload,
   RendererApi,
-  SessionState
+  SessionState,
+  UpdateCheckResult
 } from '@shared/types';
 import { defaultSettings } from '@shared/types';
 
@@ -45,6 +46,7 @@ const fallbackApi: RendererApi = {
   pauseLogcat: async (): Promise<SessionState> => rejectUnavailable(),
   resumeLogcat: async (): Promise<SessionState> => rejectUnavailable(),
   clearLogcatBuffer: async (): Promise<void> => rejectUnavailable(),
+  checkForUpdates: async (): Promise<UpdateCheckResult> => rejectUnavailable(),
   exportLogs: async (_input: ExportLogsInput): Promise<ExportLogsResult> => rejectUnavailable(),
   copyToClipboard: async (): Promise<void> => rejectUnavailable(),
   onLogBatch: (_listener: (payload: LogBatchPayload) => void) => noopUnsubscribe(),

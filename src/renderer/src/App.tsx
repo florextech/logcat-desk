@@ -44,6 +44,7 @@ export const App = (): JSX.Element => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSubmittingAdbPath, setIsSubmittingAdbPath] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
   const [isDevicesOpen, setIsDevicesOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
@@ -189,6 +190,20 @@ export const App = (): JSX.Element => {
       await electronApi.copyToClipboard(filteredLogs.map((entry) => entry.raw).join('\n'));
     } catch (copyError) {
       setError(copyError instanceof Error ? copyError.message : copy.errors.copyVisibleLogs);
+    }
+  };
+
+  const handleCheckForUpdates = async (): Promise<void> => {
+    setIsCheckingUpdates(true);
+    clearError();
+    setIsActionsOpen(false);
+
+    try {
+      await electronApi.checkForUpdates();
+    } catch (checkError) {
+      setError(checkError instanceof Error ? checkError.message : copy.errors.checkForUpdates);
+    } finally {
+      setIsCheckingUpdates(false);
     }
   };
 
@@ -362,7 +377,9 @@ export const App = (): JSX.Element => {
 
       {isActionsOpen ? (
         <ActionsModal
+          isCheckingUpdates={isCheckingUpdates}
           isExporting={isExporting}
+          onCheckForUpdates={() => void handleCheckForUpdates()}
           onClearBuffer={handleClearBuffer}
           onClearView={clearLogs}
           onClose={() => setIsActionsOpen(false)}

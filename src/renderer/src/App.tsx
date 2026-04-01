@@ -200,8 +200,8 @@ export const App = (): JSX.Element => {
 
     try {
       await electronApi.checkForUpdates();
-    } catch (checkError) {
-      setError(checkError instanceof Error ? checkError.message : copy.errors.checkForUpdates);
+    } catch {
+      // Main process already handles update-check errors with a native dialog.
     } finally {
       setIsCheckingUpdates(false);
     }

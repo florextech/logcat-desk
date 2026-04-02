@@ -54,11 +54,26 @@ export interface AppSettings {
   locale: Locale;
   filters: FilterState;
   logAnalysis: LogAnalysisConfig;
+  analysis: AnalysisConfig;
 }
 
 export interface LogAnalysisConfig {
   enableGrouping: boolean;
   enableHighlight: boolean;
+}
+
+export type AIProvider = 'openai' | 'gemini' | 'openrouter' | 'claude';
+
+export interface AIConfig {
+  provider: AIProvider;
+  apiKey: string;
+  model?: string;
+}
+
+export interface AnalysisConfig {
+  enableAnalysis: boolean;
+  enableAIEnhancement: boolean;
+  ai?: AIConfig;
 }
 
 export interface AdbStatus {
@@ -146,11 +161,22 @@ export const defaultLogAnalysisConfig: LogAnalysisConfig = {
   enableHighlight: true
 };
 
+export const defaultAnalysisConfig: AnalysisConfig = {
+  enableAnalysis: true,
+  enableAIEnhancement: false,
+  ai: {
+    provider: 'openai',
+    apiKey: '',
+    model: ''
+  }
+};
+
 export const defaultSettings: AppSettings = {
   adbPath: '',
   autoScroll: true,
   lastDeviceId: null,
   locale: 'es',
   filters: defaultFilters,
-  logAnalysis: defaultLogAnalysisConfig
+  logAnalysis: defaultLogAnalysisConfig,
+  analysis: defaultAnalysisConfig
 };

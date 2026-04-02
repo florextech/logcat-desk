@@ -1,5 +1,6 @@
 import { type JSX, useEffect, useMemo, useState } from 'react';
 import { ActionsModal } from '@renderer/components/actions-modal';
+import { AnalysisModal } from '@renderer/components/analysis-modal';
 import { CommandBar } from '@renderer/components/command-bar';
 import { DeviceModal } from '@renderer/components/device-modal';
 import { EmptyState } from '@renderer/components/empty-state';
@@ -14,6 +15,11 @@ import { useAppBootstrap } from '@renderer/hooks/use-app-bootstrap';
 import { useLogcatEvents } from '@renderer/hooks/use-logcat-events';
 import { electronApi } from '@renderer/services/electron-api';
 import { useAppStore } from '@renderer/store/app-store';
+import {
+  maybeEnhanceLogAnalysis,
+  runLogAnalysis,
+  type LogAnalysisResult
+} from '@renderer/utils/intelligent-analysis/log-analysis-engine';
 import { processLogsForRender } from '@renderer/utils/log-analysis/log-processing';
 import { filterLogs } from '@renderer/utils/log-filtering';
 import type { Locale } from '@shared/types';
@@ -35,6 +41,8 @@ export const App = (): JSX.Element => {
     clearLogs,
     setAutoScroll,
     setLogAnalysis,
+    setAnalysisAI,
+    setAnalysisConfig,
     setSettings,
     setSessionState,
     selectDevice
@@ -48,9 +56,12 @@ export const App = (): JSX.Element => {
   const [isSubmittingAdbPath, setIsSubmittingAdbPath] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isDevicesOpen, setIsDevicesOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<LogAnalysisResult | null>(null);
 
   useEffect(() => {
     setAdbPathDraft(settings.adbPath);
@@ -67,7 +78,8 @@ export const App = (): JSX.Element => {
           autoScroll: settings.autoScroll,
           lastDeviceId: selectedDeviceId,
           filters,
-          logAnalysis: settings.logAnalysis
+          logAnalysis: settings.logAnalysis,
+          analysis: settings.analysis
         })
         .then((updated: typeof settings) => {
           setSettings(updated);
@@ -85,6 +97,7 @@ export const App = (): JSX.Element => {
     filters,
     settings.autoScroll,
     settings.logAnalysis,
+    settings.analysis,
     setError,
     setSettings
   ]);
@@ -224,6 +237,27 @@ export const App = (): JSX.Element => {
       // Main process already handles update-check errors with a native dialog.
     } finally {
       setIsCheckingUpdates(false);
+    }
+  };
+
+  const handleAnalyzeLogs = async (): Promise<void> => {
+    if (!settings.analysis.enableAnalysis) {
+      return;
+    }
+
+    setIsAnalyzing(true);
+    clearError();
+
+    try {
+      const base = runLogAnalysis(processedLogs.enrichedLogs);
+      const result = await maybeEnhanceLogAnalysis(base, settings.analysis);
+      setAnalysisResult(result);
+      setIsAnalysisOpen(true);
+      setIsActionsOpen(false);
+    } catch (analysisError) {
+      setError(analysisError instanceof Error ? analysisError.message : copy.errors.analyzeLogs);
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -390,6 +424,7 @@ export const App = (): JSX.Element => {
         <SettingsModal
           adbPath={adbPathDraft}
           adbStatus={adbStatus}
+          analysis={settings.analysis}
           autoScroll={settings.autoScroll}
           logAnalysis={settings.logAnalysis}
           isSubmittingAdbPath={isSubmittingAdbPath}
@@ -397,6 +432,8 @@ export const App = (): JSX.Element => {
           onAdbPathChange={setAdbPathDraft}
           onClose={() => setIsSettingsOpen(false)}
           onSaveAdbPath={handleSaveAdbPath}
+          onSetAnalysisAI={setAnalysisAI}
+          onSetAnalysisConfig={setAnalysisConfig}
           onSetLogAnalysis={setLogAnalysis}
           onSetLocale={(locale) => void handleLocaleChange(locale)}
           onSetAutoScroll={(value) => setAutoScroll(value)}
@@ -405,8 +442,11 @@ export const App = (): JSX.Element => {
 
       {isActionsOpen ? (
         <ActionsModal
+          canAnalyze={settings.analysis.enableAnalysis}
           isCheckingUpdates={isCheckingUpdates}
+          isAnalyzing={isAnalyzing}
           isExporting={isExporting}
+          onAnalyzeLogs={() => void handleAnalyzeLogs()}
           onCheckForUpdates={() => void handleCheckForUpdates()}
           onClearBuffer={handleClearBuffer}
           onClearView={clearLogs}
@@ -416,6 +456,8 @@ export const App = (): JSX.Element => {
           onExportVisible={() => void exportLogs('visible', 'txt')}
         />
       ) : null}
+
+      {isAnalysisOpen ? <AnalysisModal result={analysisResult} onClose={() => setIsAnalysisOpen(false)} /> : null}
     </div>
   );
 };

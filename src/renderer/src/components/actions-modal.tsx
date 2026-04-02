@@ -3,8 +3,11 @@ import { useI18n } from '@renderer/i18n/provider';
 import { ModalShell } from '@renderer/components/modal-shell';
 
 interface ActionsModalProps {
+  canAnalyze: boolean;
   isCheckingUpdates: boolean;
+  isAnalyzing: boolean;
   isExporting: boolean;
+  onAnalyzeLogs: () => void;
   onCheckForUpdates: () => void;
   onClearBuffer: () => void;
   onClearView: () => void;
@@ -51,8 +54,11 @@ const ActionRow = ({
 );
 
 export const ActionsModal = ({
+  canAnalyze,
   isCheckingUpdates,
+  isAnalyzing,
   isExporting,
+  onAnalyzeLogs,
   onCheckForUpdates,
   onClearBuffer,
   onClearView,
@@ -96,6 +102,13 @@ export const ActionsModal = ({
             {copy.modals.actions.maintenance}
           </p>
           <div className="mt-3 grid gap-3">
+            <ActionRow
+              disabled={!canAnalyze || isAnalyzing}
+              hint={copy.modals.actions.analyzeLogsHint}
+              label={copy.modals.actions.analyzeLogsLabel}
+              onClick={onAnalyzeLogs}
+              runLabel={copy.common.run}
+            />
             <ActionRow
               disabled={isCheckingUpdates}
               hint={copy.modals.actions.checkUpdatesHint}

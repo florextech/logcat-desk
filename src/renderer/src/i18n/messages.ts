@@ -1,4 +1,4 @@
-import type { Locale, LogLevelFilter, SessionStatus } from '@shared/types';
+import type { AIProvider, Locale, LogLevelFilter, SessionStatus } from '@shared/types';
 
 type StringFactory<TArgs extends unknown[] = []> = (...args: TArgs) => string;
 
@@ -65,6 +65,8 @@ export interface I18nMessages {
       intro: string;
       cleanup: string;
       export: string;
+      analyzeLogsLabel: string;
+      analyzeLogsHint: string;
       clearViewLabel: string;
       clearViewHint: string;
       clearBufferLabel: string;
@@ -94,8 +96,27 @@ export interface I18nMessages {
       enableHighlightHint: string;
       enableGroupingTitle: string;
       enableGroupingHint: string;
+      enableAnalysisTitle: string;
+      enableAnalysisHint: string;
+      enableAIEnhancementTitle: string;
+      enableAIEnhancementHint: string;
+      aiProviderLabel: string;
+      aiProviders: Record<AIProvider, string>;
+      aiApiKeyLabel: string;
+      aiApiKeyPlaceholder: string;
+      aiModelLabel: string;
+      aiModelPlaceholder: string;
       languageTitle: string;
       languageHint: string;
+    };
+    analysis: {
+      title: string;
+      summary: string;
+      probableCauses: string;
+      evidence: string;
+      recommendations: string;
+      severity: string;
+      noData: string;
     };
     devices: {
       title: string;
@@ -122,6 +143,7 @@ export interface I18nMessages {
     adbUnavailable: string;
     initializeApp: string;
     sessionEndedUnexpectedly: string;
+    analyzeLogs: string;
   };
 }
 
@@ -204,6 +226,8 @@ const en: I18nMessages = {
       intro: 'Secondary actions to clean, export or copy the current output without reloading the main interface.',
       cleanup: 'Cleanup',
       export: 'Export',
+      analyzeLogsLabel: 'Analyze logs',
+      analyzeLogsHint: 'Run deterministic diagnostics and optional AI summary enhancement.',
       clearViewLabel: 'Clear View',
       clearViewHint: 'Clear only the visible console.',
       clearBufferLabel: 'Clear Buffer',
@@ -233,8 +257,32 @@ const en: I18nMessages = {
       enableHighlightHint: 'Auto-classify and emphasize important errors and warnings.',
       enableGroupingTitle: 'Error grouping',
       enableGroupingHint: 'Group similar logs and allow expanding each group.',
+      enableAnalysisTitle: 'Intelligent analysis',
+      enableAnalysisHint: 'Enable deterministic rule-based diagnostics for current logs.',
+      enableAIEnhancementTitle: 'AI summary enhancement',
+      enableAIEnhancementHint: 'Optionally improve the summary text using an external AI provider.',
+      aiProviderLabel: 'AI provider',
+      aiProviders: {
+        openai: 'OpenAI',
+        gemini: 'Gemini',
+        openrouter: 'OpenRouter',
+        claude: 'Claude'
+      },
+      aiApiKeyLabel: 'API key',
+      aiApiKeyPlaceholder: 'Enter API key',
+      aiModelLabel: 'Model (optional)',
+      aiModelPlaceholder: 'Leave blank to use provider default model',
       languageTitle: 'Language',
       languageHint: 'Choose the interface language.'
+    },
+    analysis: {
+      title: 'Log Analysis',
+      summary: 'Summary',
+      probableCauses: 'Probable causes',
+      evidence: 'Evidence',
+      recommendations: 'Recommendations',
+      severity: 'Severity',
+      noData: 'No analysis data available.'
     },
     devices: {
       title: 'Devices',
@@ -260,7 +308,8 @@ const en: I18nMessages = {
     checkForUpdates: 'Failed to check for updates.',
     adbUnavailable: 'ADB is not available.',
     initializeApp: 'Failed to initialize the app.',
-    sessionEndedUnexpectedly: 'Logcat session ended unexpectedly.'
+    sessionEndedUnexpectedly: 'Logcat session ended unexpectedly.',
+    analyzeLogs: 'Failed to analyze logs.'
   }
 };
 
@@ -343,6 +392,8 @@ const es: I18nMessages = {
       intro: 'Acciones secundarias para limpiar, exportar o copiar la salida actual sin recargar la interfaz principal.',
       cleanup: 'Limpieza',
       export: 'Exportar',
+      analyzeLogsLabel: 'Analizar logs',
+      analyzeLogsHint: 'Ejecutar diagnostico deterministico y mejora opcional del resumen con AI.',
       clearViewLabel: 'Limpiar vista',
       clearViewHint: 'Vaciar solo la consola visible.',
       clearBufferLabel: 'Limpiar buffer',
@@ -372,8 +423,32 @@ const es: I18nMessages = {
       enableHighlightHint: 'Clasificar y enfatizar automaticamente errores y advertencias importantes.',
       enableGroupingTitle: 'Agrupar errores',
       enableGroupingHint: 'Agrupar logs similares y permitir expandir cada grupo.',
+      enableAnalysisTitle: 'Analisis inteligente',
+      enableAnalysisHint: 'Activar diagnostico deterministico basado en reglas para los logs actuales.',
+      enableAIEnhancementTitle: 'Mejora de resumen con AI',
+      enableAIEnhancementHint: 'Mejorar opcionalmente el resumen usando un proveedor de AI externo.',
+      aiProviderLabel: 'Proveedor de AI',
+      aiProviders: {
+        openai: 'OpenAI',
+        gemini: 'Gemini',
+        openrouter: 'OpenRouter',
+        claude: 'Claude'
+      },
+      aiApiKeyLabel: 'API key',
+      aiApiKeyPlaceholder: 'Ingresa API key',
+      aiModelLabel: 'Modelo (opcional)',
+      aiModelPlaceholder: 'Deja vacio para usar el modelo por defecto del proveedor',
       languageTitle: 'Idioma',
       languageHint: 'Elige el idioma de la interfaz.'
+    },
+    analysis: {
+      title: 'Analisis de logs',
+      summary: 'Resumen',
+      probableCauses: 'Causas probables',
+      evidence: 'Evidencia',
+      recommendations: 'Recomendaciones',
+      severity: 'Severidad',
+      noData: 'No hay datos de analisis disponibles.'
     },
     devices: {
       title: 'Dispositivos',
@@ -399,7 +474,8 @@ const es: I18nMessages = {
     checkForUpdates: 'No se pudo verificar si hay actualizaciones.',
     adbUnavailable: 'ADB no esta disponible.',
     initializeApp: 'No se pudo inicializar la aplicacion.',
-    sessionEndedUnexpectedly: 'La sesion de logcat termino inesperadamente.'
+    sessionEndedUnexpectedly: 'La sesion de logcat termino inesperadamente.',
+    analyzeLogs: 'No se pudieron analizar los logs.'
   }
 };
 

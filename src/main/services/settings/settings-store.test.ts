@@ -49,6 +49,13 @@ describe('SettingsStore', () => {
         },
         logAnalysis: {
           enableGrouping: true
+        },
+        analysis: {
+          enableAIEnhancement: true,
+          ai: {
+            provider: 'claude',
+            apiKey: 'secret-key'
+          }
         }
       }),
       'utf8'
@@ -69,6 +76,15 @@ describe('SettingsStore', () => {
       logAnalysis: {
         ...defaultSettings.logAnalysis,
         enableGrouping: true
+      },
+      analysis: {
+        ...defaultSettings.analysis,
+        enableAIEnhancement: true,
+        ai: {
+          ...defaultSettings.analysis.ai,
+          provider: 'claude',
+          apiKey: 'secret-key'
+        }
       }
     });
     expect(second).toBe(first);
@@ -116,6 +132,35 @@ describe('SettingsStore', () => {
       logAnalysis: {
         ...defaultSettings.logAnalysis,
         enableGrouping: true
+      }
+    });
+  });
+
+  it('updates nested AI analysis config while preserving provider defaults', async () => {
+    const store = new SettingsStore();
+    await store.getSettings();
+
+    const updated = await store.update({
+      analysis: {
+        ...defaultSettings.analysis,
+        enableAIEnhancement: true,
+        ai: {
+          ...defaultSettings.analysis.ai,
+          provider: 'openrouter',
+          apiKey: 'api-123',
+          model: 'openai/gpt-4o-mini'
+        }
+      }
+    });
+
+    expect(updated.analysis).toEqual({
+      ...defaultSettings.analysis,
+      enableAIEnhancement: true,
+      ai: {
+        ...defaultSettings.analysis.ai,
+        provider: 'openrouter',
+        apiKey: 'api-123',
+        model: 'openai/gpt-4o-mini'
       }
     });
   });

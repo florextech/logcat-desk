@@ -77,6 +77,8 @@ describe('app store', () => {
     useAppStore.getState().setFilters({ text: 'crash', minLevel: 'E' });
     useAppStore.getState().setAutoScroll(false);
     useAppStore.getState().setLogAnalysis({ enableGrouping: true });
+    useAppStore.getState().setAnalysisConfig({ enableAIEnhancement: true });
+    useAppStore.getState().setAnalysisAI({ provider: 'claude', apiKey: 'token' });
 
     expect(useAppStore.getState().filters).toMatchObject({
       text: 'crash',
@@ -86,6 +88,12 @@ describe('app store', () => {
     expect(useAppStore.getState().settings.logAnalysis).toEqual({
       ...defaultSettings.logAnalysis,
       enableGrouping: true
+    });
+    expect(useAppStore.getState().settings.analysis.enableAIEnhancement).toBe(true);
+    expect(useAppStore.getState().settings.analysis.ai).toEqual({
+      ...defaultSettings.analysis.ai,
+      provider: 'claude',
+      apiKey: 'token'
     });
   });
 

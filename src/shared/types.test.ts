@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { LOG_LEVELS, defaultFilters, defaultLogAnalysisConfig, defaultSettings } from '@shared/types';
+import {
+  LOG_LEVELS,
+  defaultAnalysisConfig,
+  defaultFilters,
+  defaultLogAnalysisConfig,
+  defaultSettings
+} from '@shared/types';
 
 describe('shared types defaults', () => {
   it('exposes the supported log levels', () => {
@@ -23,7 +29,8 @@ describe('shared types defaults', () => {
       lastDeviceId: null,
       locale: 'es',
       filters: defaultFilters,
-      logAnalysis: defaultLogAnalysisConfig
+      logAnalysis: defaultLogAnalysisConfig,
+      analysis: defaultAnalysisConfig
     });
   });
 });

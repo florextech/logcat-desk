@@ -3,6 +3,12 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { defaultSettings, type AppSettings } from '@shared/types';
 
+const FALLBACK_AI_CONFIG = {
+  provider: 'openai',
+  apiKey: '',
+  model: ''
+} as const;
+
 export class SettingsStore {
   private readonly filePath = join(app.getPath('userData'), 'settings.json');
   private cachedSettings: AppSettings | null = null;
@@ -26,6 +32,8 @@ export class SettingsStore {
 
   async update(partial: Partial<AppSettings>): Promise<AppSettings> {
     const current = await this.getSettings();
+    const currentAi = current.analysis.ai ?? defaultSettings.analysis.ai ?? FALLBACK_AI_CONFIG;
+    const nextAiPartial = partial.analysis?.ai;
     const next = this.mergeWithDefaults({
       ...current,
       ...partial,
@@ -36,6 +44,15 @@ export class SettingsStore {
       logAnalysis: {
         ...current.logAnalysis,
         ...partial.logAnalysis
+      },
+      analysis: {
+        ...current.analysis,
+        ...partial.analysis,
+        ai: {
+          provider: nextAiPartial?.provider ?? currentAi.provider,
+          apiKey: nextAiPartial?.apiKey ?? currentAi.apiKey,
+          model: nextAiPartial?.model ?? currentAi.model
+        }
       }
     });
 
@@ -45,6 +62,9 @@ export class SettingsStore {
   }
 
   private mergeWithDefaults(partial: Partial<AppSettings>): AppSettings {
+    const defaultAi = defaultSettings.analysis.ai ?? FALLBACK_AI_CONFIG;
+    const partialAi = partial.analysis?.ai;
+
     return {
       ...defaultSettings,
       ...partial,
@@ -55,6 +75,15 @@ export class SettingsStore {
       logAnalysis: {
         ...defaultSettings.logAnalysis,
         ...partial.logAnalysis
+      },
+      analysis: {
+        ...defaultSettings.analysis,
+        ...partial.analysis,
+        ai: {
+          provider: partialAi?.provider ?? defaultAi.provider,
+          apiKey: partialAi?.apiKey ?? defaultAi.apiKey,
+          model: partialAi?.model ?? defaultAi.model
+        }
       }
     };
   }

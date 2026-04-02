@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import {
   defaultSettings,
   type AdbStatus,
+  type AnalysisConfig,
+  type AIConfig,
   type AppSettings,
   type DeviceInfo,
   type FilterState,
@@ -11,6 +13,11 @@ import {
 } from '@shared/types';
 
 const MAX_RENDERED_LOGS = 5000;
+const FALLBACK_AI_CONFIG = {
+  provider: 'openai',
+  apiKey: '',
+  model: ''
+} as const;
 
 interface AppState {
   adbStatus: AdbStatus;
@@ -28,6 +35,8 @@ interface AppState {
   setFilters: (partial: Partial<FilterState>) => void;
   setAutoScroll: (value: boolean) => void;
   setLogAnalysis: (partial: Partial<LogAnalysisConfig>) => void;
+  setAnalysisConfig: (partial: Partial<AnalysisConfig>) => void;
+  setAnalysisAI: (partial: Partial<AIConfig>) => void;
   setSettings: (settings: AppSettings) => void;
   setSessionState: (state: SessionState) => void;
   selectDevice: (deviceId: string) => void;
@@ -99,6 +108,44 @@ export const useAppStore = create<AppState>((set, get) => ({
         }
       }
     })),
+  setAnalysisConfig: (partial) =>
+    set((state) => {
+      const currentAi = state.settings.analysis.ai ?? defaultSettings.analysis.ai ?? FALLBACK_AI_CONFIG;
+      const nextAiPartial = partial.ai;
+
+      return {
+        settings: {
+          ...state.settings,
+          analysis: {
+            ...state.settings.analysis,
+            ...partial,
+            ai: {
+              provider: nextAiPartial?.provider ?? currentAi.provider,
+              apiKey: nextAiPartial?.apiKey ?? currentAi.apiKey,
+              model: nextAiPartial?.model ?? currentAi.model
+            }
+          }
+        }
+      };
+    }),
+  setAnalysisAI: (partial) =>
+    set((state) => {
+      const currentAi = state.settings.analysis.ai ?? defaultSettings.analysis.ai ?? FALLBACK_AI_CONFIG;
+
+      return {
+        settings: {
+          ...state.settings,
+          analysis: {
+            ...state.settings.analysis,
+            ai: {
+              provider: partial.provider ?? currentAi.provider,
+              apiKey: partial.apiKey ?? currentAi.apiKey,
+              model: partial.model ?? currentAi.model
+            }
+          }
+        }
+      };
+    }),
   setSettings: (settings) =>
     set({
       settings,

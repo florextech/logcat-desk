@@ -10,7 +10,6 @@ interface CommandBarProps {
   isPaused: boolean;
   isStreaming: boolean;
   onClearLogs: () => void;
-  onOpenActions: () => void;
   onPauseResume: () => void;
   onSetFilters: (filters: Partial<FilterState>) => void;
   onStart: () => void;
@@ -30,7 +29,6 @@ export const CommandBar = ({
   isPaused,
   isStreaming,
   onClearLogs,
-  onOpenActions,
   onPauseResume,
   onSetFilters,
   onStart,
@@ -175,11 +173,6 @@ export const CommandBar = ({
             {copy.toolbar.clearLogs}
           </button>
 
-          <div className="ml-auto flex items-center gap-3">
-            <button className={actionClassName} onClick={onOpenActions}>
-              {copy.common.more}
-            </button>
-          </div>
         </div>
       </div>
 

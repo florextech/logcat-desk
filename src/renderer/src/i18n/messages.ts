@@ -46,6 +46,9 @@ export interface I18nMessages {
     tagPid: string;
     message: string;
     copy: string;
+    details: string;
+    expand: string;
+    collapse: string;
     logOutput: string;
     jumpToLatest: string;
   };
@@ -182,6 +185,9 @@ const en: I18nMessages = {
     tagPid: 'Tag / pid',
     message: 'Message',
     copy: 'Copy',
+    details: 'Detail',
+    expand: 'Expand',
+    collapse: 'Collapse',
     logOutput: 'Log output',
     jumpToLatest: 'Jump to latest log'
   },
@@ -318,6 +324,9 @@ const es: I18nMessages = {
     tagPid: 'Tag / pid',
     message: 'Mensaje',
     copy: 'Copiar',
+    details: 'Detalle',
+    expand: 'Expandir',
+    collapse: 'Colapsar',
     logOutput: 'Salida',
     jumpToLatest: 'Ir al ultimo log'
   },

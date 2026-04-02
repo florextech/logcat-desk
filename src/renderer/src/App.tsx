@@ -331,7 +331,6 @@ export const App = (): JSX.Element => {
             isPaused={paused}
             isStreaming={streaming}
             onClearLogs={clearLogs}
-            onOpenActions={() => setIsActionsOpen(true)}
             onPauseResume={handlePauseResume}
             onSetFilters={setFilters}
             onStart={handleStartSession}

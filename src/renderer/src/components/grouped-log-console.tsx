@@ -11,6 +11,28 @@ interface GroupedLogConsoleProps {
   onCopyLine: (line: string) => Promise<void>;
 }
 
+const actionButtonClass =
+  'inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[rgb(17_21_19/0.74)] text-[var(--muted)] transition hover:border-[rgb(189_241_70/0.3)] hover:text-[var(--foreground)]';
+
+const CopyIcon = (): JSX.Element => (
+  <svg aria-hidden="true" fill="none" height="14" viewBox="0 0 24 24" width="14">
+    <rect height="12" rx="2" stroke="currentColor" strokeWidth="1.8" width="10" x="9" y="8" />
+    <path d="M6 16H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" stroke="currentColor" strokeWidth="1.8" />
+  </svg>
+);
+
+const ExpandIcon = ({ expanded }: { expanded: boolean }): JSX.Element => (
+  <svg aria-hidden="true" fill="none" height="14" viewBox="0 0 24 24" width="14">
+    <path
+      d={expanded ? 'M7 10l5 5 5-5' : 'M10 7l5 5-5 5'}
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+  </svg>
+);
+
 const formatLogMoment = (receivedAt: number): string => {
   const date = new Date(receivedAt);
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -101,12 +123,13 @@ export const GroupedLogConsole = ({
 
   return (
     <div className="flx-card flx-grid-glow relative flex h-full min-h-0 max-h-[calc(100vh-270px)] flex-col overflow-hidden bg-[rgb(11_13_12/0.92)]">
-      <div className="grid grid-cols-[12rem_4rem_15rem_1fr_5rem] gap-3 border-b border-[var(--border)] bg-[rgb(17_21_19/0.9)] px-4 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+      <div className="grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)_4.5rem_4.5rem] gap-3 border-b border-[var(--border)] bg-[rgb(17_21_19/0.9)] px-4 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
         <span>{copy.console.time}</span>
         <span>{copy.console.level}</span>
         <span>{copy.console.tagPid}</span>
         <span>{copy.console.message}</span>
         <span>{copy.console.copy}</span>
+        <span>{copy.console.details}</span>
       </div>
 
       <div
@@ -131,14 +154,14 @@ export const GroupedLogConsole = ({
 
           return (
             <div key={group.fingerprint} className="border-b border-[rgb(38_48_40/0.55)]">
-              <div className={`group grid grid-cols-[12rem_4rem_15rem_1fr_5rem] gap-3 px-4 py-2 text-[12px] ${tone.row}`}>
+              <div className={`group grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)_4.5rem_4.5rem] gap-3 px-4 py-2 text-[12px] ${tone.row}`}>
                 <span className="text-[var(--muted)]">{formatRange(group.firstSeen, group.lastSeen)}</span>
                 <span className={`font-semibold ${tone.level}`}>{representative.level}</span>
-                <div className="truncate">
+                <div className="min-w-0 truncate">
                   <span className="text-[var(--foreground)]">{representative.tag}</span>
                   <span className="ml-2 text-[rgb(118_183_61)]">x{group.count}</span>
                 </div>
-                <div className="break-words text-[var(--foreground)]">
+                <div className="min-w-0 break-all text-[var(--foreground)]">
                   {enableHighlight && representative.highlight && representative.category ? (
                     <span className="mr-2 rounded-full border border-[rgb(255_255_255/0.1)] bg-[rgb(255_255_255/0.04)] px-2 py-[1px] text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
                       {representative.category}
@@ -147,16 +170,27 @@ export const GroupedLogConsole = ({
                   {highlightText(group.message, searchQuery)}
                 </div>
                 <button
-                  className="rounded-lg border border-[var(--border)] bg-[rgb(17_21_19/0.74)] px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] transition hover:border-[rgb(189_241_70/0.3)] hover:text-[var(--foreground)]"
+                  aria-label={copy.console.copy}
+                  className={`${actionButtonClass} justify-self-end opacity-0 group-hover:opacity-100`}
+                  onClick={() => void onCopyLine(representative.raw)}
+                  title={copy.console.copy}
+                  type="button"
+                >
+                  <CopyIcon />
+                </button>
+                <button
+                  aria-label={isExpanded ? copy.console.collapse : copy.console.expand}
+                  className={`${actionButtonClass} justify-self-end`}
                   onClick={() =>
                     setExpanded((current) => ({
                       ...current,
                       [group.fingerprint]: !current[group.fingerprint]
                     }))
                   }
+                  title={isExpanded ? copy.console.collapse : copy.console.expand}
                   type="button"
                 >
-                  {isExpanded ? '-' : '+'}
+                  <ExpandIcon expanded={isExpanded} />
                 </button>
               </div>
 
@@ -171,25 +205,29 @@ export const GroupedLogConsole = ({
                     return (
                       <div
                         key={entry.id}
-                        className={`group grid grid-cols-[12rem_4rem_15rem_1fr_5rem] gap-3 border-t border-[rgb(38_48_40/0.35)] px-4 py-2 pl-8 text-[12px] ${childTone.row}`}
+                        className={`group grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)_4.5rem_4.5rem] gap-3 border-t border-[rgb(38_48_40/0.35)] px-4 py-2 pl-8 text-[12px] ${childTone.row}`}
                       >
                         <span className="text-[var(--muted)]">
                           {entry.monthDay && entry.time ? `${entry.monthDay} ${entry.time}` : '--'}
                         </span>
                         <span className={`font-semibold ${childTone.level}`}>{entry.level}</span>
-                        <div className="truncate">
+                        <div className="min-w-0 truncate">
                           <span className="text-[var(--foreground)]">{entry.tag}</span>
                           {entry.pid ? <span className="ml-2 text-[rgb(118_183_61)]">#{entry.pid}</span> : null}
                         </div>
-                        <div className="break-words text-[var(--foreground)]">
+                        <div className="min-w-0 break-all text-[var(--foreground)]">
                           {highlightText(entry.message || entry.raw, searchQuery)}
                         </div>
                         <button
-                          className="rounded-lg border border-[var(--border)] bg-[rgb(17_21_19/0.74)] px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] opacity-0 transition group-hover:opacity-100 hover:border-[rgb(189_241_70/0.3)] hover:text-[var(--foreground)]"
+                          aria-label={copy.console.copy}
+                          className={`${actionButtonClass} justify-self-end opacity-0 group-hover:opacity-100`}
                           onClick={() => void onCopyLine(entry.raw)}
+                          title={copy.console.copy}
+                          type="button"
                         >
-                          {copy.console.copy}
+                          <CopyIcon />
                         </button>
+                        <div className="h-8 w-8 justify-self-end" />
                       </div>
                     );
                   })}

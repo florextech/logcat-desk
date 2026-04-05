@@ -13,13 +13,14 @@ describe('CommandBar', () => {
 
     render(
       <CommandBar
+        canAnalyze
         canStart
         canClearLogs
         filters={{ text: '', tag: '', packageName: '', search: '', minLevel: 'ALL' }}
         isPaused={false}
         isStreaming={false}
+        onAnalyze={vi.fn()}
         onClearLogs={onClearLogs}
-        onOpenActions={vi.fn()}
         onPauseResume={vi.fn()}
         onSetFilters={vi.fn()}
         onStart={vi.fn()}
@@ -34,13 +35,14 @@ describe('CommandBar', () => {
   it('disables clear logs when there is no visible output', () => {
     render(
       <CommandBar
+        canAnalyze={false}
         canStart
         canClearLogs={false}
         filters={{ text: '', tag: '', packageName: '', search: '', minLevel: 'ALL' }}
         isPaused={false}
         isStreaming={false}
+        onAnalyze={vi.fn()}
         onClearLogs={vi.fn()}
-        onOpenActions={vi.fn()}
         onPauseResume={vi.fn()}
         onSetFilters={vi.fn()}
         onStart={vi.fn()}

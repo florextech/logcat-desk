@@ -37,6 +37,10 @@ xattr -dr com.apple.quarantine "/Applications/Logcat Desk.app"
 
 This is a temporary workaround for local builds and trusted release artifacts. It is not a replacement for proper signing and notarization.
 
+## AI provider troubleshooting
+
+See [docs/user/troubleshooting.md](./docs/user/troubleshooting.md#ai-enhancement-fails) for quick fixes and [docs/user/ai-analysis.md](./docs/user/ai-analysis.md) for full provider setup.
+
 ## Not for public issues
 
 Do not use public issues for security disclosures. Follow [SECURITY.md](./SECURITY.md) instead.

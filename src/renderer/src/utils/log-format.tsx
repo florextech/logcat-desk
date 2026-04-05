@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import type { Emphasis, LogLevel } from '@shared/types';
+import type { LogSeverity } from '@renderer/utils/log-analysis/types';
 
 export const getLevelTone = (
   level: LogLevel,
@@ -25,13 +26,39 @@ export const getLevelTone = (
   if (level === 'D' || level === 'V') {
     return {
       row: 'bg-[rgb(189_241_70/0.03)]',
-      level: 'text-[var(--brand-500)]'
+      level: 'text-(--brand-500)'
     };
   }
 
   return {
     row: 'bg-transparent',
-    level: 'text-[var(--brand-700)]'
+    level: 'text-(--brand-700)'
+  };
+};
+
+export const getSeverityTone = (
+  severity: LogSeverity
+): {
+  row: string;
+  level: string;
+} => {
+  if (severity === 'error') {
+    return {
+      row: 'bg-red-500/[0.08]',
+      level: 'text-red-200'
+    };
+  }
+
+  if (severity === 'warning') {
+    return {
+      row: 'bg-amber-500/[0.085]',
+      level: 'text-amber-200'
+    };
+  }
+
+  return {
+    row: 'bg-transparent',
+    level: 'text-(--brand-700)'
   };
 };
 

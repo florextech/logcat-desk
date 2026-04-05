@@ -12,6 +12,8 @@ const THREADTIME_PATTERN =
   /^(\d\d-\d\d)\s+(\d\d:\d\d:\d\d\.\d+)\s+(\d+)\s+(\d+)\s+([VDIWEF])\s+(.+?)\s*:\s(.*)$/;
 
 export class LogcatSessionManager extends EventEmitter {
+  private static readonly FORCE_KILL_TIMEOUT_MS = 1200;
+
   private child: ChildProcessByStdio<null, Readable, Readable> | null = null;
   private state: SessionState = { status: 'idle', deviceId: null };
   private sequence = 0;
@@ -147,7 +149,26 @@ export class LogcatSessionManager extends EventEmitter {
       this.flushTimer = null;
     }
 
-    await closed;
+    let forceKillTimer: ReturnType<typeof setTimeout> | null = null;
+    let terminatedByTimeout = false;
+
+    try {
+      terminatedByTimeout = await Promise.race<boolean>([
+        closed.then(() => false),
+        new Promise<boolean>((resolve) => {
+          forceKillTimer = setTimeout(() => resolve(true), LogcatSessionManager.FORCE_KILL_TIMEOUT_MS);
+        })
+      ]);
+    } finally {
+      if (forceKillTimer) {
+        clearTimeout(forceKillTimer);
+      }
+    }
+
+    if (terminatedByTimeout && this.child === child) {
+      child.kill('SIGKILL');
+      await closed;
+    }
   }
 
   pause(): void {

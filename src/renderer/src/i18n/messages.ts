@@ -1,4 +1,4 @@
-import type { Locale, LogLevelFilter, SessionStatus } from '@shared/types';
+import type { AIProvider, Locale, LogLevelFilter, SessionStatus } from '@shared/types';
 
 type StringFactory<TArgs extends unknown[] = []> = (...args: TArgs) => string;
 
@@ -14,6 +14,7 @@ export interface I18nMessages {
     save: string;
     saving: string;
     run: string;
+    close: string;
     english: string;
     spanish: string;
   };
@@ -39,6 +40,7 @@ export interface I18nMessages {
     pause: string;
     resume: string;
     clearLogs: string;
+    analyze: string;
   };
   console: {
     time: string;
@@ -46,6 +48,9 @@ export interface I18nMessages {
     tagPid: string;
     message: string;
     copy: string;
+    details: string;
+    expand: string;
+    collapse: string;
     logOutput: string;
     jumpToLatest: string;
   };
@@ -62,6 +67,8 @@ export interface I18nMessages {
       intro: string;
       cleanup: string;
       export: string;
+      analyzeLogsLabel: string;
+      analyzeLogsHint: string;
       clearViewLabel: string;
       clearViewHint: string;
       clearBufferLabel: string;
@@ -79,6 +86,8 @@ export interface I18nMessages {
     settings: {
       title: string;
       adb: string;
+      generalTab: string;
+      analysisTab: string;
       adbReady: string;
       adbMissing: string;
       adbHint: StringFactory<[path: string | null]>;
@@ -87,8 +96,59 @@ export interface I18nMessages {
       saveAdbPath: string;
       autoScrollTitle: string;
       autoScrollHint: string;
+      enableHighlightTitle: string;
+      enableHighlightHint: string;
+      enableGroupingTitle: string;
+      enableGroupingHint: string;
+      enableAnalysisTitle: string;
+      enableAnalysisHint: string;
+      enableAIEnhancementTitle: string;
+      enableAIEnhancementHint: string;
+      aiProviderLabel: string;
+      aiProviders: Record<AIProvider, string>;
+      aiApiKeyLabel: string;
+      aiApiKeyPlaceholder: string;
+      aiModelLabel: string;
+      aiModelPlaceholder: string;
       languageTitle: string;
       languageHint: string;
+    };
+    analysis: {
+      title: string;
+      summary: string;
+      probableCauses: string;
+      evidence: string;
+      recommendations: string;
+      severity: string;
+      severityLevels: Record<'low' | 'medium' | 'high' | 'critical', string>;
+      aiStatus: string;
+      aiStatusRuleOnly: string;
+      aiStatusUsed: StringFactory<[provider: string]>;
+      aiStatusFallback: StringFactory<[reason: string]>;
+      aiStatusReasons: Record<'success' | 'disabled' | 'missing_api_key' | 'empty_response' | 'request_failed', string>;
+      enhanceWithAI: string;
+      enhancingWithAI: string;
+      openAIChat: string;
+      noData: string;
+    };
+    analysisChat: {
+      title: string;
+      empty: string;
+      thinking: string;
+      inputPlaceholder: string;
+      send: string;
+      failed: StringFactory<[reason: string]>;
+    };
+    analysisOptions: {
+      title: string;
+      intro: StringFactory<[count: number]>;
+      selectedScopeLabel: string;
+      selectedScopeHint: string;
+      selectedScopeDisabledHint: string;
+      lastVisibleScopeLabel: string;
+      lastVisibleScopeHint: string;
+      allVisibleScopeLabel: string;
+      allVisibleScopeHint: string;
     };
     devices: {
       title: string;
@@ -115,6 +175,7 @@ export interface I18nMessages {
     adbUnavailable: string;
     initializeApp: string;
     sessionEndedUnexpectedly: string;
+    analyzeLogs: string;
   };
 }
 
@@ -130,6 +191,7 @@ const en: I18nMessages = {
     save: 'Save',
     saving: 'Saving...',
     run: 'Run',
+    close: 'Close',
     english: 'English',
     spanish: 'Spanish'
   },
@@ -170,7 +232,8 @@ const en: I18nMessages = {
     stop: 'Stop',
     pause: 'Pause',
     resume: 'Resume',
-    clearLogs: 'Clear logs'
+    clearLogs: 'Clear logs',
+    analyze: 'Analyze'
   },
   console: {
     time: 'Time',
@@ -178,6 +241,9 @@ const en: I18nMessages = {
     tagPid: 'Tag / pid',
     message: 'Message',
     copy: 'Copy',
+    details: 'Detail',
+    expand: 'Expand',
+    collapse: 'Collapse',
     logOutput: 'Log output',
     jumpToLatest: 'Jump to latest log'
   },
@@ -194,6 +260,8 @@ const en: I18nMessages = {
       intro: 'Secondary actions to clean, export or copy the current output without reloading the main interface.',
       cleanup: 'Cleanup',
       export: 'Export',
+      analyzeLogsLabel: 'Analyze logs',
+      analyzeLogsHint: 'Run deterministic diagnostics and optional AI summary enhancement.',
       clearViewLabel: 'Clear View',
       clearViewHint: 'Clear only the visible console.',
       clearBufferLabel: 'Clear Buffer',
@@ -211,6 +279,8 @@ const en: I18nMessages = {
     settings: {
       title: 'Settings',
       adb: 'ADB',
+      generalTab: 'General',
+      analysisTab: 'Analysis & AI',
       adbReady: 'ADB ready',
       adbMissing: 'ADB unavailable',
       adbHint: (path) => path ?? 'Use PATH or configure the binary path manually.',
@@ -219,8 +289,75 @@ const en: I18nMessages = {
       saveAdbPath: 'Save ADB path',
       autoScrollTitle: 'Auto-scroll',
       autoScrollHint: 'Automatically follow new incoming logs.',
+      enableHighlightTitle: 'Smart highlight',
+      enableHighlightHint: 'Auto-classify and emphasize important errors and warnings.',
+      enableGroupingTitle: 'Error grouping',
+      enableGroupingHint: 'Group similar logs and allow expanding each group.',
+      enableAnalysisTitle: 'Intelligent analysis',
+      enableAnalysisHint: 'Enable deterministic rule-based diagnostics for current logs.',
+      enableAIEnhancementTitle: 'AI summary enhancement',
+      enableAIEnhancementHint: 'Optionally improve the summary text using an external AI provider.',
+      aiProviderLabel: 'AI provider',
+      aiProviders: {
+        openai: 'OpenAI',
+        gemini: 'Gemini',
+        openrouter: 'OpenRouter',
+        claude: 'Claude'
+      },
+      aiApiKeyLabel: 'API key',
+      aiApiKeyPlaceholder: 'Enter API key',
+      aiModelLabel: 'Model (optional)',
+      aiModelPlaceholder: 'Leave blank to use provider default model',
       languageTitle: 'Language',
       languageHint: 'Choose the interface language.'
+    },
+    analysis: {
+      title: 'Log Analysis',
+      summary: 'Summary',
+      probableCauses: 'Probable causes',
+      evidence: 'Evidence',
+      recommendations: 'Recommendations',
+      severity: 'Severity',
+      severityLevels: {
+        low: 'Low',
+        medium: 'Medium',
+        high: 'High',
+        critical: 'Critical'
+      },
+      aiStatus: 'AI enhancement',
+      aiStatusRuleOnly: 'Rule-based only',
+      aiStatusUsed: (provider) => `Used ${provider}`,
+      aiStatusFallback: (reason) => `Fallback to rules (${reason})`,
+      aiStatusReasons: {
+        success: 'applied',
+        disabled: 'disabled',
+        missing_api_key: 'missing API key',
+        empty_response: 'empty response',
+        request_failed: 'provider request failed'
+      },
+      enhanceWithAI: 'Generate AI response',
+      enhancingWithAI: 'Generating...',
+      openAIChat: 'Open AI chat',
+      noData: 'No analysis data available.'
+    },
+    analysisChat: {
+      title: 'AI Chat',
+      empty: 'No messages yet. Ask about probable causes, evidence, or next steps.',
+      thinking: 'Thinking...',
+      inputPlaceholder: 'Ask a follow-up question...',
+      send: 'Send',
+      failed: (reason) => `AI request failed: ${reason}`
+    },
+    analysisOptions: {
+      title: 'Analyze Logs',
+      intro: (count) => `Analyze the latest visible logs from the current filtered set (${count}).`,
+      selectedScopeLabel: 'Selected log',
+      selectedScopeHint: 'Analyze only the currently selected row.',
+      selectedScopeDisabledHint: 'Select a log row first to enable this option.',
+      lastVisibleScopeLabel: 'Last visible logs',
+      lastVisibleScopeHint: 'Analyze only the most recent visible logs based on your filters.',
+      allVisibleScopeLabel: 'All visible logs',
+      allVisibleScopeHint: 'Analyze all logs currently visible in the table.'
     },
     devices: {
       title: 'Devices',
@@ -246,7 +383,8 @@ const en: I18nMessages = {
     checkForUpdates: 'Failed to check for updates.',
     adbUnavailable: 'ADB is not available.',
     initializeApp: 'Failed to initialize the app.',
-    sessionEndedUnexpectedly: 'Logcat session ended unexpectedly.'
+    sessionEndedUnexpectedly: 'Logcat session ended unexpectedly.',
+    analyzeLogs: 'Failed to analyze logs.'
   }
 };
 
@@ -262,6 +400,7 @@ const es: I18nMessages = {
     save: 'Guardar',
     saving: 'Guardando...',
     run: 'Ejecutar',
+    close: 'Cerrar',
     english: 'Ingles',
     spanish: 'Espanol'
   },
@@ -302,7 +441,8 @@ const es: I18nMessages = {
     stop: 'Detener',
     pause: 'Pausar',
     resume: 'Reanudar',
-    clearLogs: 'Limpiar logs'
+    clearLogs: 'Limpiar logs',
+    analyze: 'Analizar'
   },
   console: {
     time: 'Hora',
@@ -310,6 +450,9 @@ const es: I18nMessages = {
     tagPid: 'Tag / pid',
     message: 'Mensaje',
     copy: 'Copiar',
+    details: 'Detalle',
+    expand: 'Expandir',
+    collapse: 'Colapsar',
     logOutput: 'Salida',
     jumpToLatest: 'Ir al ultimo log'
   },
@@ -326,6 +469,8 @@ const es: I18nMessages = {
       intro: 'Acciones secundarias para limpiar, exportar o copiar la salida actual sin recargar la interfaz principal.',
       cleanup: 'Limpieza',
       export: 'Exportar',
+      analyzeLogsLabel: 'Analizar logs',
+      analyzeLogsHint: 'Ejecutar diagnostico deterministico y mejora opcional del resumen con AI.',
       clearViewLabel: 'Limpiar vista',
       clearViewHint: 'Vaciar solo la consola visible.',
       clearBufferLabel: 'Limpiar buffer',
@@ -343,6 +488,8 @@ const es: I18nMessages = {
     settings: {
       title: 'Configuracion',
       adb: 'ADB',
+      generalTab: 'General',
+      analysisTab: 'Analisis e IA',
       adbReady: 'ADB listo',
       adbMissing: 'ADB no disponible',
       adbHint: (path) => path ?? 'Usa PATH o configura la ruta manualmente.',
@@ -351,8 +498,75 @@ const es: I18nMessages = {
       saveAdbPath: 'Guardar ruta de ADB',
       autoScrollTitle: 'Auto-scroll',
       autoScrollHint: 'Seguir automaticamente los logs nuevos.',
+      enableHighlightTitle: 'Resaltado inteligente',
+      enableHighlightHint: 'Clasificar y enfatizar automaticamente errores y advertencias importantes.',
+      enableGroupingTitle: 'Agrupar errores',
+      enableGroupingHint: 'Agrupar logs similares y permitir expandir cada grupo.',
+      enableAnalysisTitle: 'Analisis inteligente',
+      enableAnalysisHint: 'Activar diagnostico deterministico basado en reglas para los logs actuales.',
+      enableAIEnhancementTitle: 'Mejora de resumen con AI',
+      enableAIEnhancementHint: 'Mejorar opcionalmente el resumen usando un proveedor de AI externo.',
+      aiProviderLabel: 'Proveedor de AI',
+      aiProviders: {
+        openai: 'OpenAI',
+        gemini: 'Gemini',
+        openrouter: 'OpenRouter',
+        claude: 'Claude'
+      },
+      aiApiKeyLabel: 'API key',
+      aiApiKeyPlaceholder: 'Ingresa API key',
+      aiModelLabel: 'Modelo (opcional)',
+      aiModelPlaceholder: 'Deja vacio para usar el modelo por defecto del proveedor',
       languageTitle: 'Idioma',
       languageHint: 'Elige el idioma de la interfaz.'
+    },
+    analysis: {
+      title: 'Analisis de logs',
+      summary: 'Resumen',
+      probableCauses: 'Causas probables',
+      evidence: 'Evidencia',
+      recommendations: 'Recomendaciones',
+      severity: 'Severidad',
+      severityLevels: {
+        low: 'Baja',
+        medium: 'Media',
+        high: 'Alta',
+        critical: 'Critica'
+      },
+      aiStatus: 'Mejora con AI',
+      aiStatusRuleOnly: 'Solo reglas',
+      aiStatusUsed: (provider) => `Se uso ${provider}`,
+      aiStatusFallback: (reason) => `Fallback a reglas (${reason})`,
+      aiStatusReasons: {
+        success: 'aplicado',
+        disabled: 'desactivada',
+        missing_api_key: 'falta API key',
+        empty_response: 'respuesta vacia',
+        request_failed: 'fallo la solicitud al proveedor'
+      },
+      enhanceWithAI: 'Generar respuesta con IA',
+      enhancingWithAI: 'Generando...',
+      openAIChat: 'Abrir chat IA',
+      noData: 'No hay datos de analisis disponibles.'
+    },
+    analysisChat: {
+      title: 'Chat IA',
+      empty: 'Aun no hay mensajes. Pregunta por causas probables, evidencia o siguientes pasos.',
+      thinking: 'Pensando...',
+      inputPlaceholder: 'Escribe una pregunta de seguimiento...',
+      send: 'Enviar',
+      failed: (reason) => `Fallo la solicitud IA: ${reason}`
+    },
+    analysisOptions: {
+      title: 'Analizar logs',
+      intro: (count) => `Analiza los ultimos logs visibles del conjunto filtrado actual (${count}).`,
+      selectedScopeLabel: 'Log seleccionado',
+      selectedScopeHint: 'Analizar solo la fila seleccionada actualmente.',
+      selectedScopeDisabledHint: 'Selecciona una fila de log para habilitar esta opcion.',
+      lastVisibleScopeLabel: 'Ultimos logs visibles',
+      lastVisibleScopeHint: 'Analizar solo los logs visibles mas recientes segun tus filtros.',
+      allVisibleScopeLabel: 'Todos los visibles',
+      allVisibleScopeHint: 'Analizar todos los logs visibles actualmente en la tabla.'
     },
     devices: {
       title: 'Dispositivos',
@@ -378,7 +592,8 @@ const es: I18nMessages = {
     checkForUpdates: 'No se pudo verificar si hay actualizaciones.',
     adbUnavailable: 'ADB no esta disponible.',
     initializeApp: 'No se pudo inicializar la aplicacion.',
-    sessionEndedUnexpectedly: 'La sesion de logcat termino inesperadamente.'
+    sessionEndedUnexpectedly: 'La sesion de logcat termino inesperadamente.',
+    analyzeLogs: 'No se pudieron analizar los logs.'
   }
 };
 

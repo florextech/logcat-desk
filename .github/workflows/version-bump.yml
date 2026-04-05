@@ -49,7 +49,7 @@ jobs:
       - name: Create release PR
         uses: peter-evans/create-pull-request@v8
         with:
-          branch: codex/release-v${{ inputs.version }}
+          branch: release-v${{ inputs.version }}
           base: ${{ inputs.base_branch }}
           commit-message: "chore(release): prepare v${{ inputs.version }}"
           title: "chore(release): prepare v${{ inputs.version }}"

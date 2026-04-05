@@ -2,6 +2,7 @@ import { app, clipboard, dialog, ipcMain, shell } from 'electron';
 import type { BrowserWindow } from 'electron';
 import { clearLogcatBuffer, listDevices } from '@main/services/adb/device-service';
 import { resolveAdbStatus } from '@main/services/adb/adb-resolver';
+import { askAnalysisAssistant, enhanceAnalysisSummary } from '@main/services/analysis/analysis-ai-service';
 import { ExportService } from '@main/services/export/export-service';
 import { LogcatSessionManager } from '@main/services/logcat/logcat-session-manager';
 import { SettingsStore } from '@main/services/settings/settings-store';
@@ -9,8 +10,10 @@ import { getUpdateCheckFailedCopy, getUpdateDialogCopy } from '@main/services/up
 import { UpdateService } from '@main/services/update/update-service';
 import { ipcChannels } from '@shared/ipc';
 import type {
+  AskAnalysisAssistantInput,
   AppSettings,
   ClearBufferInput,
+  EnhanceAnalysisSummaryInput,
   ExportLogsInput,
   StartSessionInput
 } from '@shared/types';
@@ -163,6 +166,14 @@ export const registerIpc = ({
 
   safeHandle(ipcChannels.exportLogs, async (_, input: ExportLogsInput) => {
     return exportService.exportWithDialog(input, dialog);
+  });
+
+  safeHandle(ipcChannels.analysisEnhanceSummary, async (_, input: EnhanceAnalysisSummaryInput) => {
+    return enhanceAnalysisSummary(input);
+  });
+
+  safeHandle(ipcChannels.analysisAskAssistant, async (_, input: AskAnalysisAssistantInput) => {
+    return askAnalysisAssistant(input);
   });
 
   safeHandle(ipcChannels.clipboardCopy, async (_, text: string) => {

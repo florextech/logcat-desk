@@ -129,4 +129,33 @@ describe('LogcatSessionManager internal logic', () => {
       message: 'No active logcat session'
     });
   });
+
+  it('forces SIGKILL when logcat does not close after SIGTERM', async () => {
+    const manager = new LogcatSessionManager();
+    const signals: string[] = [];
+    let onClose: (() => void) | undefined;
+
+    const fakeChild = {
+      once: vi.fn((event: string, listener: () => void) => {
+        if (event === 'close') {
+          onClose = listener;
+        }
+      }),
+      kill: vi.fn((signal: string) => {
+        signals.push(signal);
+
+        if (signal === 'SIGKILL') {
+          onClose?.();
+        }
+      })
+    };
+
+    (manager as unknown as { child: typeof fakeChild | null }).child = fakeChild;
+
+    const stopPromise = manager.stop();
+    await vi.advanceTimersByTimeAsync(1300);
+    await stopPromise;
+
+    expect(signals).toEqual(['SIGTERM', 'SIGKILL']);
+  });
 });

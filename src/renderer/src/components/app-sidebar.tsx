@@ -18,7 +18,7 @@ interface AppSidebarProps {
 
 const deviceStateTone = (state: string): string => {
   if (state === 'device') {
-    return 'border-[rgb(189_241_70/0.24)] bg-[rgb(189_241_70/0.12)] text-[var(--brand-700)]';
+    return 'border-[rgb(189_241_70/0.24)] bg-[rgb(189_241_70/0.12)] text-(--brand-700)';
   }
 
   if (state === 'offline') {
@@ -46,13 +46,13 @@ export const AppSidebar = ({
     <div className="flx-card rounded-[20px] bg-[linear-gradient(180deg,_rgba(23,31,18,0.9),_rgba(17,21,19,0.84))] px-5 py-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[var(--brand-500)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-(--brand-500)">
             Logcat
           </p>
-          <h2 className="mt-3 text-3xl font-semibold leading-none tracking-tight text-[var(--foreground)]">
+          <h2 className="mt-3 text-3xl font-semibold leading-none tracking-tight text-(--foreground)">
             Desk
           </h2>
-          <p className="mt-2 text-sm text-[var(--muted)]">ADB-first log viewer for macOS.</p>
+          <p className="mt-2 text-sm text-(--muted)">ADB-first log viewer for macOS.</p>
         </div>
         <div className="flx-pill">
           MVP
@@ -63,33 +63,33 @@ export const AppSidebar = ({
     <div className="mt-3 flx-card p-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--brand-500)]">Setup</p>
-          <p className="mt-2 text-sm font-medium text-[var(--foreground)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--brand-500)">Setup</p>
+          <p className="mt-2 text-sm font-medium text-(--foreground)">
             {adbStatus.available ? 'ADB listo' : 'ADB no disponible'}
           </p>
         </div>
         <div
           className={`h-3 w-3 rounded-full ${
             adbStatus.available
-              ? 'bg-[var(--brand-600)] shadow-[0_0_20px_rgba(189,241,70,0.75)]'
+              ? 'bg-(--brand-600) shadow-[0_0_20px_rgba(189,241,70,0.75)]'
               : 'bg-red-400 shadow-[0_0_20px_rgba(239,68,68,0.8)]'
           }`}
         />
       </div>
 
-      <p className="mt-1 text-xs text-[var(--muted)]">
+      <p className="mt-1 text-xs text-(--muted)">
         {adbStatus.resolvedPath ?? 'Usa PATH o configura la ruta manual.'}
       </p>
 
       <label
-        className="mt-4 block text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]"
+        className="mt-4 block text-[11px] font-semibold uppercase tracking-[0.22em] text-(--muted)"
         htmlFor="sidebar-adb-path"
       >
         Custom adb path
       </label>
       <input
         id="sidebar-adb-path"
-        className="flx-focus mt-2 w-full rounded-2xl border border-[var(--border)] bg-[rgb(11_13_12/0.88)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[rgb(189_241_70/0.42)]"
+        className="flx-focus mt-2 w-full rounded-2xl border border-(--border) bg-[rgb(11_13_12/0.88)] px-4 py-3 text-sm text-(--foreground) outline-none transition focus:border-[rgb(189_241_70/0.42)]"
         placeholder="/opt/homebrew/bin/adb"
         value={adbPath}
         onChange={(event) => onAdbPathChange(event.target.value)}
@@ -107,10 +107,10 @@ export const AppSidebar = ({
     <div className="mt-3 flx-card flex min-h-0 flex-1 flex-col p-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--brand-500)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--brand-500)">
             Devices
           </p>
-          <p className="mt-2 text-sm text-[var(--foreground)]">{devices.length} connected</p>
+          <p className="mt-2 text-sm text-(--foreground)">{devices.length} connected</p>
         </div>
         <button
           className="flx-btn flx-btn-secondary rounded-full px-3 py-2 text-xs uppercase tracking-[0.18em] disabled:cursor-not-allowed disabled:opacity-50"
@@ -123,7 +123,7 @@ export const AppSidebar = ({
 
       <div className="mt-4 flex-1 space-y-3 overflow-auto pr-1">
         {devices.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[rgb(11_13_12/0.82)] px-4 py-5 text-sm text-[var(--muted)]">
+          <div className="rounded-2xl border border-dashed border-(--border) bg-[rgb(11_13_12/0.82)] px-4 py-5 text-sm text-(--muted)">
             No Android devices detected.
           </div>
         ) : (
@@ -136,18 +136,18 @@ export const AppSidebar = ({
                 className={`w-full rounded-2xl border px-4 py-4 text-left transition ${
                   selected
                     ? 'border-[rgb(189_241_70/0.42)] bg-[linear-gradient(180deg,_rgba(34,42,24,0.84),_rgba(17,21,19,0.88))] shadow-[0_0_0_1px_rgba(189,241,70,0.12)]'
-                    : 'border-[var(--border)] bg-[rgb(14_17_15/0.7)] hover:border-[rgb(189_241_70/0.22)] hover:bg-[rgb(18_23_20/0.84)]'
+                    : 'border-(--border) bg-[rgb(14_17_15/0.7)] hover:border-[rgb(189_241_70/0.22)] hover:bg-[rgb(18_23_20/0.84)]'
                 }`}
                 onClick={() => onSelectDevice(device.id)}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-medium text-[var(--foreground)]">
+                    <p className="text-sm font-medium text-(--foreground)">
                       {device.model ?? device.deviceName ?? 'Android device'}
                     </p>
-                    <p className="mt-1 font-mono text-xs text-[var(--muted)]">{device.id}</p>
+                    <p className="mt-1 font-mono text-xs text-(--muted)">{device.id}</p>
                     {device.product ? (
-                      <p className="mt-2 text-xs uppercase tracking-[0.2em] text-[var(--brand-500)]">
+                      <p className="mt-2 text-xs uppercase tracking-[0.2em] text-(--brand-500)">
                         {device.product}
                       </p>
                     ) : null}
@@ -168,11 +168,11 @@ export const AppSidebar = ({
     <div className="mt-3 flx-card p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--brand-500)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--brand-500)">
             Session
           </p>
-          <p className="mt-2 text-sm font-medium text-[var(--foreground)]">{sessionState.status}</p>
-          <p className="mt-1 text-xs text-[var(--muted)]">{sessionState.message ?? 'Waiting for capture.'}</p>
+          <p className="mt-2 text-sm font-medium text-(--foreground)">{sessionState.status}</p>
+          <p className="mt-1 text-xs text-(--muted)">{sessionState.message ?? 'Waiting for capture.'}</p>
         </div>
         <div className="flx-pill">{selectedDeviceId ? 'Ready' : 'No device'}</div>
       </div>

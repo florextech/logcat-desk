@@ -8,6 +8,8 @@ export const ipcChannels = {
   logcatPause: 'logcat:pause',
   logcatResume: 'logcat:resume',
   logcatClearBuffer: 'logcat:clear-buffer',
+  analysisEnhanceSummary: 'analysis:enhance-summary',
+  analysisAskAssistant: 'analysis:ask-assistant',
   updatesCheck: 'updates:check',
   exportLogs: 'export:logs',
   clipboardCopy: 'clipboard:copy',

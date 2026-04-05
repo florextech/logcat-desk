@@ -15,7 +15,7 @@ interface DeviceModalProps {
 
 const deviceStateTone = (state: string): string => {
   if (state === 'device') {
-    return 'border-[rgb(189_241_70/0.24)] bg-[rgb(189_241_70/0.12)] text-[var(--brand-700)]';
+    return 'border-[rgb(189_241_70/0.24)] bg-[rgb(189_241_70/0.12)] text-(--brand-700)';
   }
 
   if (state === 'offline') {
@@ -44,8 +44,8 @@ export const DeviceModal = ({
   <ModalShell onClose={onClose} title={copy.modals.devices.title}>
     <div className="flex items-center justify-between gap-4">
       <div>
-        <p className="text-sm font-medium text-[var(--foreground)]">{copy.modals.devices.connectedCount(devices.length)}</p>
-        <p className="mt-1 text-sm text-[var(--muted)]">
+        <p className="text-sm font-medium text-(--foreground)">{copy.modals.devices.connectedCount(devices.length)}</p>
+        <p className="mt-1 text-sm text-(--muted)">
           {copy.modals.devices.intro}
         </p>
       </div>
@@ -60,7 +60,7 @@ export const DeviceModal = ({
 
     <div className="mt-5 space-y-3">
       {devices.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[rgb(11_13_12/0.82)] px-4 py-6 text-sm text-[var(--muted)]">
+        <div className="rounded-2xl border border-dashed border-(--border) bg-[rgb(11_13_12/0.82)] px-4 py-6 text-sm text-(--muted)">
           {copy.modals.devices.noDevices}
         </div>
       ) : (
@@ -72,7 +72,7 @@ export const DeviceModal = ({
               className={`w-full rounded-2xl border px-4 py-4 text-left transition ${
                 selected
                   ? 'border-[rgb(189_241_70/0.42)] bg-[linear-gradient(180deg,_rgba(34,42,24,0.84),_rgba(17,21,19,0.88))] shadow-[0_0_0_1px_rgba(189,241,70,0.12)]'
-                  : 'border-[var(--border)] bg-[rgb(14_17_15/0.7)] hover:border-[rgb(189_241_70/0.22)] hover:bg-[rgb(18_23_20/0.84)]'
+                  : 'border-(--border) bg-[rgb(14_17_15/0.7)] hover:border-[rgb(189_241_70/0.22)] hover:bg-[rgb(18_23_20/0.84)]'
               }`}
               onClick={() => {
                 onSelectDevice(device.id);
@@ -81,12 +81,12 @@ export const DeviceModal = ({
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm font-medium text-[var(--foreground)]">
+                  <p className="text-sm font-medium text-(--foreground)">
                     {device.model ?? device.deviceName ?? copy.modals.devices.defaultDeviceName}
                   </p>
-                  <p className="mt-1 font-mono text-xs text-[var(--muted)]">{device.id}</p>
+                  <p className="mt-1 font-mono text-xs text-(--muted)">{device.id}</p>
                   {device.product ? (
-                    <p className="mt-2 text-xs uppercase tracking-[0.2em] text-[var(--brand-500)]">
+                    <p className="mt-2 text-xs uppercase tracking-[0.2em] text-(--brand-500)">
                       {device.product}
                     </p>
                   ) : null}
@@ -103,8 +103,8 @@ export const DeviceModal = ({
       )}
     </div>
 
-    <div className="mt-5 rounded-2xl border border-[var(--border)] bg-[rgb(11_13_12/0.8)] px-4 py-4 text-sm text-[var(--muted)]">
-      <span className="font-medium text-[var(--foreground)]">{copy.modals.devices.session}:</span> {sessionLabel}
+    <div className="mt-5 rounded-2xl border border-(--border) bg-[rgb(11_13_12/0.8)] px-4 py-4 text-sm text-(--muted)">
+      <span className="font-medium text-(--foreground)">{copy.modals.devices.session}:</span> {sessionLabel}
     </div>
   </ModalShell>
   );

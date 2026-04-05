@@ -1,8 +1,12 @@
 import { type JSX, useEffect, useMemo, useState } from 'react';
 import { ActionsModal } from '@renderer/components/actions-modal';
+import { AnalysisChatModal } from '@renderer/components/analysis-chat-modal';
+import { AnalysisModal } from '@renderer/components/analysis-modal';
+import { AnalysisOptionsModal } from '@renderer/components/analysis-options-modal';
 import { CommandBar } from '@renderer/components/command-bar';
 import { DeviceModal } from '@renderer/components/device-modal';
 import { EmptyState } from '@renderer/components/empty-state';
+import { GroupedLogConsole } from '@renderer/components/grouped-log-console';
 import { IconButton } from '@renderer/components/icon-button';
 import { useI18n } from '@renderer/i18n/provider';
 import { LogConsole } from '@renderer/components/log-console';
@@ -13,8 +17,187 @@ import { useAppBootstrap } from '@renderer/hooks/use-app-bootstrap';
 import { useLogcatEvents } from '@renderer/hooks/use-logcat-events';
 import { electronApi } from '@renderer/services/electron-api';
 import { useAppStore } from '@renderer/store/app-store';
+import {
+  maybeEnhanceLogAnalysisDetailed,
+  type AIEnhancementMeta,
+  runLogAnalysis,
+  type LogAnalysisResult
+} from '@renderer/utils/intelligent-analysis/log-analysis-engine';
+import { processLogsForRender } from '@renderer/utils/log-analysis/log-processing';
+import type { EnrichedLog } from '@renderer/utils/log-analysis/types';
 import { filterLogs } from '@renderer/utils/log-filtering';
-import type { Locale } from '@shared/types';
+import type { AnalysisChatTurn, AnalysisConfig, Locale } from '@shared/types';
+
+const analysisAskAssistantErrorPattern =
+  /^Error invoking remote method 'analysis:ask-assistant': Error: (.+)$/s;
+
+const unwrapAnalysisChatIpcError = (message: string): string => {
+  const match = analysisAskAssistantErrorPattern.exec(message);
+  return match?.[1]?.trim() || message.trim();
+};
+
+interface RunAnalysisForLogsHandlerDeps {
+  analysisEnabled: boolean;
+  locale: Locale;
+  clearError: () => void;
+  setError: (message: string) => void;
+  setIsAnalyzing: (value: boolean) => void;
+  setAnalysisBaseResult: (value: LogAnalysisResult | null) => void;
+  setAnalysisResult: (value: LogAnalysisResult | null) => void;
+  setAnalysisMeta: (value: AIEnhancementMeta | null) => void;
+  setAnalysisChatMessages: (value: AnalysisChatTurn[]) => void;
+  setIsAnalysisChatOpen: (value: boolean) => void;
+  setIsAnalysisOpen: (value: boolean) => void;
+  setIsAnalyzeOptionsOpen: (value: boolean) => void;
+  setIsActionsOpen: (value: boolean) => void;
+  analyzeErrorCopy: string;
+}
+
+const createRunAnalysisForLogsHandler =
+  (deps: RunAnalysisForLogsHandlerDeps) =>
+  async (logsToAnalyze: EnrichedLog[]): Promise<void> => {
+    if (!deps.analysisEnabled || logsToAnalyze.length === 0) {
+      return;
+    }
+
+    deps.setIsAnalyzing(true);
+    deps.clearError();
+
+    try {
+      const base = runLogAnalysis(logsToAnalyze, deps.locale);
+      deps.setAnalysisBaseResult(base);
+      deps.setAnalysisResult(base);
+      deps.setAnalysisMeta(null);
+      deps.setAnalysisChatMessages([]);
+      deps.setIsAnalysisChatOpen(false);
+      deps.setIsAnalysisOpen(true);
+      deps.setIsAnalyzeOptionsOpen(false);
+      deps.setIsActionsOpen(false);
+    } catch (analysisError) {
+      deps.setError(analysisError instanceof Error ? analysisError.message : deps.analyzeErrorCopy);
+    } finally {
+      deps.setIsAnalyzing(false);
+    }
+  };
+
+interface EnhanceAnalysisWithAIHandlerDeps {
+  analysisBaseResult: LogAnalysisResult | null;
+  analysisConfig: AnalysisConfig;
+  locale: Locale;
+  analyzeErrorCopy: string;
+  clearError: () => void;
+  setError: (message: string) => void;
+  setIsEnhancingWithAI: (value: boolean) => void;
+  setAnalysisMeta: (value: AIEnhancementMeta | null) => void;
+  setAnalysisResult: (value: LogAnalysisResult | null) => void;
+  setAnalysisChatMessages: (value: AnalysisChatTurn[]) => void;
+}
+
+const createEnhanceAnalysisWithAIHandler =
+  (deps: EnhanceAnalysisWithAIHandlerDeps) =>
+  async (): Promise<void> => {
+    if (!deps.analysisBaseResult) {
+      return;
+    }
+
+    deps.setIsEnhancingWithAI(true);
+    deps.clearError();
+
+    try {
+      const detailed = await maybeEnhanceLogAnalysisDetailed(deps.analysisBaseResult, deps.analysisConfig, deps.locale);
+      deps.setAnalysisMeta(detailed.meta);
+      if (detailed.meta.used) {
+        deps.setAnalysisResult(detailed.result);
+        deps.setAnalysisChatMessages([
+          {
+            role: 'assistant',
+            content: detailed.result.summary
+          }
+        ]);
+      } else {
+        deps.setAnalysisResult(deps.analysisBaseResult);
+        deps.setAnalysisChatMessages([
+          {
+            role: 'assistant',
+            content: deps.analysisBaseResult.summary
+          }
+        ]);
+      }
+    } catch (error_) {
+      deps.setAnalysisResult(deps.analysisBaseResult);
+      deps.setAnalysisChatMessages([
+        {
+          role: 'assistant',
+          content: deps.analysisBaseResult.summary
+        }
+      ]);
+      deps.setError(error_ instanceof Error ? error_.message : deps.analyzeErrorCopy);
+    } finally {
+      deps.setIsEnhancingWithAI(false);
+    }
+  };
+
+interface SendAIQuestionHandlerDeps {
+  analysisResult: LogAnalysisResult | null;
+  analysisConfig: AnalysisConfig;
+  locale: Locale;
+  analysisChatMessages: AnalysisChatTurn[];
+  analyzeErrorCopy: string;
+  failedCopyFactory: (reason: string) => string;
+  clearError: () => void;
+  setError: (message: string) => void;
+  setIsChatRequestPending: (value: boolean) => void;
+  setAnalysisChatMessages: (value: AnalysisChatTurn[] | ((current: AnalysisChatTurn[]) => AnalysisChatTurn[])) => void;
+}
+
+const createSendAIQuestionHandler =
+  (deps: SendAIQuestionHandlerDeps) =>
+  async (question: string): Promise<void> => {
+    if (!deps.analysisResult) {
+      return;
+    }
+
+    const userTurn: AnalysisChatTurn = {
+      role: 'user',
+      content: question
+    };
+    const history = deps.analysisChatMessages;
+
+    deps.setAnalysisChatMessages((current) => [...current, userTurn]);
+    deps.setIsChatRequestPending(true);
+    deps.clearError();
+
+    try {
+      const answer = await electronApi.askAnalysisAssistant({
+        analysis: deps.analysisResult,
+        config: deps.analysisConfig,
+        locale: deps.locale,
+        question,
+        history
+      });
+
+      deps.setAnalysisChatMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          content: answer
+        }
+      ]);
+    } catch (error_) {
+      const rawReason = error_ instanceof Error ? error_.message : deps.analyzeErrorCopy;
+      const reason = unwrapAnalysisChatIpcError(rawReason);
+      deps.setError(reason);
+      deps.setAnalysisChatMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          content: deps.failedCopyFactory(reason)
+        }
+      ]);
+    } finally {
+      deps.setIsChatRequestPending(false);
+    }
+  };
 
 export const App = (): JSX.Element => {
   const { copy, locale } = useI18n();
@@ -32,6 +215,9 @@ export const App = (): JSX.Element => {
     setFilters,
     clearLogs,
     setAutoScroll,
+    setLogAnalysis,
+    setAnalysisAI,
+    setAnalysisConfig,
     setSettings,
     setSessionState,
     selectDevice
@@ -45,9 +231,23 @@ export const App = (): JSX.Element => {
   const [isSubmittingAdbPath, setIsSubmittingAdbPath] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isStopPending, setIsStopPending] = useState(false);
+  const [isPausePending, setIsPausePending] = useState(false);
+  const [selectedLogId, setSelectedLogId] = useState<string | null>(null);
+  const [isAnalyzeOptionsOpen, setIsAnalyzeOptionsOpen] = useState(false);
+  const [analyzeLimit, setAnalyzeLimit] = useState(56);
   const [isDevicesOpen, setIsDevicesOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
+  const [isAnalysisChatOpen, setIsAnalysisChatOpen] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<LogAnalysisResult | null>(null);
+  const [analysisBaseResult, setAnalysisBaseResult] = useState<LogAnalysisResult | null>(null);
+  const [analysisMeta, setAnalysisMeta] = useState<AIEnhancementMeta | null>(null);
+  const [isEnhancingWithAI, setIsEnhancingWithAI] = useState(false);
+  const [isChatRequestPending, setIsChatRequestPending] = useState(false);
+  const [analysisChatMessages, setAnalysisChatMessages] = useState<AnalysisChatTurn[]>([]);
 
   useEffect(() => {
     setAdbPathDraft(settings.adbPath);
@@ -63,7 +263,9 @@ export const App = (): JSX.Element => {
         .updateSettings({
           autoScroll: settings.autoScroll,
           lastDeviceId: selectedDeviceId,
-          filters
+          filters,
+          logAnalysis: settings.logAnalysis,
+          analysis: settings.analysis
         })
         .then((updated: typeof settings) => {
           setSettings(updated);
@@ -74,10 +276,39 @@ export const App = (): JSX.Element => {
     }, 250);
 
     return () => globalThis.clearTimeout(timer);
-  }, [copy.errors.persistPreferences, ready, selectedDeviceId, filters, settings.autoScroll, setError, setSettings]);
+  }, [
+    copy.errors.persistPreferences,
+    ready,
+    selectedDeviceId,
+    filters,
+    settings.autoScroll,
+    settings.logAnalysis,
+    settings.analysis,
+    setError,
+    setSettings
+  ]);
 
   const filteredLogs = useMemo(() => filterLogs(logs, filters), [logs, filters]);
+  const processedLogs = useMemo(
+    () =>
+      processLogsForRender(filteredLogs, {
+        enableGrouping: settings.logAnalysis.enableGrouping,
+        enableHighlight: settings.logAnalysis.enableHighlight
+      }),
+    [filteredLogs, settings.logAnalysis.enableGrouping, settings.logAnalysis.enableHighlight]
+  );
   const selectedDevice = devices.find((device) => device.id === selectedDeviceId) ?? null;
+
+  useEffect(() => {
+    if (!selectedLogId) {
+      return;
+    }
+
+    const stillVisible = processedLogs.enrichedLogs.some((entry) => entry.id === selectedLogId);
+    if (!stillVisible) {
+      setSelectedLogId(null);
+    }
+  }, [processedLogs.enrichedLogs, selectedLogId]);
 
   const refreshDeviceList = async (): Promise<void> => {
     setIsRefreshing(true);
@@ -125,15 +356,29 @@ export const App = (): JSX.Element => {
   };
 
   const handleStopSession = async (): Promise<void> => {
+    if (isStopPending) {
+      return;
+    }
+
+    setIsStopPending(true);
+
     try {
       const nextState = await electronApi.stopLogcat();
       setSessionState(nextState);
     } catch (stopError) {
       setError(stopError instanceof Error ? stopError.message : copy.errors.stopLogcat);
+    } finally {
+      setIsStopPending(false);
     }
   };
 
   const handlePauseResume = async (): Promise<void> => {
+    if (isPausePending || isStopPending) {
+      return;
+    }
+
+    setIsPausePending(true);
+
     try {
       const nextState =
         sessionState.status === 'paused'
@@ -142,6 +387,8 @@ export const App = (): JSX.Element => {
       setSessionState(nextState);
     } catch (pauseError) {
       setError(pauseError instanceof Error ? pauseError.message : copy.errors.updateCaptureState);
+    } finally {
+      setIsPausePending(false);
     }
   };
 
@@ -207,6 +454,72 @@ export const App = (): JSX.Element => {
     }
   };
 
+  const runAnalysisForLogs = createRunAnalysisForLogsHandler({
+    analysisEnabled: settings.analysis.enableAnalysis,
+    locale,
+    clearError,
+    setError,
+    setIsAnalyzing,
+    setAnalysisBaseResult,
+    setAnalysisResult,
+    setAnalysisMeta,
+    setAnalysisChatMessages,
+    setIsAnalysisChatOpen,
+    setIsAnalysisOpen,
+    setIsAnalyzeOptionsOpen,
+    setIsActionsOpen,
+    analyzeErrorCopy: copy.errors.analyzeLogs
+  });
+
+  const handleOpenAnalyzeOptions = (): void => {
+    if (!settings.analysis.enableAnalysis || processedLogs.enrichedLogs.length === 0) {
+      return;
+    }
+
+    setIsAnalyzeOptionsOpen(true);
+    setIsActionsOpen(false);
+  };
+
+  const handleAnalyzeSingleLog = (log: EnrichedLog): void => {
+    void runAnalysisForLogs([log]);
+  };
+
+  const handleEnhanceAnalysisWithAI = createEnhanceAnalysisWithAIHandler({
+    analysisBaseResult,
+    analysisConfig: settings.analysis,
+    locale,
+    analyzeErrorCopy: copy.errors.analyzeLogs,
+    clearError,
+    setError,
+    setIsEnhancingWithAI,
+    setAnalysisMeta,
+    setAnalysisResult,
+    setAnalysisChatMessages
+  });
+
+  const handleOpenAIChat = (): void => {
+    setIsAnalysisChatOpen(true);
+  };
+
+  const handleSendAIQuestion = createSendAIQuestionHandler({
+    analysisResult,
+    analysisConfig: settings.analysis,
+    locale,
+    analysisChatMessages,
+    analyzeErrorCopy: copy.errors.analyzeLogs,
+    failedCopyFactory: copy.modals.analysisChat.failed,
+    clearError,
+    setError,
+    setIsChatRequestPending,
+    setAnalysisChatMessages
+  });
+
+  const handleRunAnalyzeScope = async (): Promise<void> => {
+    const safeLimit = Number.isFinite(analyzeLimit) ? Math.max(1, Math.floor(analyzeLimit)) : 1;
+    const subset = processedLogs.enrichedLogs.slice(-safeLimit);
+    await runAnalysisForLogs(subset);
+  };
+
   const handleLocaleChange = async (nextLocale: Locale): Promise<void> => {
     const nextSettings = await electronApi.updateSettings({ locale: nextLocale });
     setSettings(nextSettings);
@@ -247,7 +560,7 @@ export const App = (): JSX.Element => {
   );
 
   return (
-    <div className="flx-screen min-h-screen bg-[var(--bg)] text-[var(--foreground)]">
+    <div className="flx-screen min-h-screen bg-(--bg) text-(--foreground)">
       <div className="mx-auto flex min-h-screen max-w-[1480px] flex-col px-6 py-6">
         <main className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[28px] bg-transparent shadow-none">
           <div className="drag-region h-9" />
@@ -261,10 +574,10 @@ export const App = (): JSX.Element => {
                   src={logcatDeskMark}
                 />
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[var(--brand-500)]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-(--brand-500)">
                     {copy.common.appName}
                   </p>
-                  <p className="mt-1 text-sm text-[var(--muted)]">
+                  <p className="mt-1 text-sm text-(--muted)">
                     {copy.header.tagline}
                   </p>
                 </div>
@@ -286,7 +599,7 @@ export const App = (): JSX.Element => {
               </div>
             </div>
 
-            <div className="drag-region mt-3 flex items-center gap-3 text-sm text-[var(--muted)]">
+            <div className="drag-region mt-3 flex items-center gap-3 text-sm text-(--muted)">
               <span>
                 {selectedDevice
                   ? copy.header.selectedDevice(selectedDevice.model ?? selectedDevice.id)
@@ -305,13 +618,17 @@ export const App = (): JSX.Element => {
           ) : null}
 
           <CommandBar
+            canAnalyze={settings.analysis.enableAnalysis && processedLogs.enrichedLogs.length > 0}
             canStart={Boolean(selectedDeviceId) && adbStatus.available}
             canClearLogs={filteredLogs.length > 0}
             filters={filters}
+            isAnalyzePending={isAnalyzing}
+            isPausePending={isPausePending}
             isPaused={paused}
+            isStopPending={isStopPending}
             isStreaming={streaming}
+            onAnalyze={handleOpenAnalyzeOptions}
             onClearLogs={clearLogs}
-            onOpenActions={() => setIsActionsOpen(true)}
             onPauseResume={handlePauseResume}
             onSetFilters={setFilters}
             onStart={handleStartSession}
@@ -333,12 +650,28 @@ export const App = (): JSX.Element => {
                 }
               />
             ) : (
-              <LogConsole
-                autoScroll={settings.autoScroll}
-                logs={filteredLogs}
-                searchQuery={filters.search}
-                onCopyLine={(line) => electronApi.copyToClipboard(line)}
-              />
+              settings.logAnalysis.enableGrouping ? (
+                <GroupedLogConsole
+                  autoScroll={settings.autoScroll}
+                  enableHighlight={settings.logAnalysis.enableHighlight}
+                  groups={processedLogs.groupedLogs}
+                  searchQuery={filters.search}
+                  selectedLogId={selectedLogId}
+                  onAnalyzeLog={handleAnalyzeSingleLog}
+                  onSelectLog={setSelectedLogId}
+                  onCopyLine={(line) => electronApi.copyToClipboard(line)}
+                />
+              ) : (
+                <LogConsole
+                  autoScroll={settings.autoScroll}
+                  enableHighlight={settings.logAnalysis.enableHighlight}
+                  logs={settings.logAnalysis.enableHighlight ? processedLogs.enrichedLogs : filteredLogs}
+                  searchQuery={filters.search}
+                  selectedLogId={selectedLogId}
+                  onSelectLog={setSelectedLogId}
+                  onCopyLine={(line) => electronApi.copyToClipboard(line)}
+                />
+              )
             )}
           </section>
         </main>
@@ -360,12 +693,17 @@ export const App = (): JSX.Element => {
         <SettingsModal
           adbPath={adbPathDraft}
           adbStatus={adbStatus}
+          analysis={settings.analysis}
           autoScroll={settings.autoScroll}
+          logAnalysis={settings.logAnalysis}
           isSubmittingAdbPath={isSubmittingAdbPath}
           locale={settings.locale}
           onAdbPathChange={setAdbPathDraft}
           onClose={() => setIsSettingsOpen(false)}
           onSaveAdbPath={handleSaveAdbPath}
+          onSetAnalysisAI={setAnalysisAI}
+          onSetAnalysisConfig={setAnalysisConfig}
+          onSetLogAnalysis={setLogAnalysis}
           onSetLocale={(locale) => void handleLocaleChange(locale)}
           onSetAutoScroll={(value) => setAutoScroll(value)}
         />
@@ -373,8 +711,11 @@ export const App = (): JSX.Element => {
 
       {isActionsOpen ? (
         <ActionsModal
+          canAnalyze={settings.analysis.enableAnalysis}
           isCheckingUpdates={isCheckingUpdates}
+          isAnalyzing={isAnalyzing}
           isExporting={isExporting}
+          onAnalyzeLogs={handleOpenAnalyzeOptions}
           onCheckForUpdates={() => void handleCheckForUpdates()}
           onClearBuffer={handleClearBuffer}
           onClearView={clearLogs}
@@ -382,6 +723,49 @@ export const App = (): JSX.Element => {
           onCopyVisible={handleCopyVisible}
           onExportAll={() => void exportLogs('all', 'log')}
           onExportVisible={() => void exportLogs('visible', 'txt')}
+        />
+      ) : null}
+
+      {isAnalysisOpen ? (
+        <AnalysisModal
+          aiMeta={analysisMeta}
+          canEnhanceWithAI={settings.analysis.enableAIEnhancement}
+          canOpenAIChat={
+            settings.analysis.enableAIEnhancement &&
+            Boolean(settings.analysis.ai?.apiKey.trim()) &&
+            Boolean(analysisResult)
+          }
+          isEnhancingWithAI={isEnhancingWithAI}
+          result={analysisResult}
+          onEnhanceWithAI={() => void handleEnhanceAnalysisWithAI()}
+          onOpenAIChat={handleOpenAIChat}
+          onClose={() => {
+            setIsAnalysisOpen(false);
+            setAnalysisBaseResult(null);
+            setAnalysisMeta(null);
+            setAnalysisChatMessages([]);
+            setIsAnalysisChatOpen(false);
+          }}
+        />
+      ) : null}
+
+      {isAnalysisChatOpen ? (
+        <AnalysisChatModal
+          isSending={isChatRequestPending}
+          messages={analysisChatMessages}
+          onClose={() => setIsAnalysisChatOpen(false)}
+          onSend={(question) => void handleSendAIQuestion(question)}
+        />
+      ) : null}
+
+      {isAnalyzeOptionsOpen ? (
+        <AnalysisOptionsModal
+          analyzeLimit={analyzeLimit}
+          isAnalyzing={isAnalyzing}
+          totalVisible={processedLogs.enrichedLogs.length}
+          onClose={() => setIsAnalyzeOptionsOpen(false)}
+          onLimitChange={setAnalyzeLimit}
+          onRun={() => void handleRunAnalyzeScope()}
         />
       ) : null}
     </div>

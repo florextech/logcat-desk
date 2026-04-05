@@ -37,21 +37,28 @@ export default defineConfig({
       ],
       exclude: [
         'src/main/index.ts',
-        'src/main/services/logcat/logcat-session-manager.ts',
         'src/renderer/src/App.tsx',
         'src/renderer/src/main.tsx',
         'src/renderer/src/vite-env.d.ts',
         'src/renderer/src/index.css',
         'src/renderer/src/components/actions-modal.tsx',
+        'src/renderer/src/components/analysis-chat-modal.tsx',
+        'src/renderer/src/components/analysis-modal.tsx',
+        'src/renderer/src/components/analysis-options-modal.tsx',
         'src/renderer/src/components/app-sidebar.tsx',
         'src/renderer/src/components/command-bar.tsx',
         'src/renderer/src/components/device-modal.tsx',
         'src/renderer/src/components/empty-state.tsx',
+        'src/renderer/src/components/floating-select.tsx',
+        'src/renderer/src/components/grouped-log-console.tsx',
         'src/renderer/src/components/log-console.tsx',
         'src/renderer/src/components/modal-shell.tsx',
         'src/renderer/src/components/settings-modal.tsx',
         'src/renderer/src/hooks/use-app-bootstrap.ts',
-        'src/renderer/src/hooks/use-logcat-events.ts'
+        'src/renderer/src/hooks/use-logcat-events.ts',
+        'src/renderer/src/i18n/messages.ts',
+        'src/renderer/src/utils/intelligent-analysis/ai/**/*.ts',
+        'src/renderer/src/utils/log-analysis/types.ts'
       ]
     }
   }

@@ -1,10 +1,13 @@
-import type { JSX } from 'react';
+import { type JSX, useState } from 'react';
 import { useI18n } from '@renderer/i18n/provider';
 import { ModalShell } from '@renderer/components/modal-shell';
 
 interface ActionsModalProps {
+  canAnalyze: boolean;
   isCheckingUpdates: boolean;
+  isAnalyzing: boolean;
   isExporting: boolean;
+  onAnalyzeLogs: () => void;
   onCheckForUpdates: () => void;
   onClearBuffer: () => void;
   onClearView: () => void;
@@ -29,7 +32,7 @@ const ActionRow = ({
   onClick,
   runLabel,
   disabled = false,
-  accent = 'text-[var(--brand-700)]'
+  accent = 'text-(--brand-700)'
 }: ActionRowProps): JSX.Element => (
   <button
     className="group flex items-center justify-between rounded-2xl border border-[rgb(38_48_40/0.82)] bg-[rgb(13_16_14/0.72)] px-4 py-4 text-left transition hover:border-[rgb(189_241_70/0.24)] hover:bg-[rgb(16_20_17/0.86)] disabled:cursor-not-allowed disabled:opacity-45"
@@ -37,10 +40,10 @@ const ActionRow = ({
     onClick={onClick}
   >
     <div>
-      <p className={`text-sm font-semibold ${disabled ? 'text-[var(--muted)]' : 'text-[var(--foreground)]'}`}>
+      <p className={`text-sm font-semibold ${disabled ? 'text-(--muted)' : 'text-(--foreground)'}`}>
         {label}
       </p>
-      <p className="mt-1 text-sm text-[var(--muted)]">{hint}</p>
+      <p className="mt-1 text-sm text-(--muted)">{hint}</p>
     </div>
     <span
       className={`rounded-full border border-[rgb(38_48_40/0.82)] bg-[rgb(17_21_19/0.84)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${accent}`}
@@ -51,8 +54,11 @@ const ActionRow = ({
 );
 
 export const ActionsModal = ({
+  canAnalyze,
   isCheckingUpdates,
+  isAnalyzing,
   isExporting,
+  onAnalyzeLogs,
   onCheckForUpdates,
   onClearBuffer,
   onClearView,
@@ -62,19 +68,50 @@ export const ActionsModal = ({
   onExportVisible
 }: ActionsModalProps): JSX.Element => {
   const { copy } = useI18n();
+  type ActionTab = 'cleanup' | 'maintenance' | 'export';
+  const [activeTab, setActiveTab] = useState<ActionTab>('cleanup');
+  const tabClass = (isActive: boolean): string =>
+    `inline-flex h-9 items-center justify-center rounded-xl px-3 text-[11px] font-semibold uppercase tracking-[0.14em] transition ${
+      isActive
+        ? 'border border-[rgb(189_241_70/0.34)] bg-[rgb(189_241_70/0.12)] text-(--brand-700)'
+        : 'text-(--muted) hover:bg-[rgb(17_21_19/0.82)] hover:text-(--foreground)'
+    }`;
 
   return (
     <ModalShell maxWidthClass="max-w-xl" onClose={onClose} title={copy.modals.actions.title}>
       <div className="space-y-5">
-        <p className="text-sm leading-7 text-[var(--muted)]">
+        <p className="text-sm leading-7 text-(--muted)">
           {copy.modals.actions.intro}
         </p>
 
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--brand-500)]">
-            {copy.modals.actions.cleanup}
-          </p>
-          <div className="mt-3 grid gap-3">
+        <div className="rounded-2xl border border-(--border) bg-[rgb(11_13_12/0.82)] p-1">
+          <div className="grid grid-cols-3 gap-1">
+            <button
+              className={tabClass(activeTab === 'cleanup')}
+              type="button"
+              onClick={() => setActiveTab('cleanup')}
+            >
+              {copy.modals.actions.cleanup}
+            </button>
+            <button
+              className={tabClass(activeTab === 'maintenance')}
+              type="button"
+              onClick={() => setActiveTab('maintenance')}
+            >
+              {copy.modals.actions.maintenance}
+            </button>
+            <button
+              className={tabClass(activeTab === 'export')}
+              type="button"
+              onClick={() => setActiveTab('export')}
+            >
+              {copy.modals.actions.export}
+            </button>
+          </div>
+        </div>
+
+        {activeTab === 'cleanup' ? (
+          <div className="grid gap-3">
             <ActionRow
               hint={copy.modals.actions.clearViewHint}
               label={copy.modals.actions.clearViewLabel}
@@ -89,13 +126,17 @@ export const ActionsModal = ({
               runLabel={copy.common.run}
             />
           </div>
-        </div>
+        ) : null}
 
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--brand-500)]">
-            {copy.modals.actions.maintenance}
-          </p>
-          <div className="mt-3 grid gap-3">
+        {activeTab === 'maintenance' ? (
+          <div className="grid gap-3">
+            <ActionRow
+              disabled={!canAnalyze || isAnalyzing}
+              hint={copy.modals.actions.analyzeLogsHint}
+              label={copy.modals.actions.analyzeLogsLabel}
+              onClick={onAnalyzeLogs}
+              runLabel={copy.common.run}
+            />
             <ActionRow
               disabled={isCheckingUpdates}
               hint={copy.modals.actions.checkUpdatesHint}
@@ -104,13 +145,10 @@ export const ActionsModal = ({
               runLabel={copy.common.run}
             />
           </div>
-        </div>
+        ) : null}
 
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--brand-500)]">
-            {copy.modals.actions.export}
-          </p>
-          <div className="mt-3 grid gap-3">
+        {activeTab === 'export' ? (
+          <div className="grid gap-3">
             <ActionRow
               disabled={isExporting}
               hint={copy.modals.actions.exportVisibleHint}
@@ -132,7 +170,7 @@ export const ActionsModal = ({
               runLabel={copy.common.run}
             />
           </div>
-        </div>
+        ) : null}
       </div>
     </ModalShell>
   );

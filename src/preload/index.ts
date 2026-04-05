@@ -14,6 +14,8 @@ const api: RendererApi = {
   clearLogcatBuffer: (input) => ipcRenderer.invoke(ipcChannels.logcatClearBuffer, input),
   checkForUpdates: () => ipcRenderer.invoke(ipcChannels.updatesCheck),
   exportLogs: (input) => ipcRenderer.invoke(ipcChannels.exportLogs, input),
+  enhanceAnalysisSummary: (input) => ipcRenderer.invoke(ipcChannels.analysisEnhanceSummary, input),
+  askAnalysisAssistant: (input) => ipcRenderer.invoke(ipcChannels.analysisAskAssistant, input),
   copyToClipboard: (text) => ipcRenderer.invoke(ipcChannels.clipboardCopy, text),
   onLogBatch: (listener) => {
     const wrapped = (_event: Electron.IpcRendererEvent, payload: Parameters<typeof listener>[0]) =>

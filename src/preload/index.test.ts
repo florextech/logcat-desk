@@ -74,6 +74,72 @@ describe('preload api exposure', () => {
       suggestedName: 'capture'
     });
 
+    api.enhanceAnalysisSummary({
+      base: {
+        summary: 'summary',
+        probableCauses: [],
+        evidence: [],
+        recommendations: [],
+        severity: 'low'
+      },
+      config: {
+        enableAnalysis: true,
+        enableAIEnhancement: true,
+        ai: { provider: 'openai', apiKey: 'key' }
+      },
+      locale: 'en'
+    });
+    expect(invokeMock).toHaveBeenCalledWith(ipcChannels.analysisEnhanceSummary, {
+      base: {
+        summary: 'summary',
+        probableCauses: [],
+        evidence: [],
+        recommendations: [],
+        severity: 'low'
+      },
+      config: {
+        enableAnalysis: true,
+        enableAIEnhancement: true,
+        ai: { provider: 'openai', apiKey: 'key' }
+      },
+      locale: 'en'
+    });
+
+    api.askAnalysisAssistant({
+      analysis: {
+        summary: 'summary',
+        probableCauses: [],
+        evidence: [],
+        recommendations: [],
+        severity: 'low'
+      },
+      config: {
+        enableAnalysis: true,
+        enableAIEnhancement: true,
+        ai: { provider: 'openai', apiKey: 'key' }
+      },
+      locale: 'en',
+      question: 'Why is this failing?',
+      history: [{ role: 'assistant', content: 'Previous response' }]
+    });
+    expect(invokeMock).toHaveBeenCalledWith(ipcChannels.analysisAskAssistant, {
+      analysis: {
+        summary: 'summary',
+        probableCauses: [],
+        evidence: [],
+        recommendations: [],
+        severity: 'low'
+      },
+      config: {
+        enableAnalysis: true,
+        enableAIEnhancement: true,
+        ai: { provider: 'openai', apiKey: 'key' }
+      },
+      locale: 'en',
+      question: 'Why is this failing?',
+      history: [{ role: 'assistant', content: 'Previous response' }]
+    });
+
     api.copyToClipboard('copied');
     expect(invokeMock).toHaveBeenCalledWith(ipcChannels.clipboardCopy, 'copied');
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LogEntry } from '@shared/types';
-import { enrichLog } from '@renderer/utils/log-analysis/log-highlighter';
+import { enrichLog, enrichLogs } from '@renderer/utils/log-analysis/log-highlighter';
 
 const makeLog = (overrides: Partial<LogEntry>): LogEntry => ({
   id: 'log-1',
@@ -43,5 +43,47 @@ describe('log highlighter', () => {
     expect(enriched.severity).toBe('info');
     expect(enriched.highlight).toBe(false);
     expect(enriched.category).toBeUndefined();
+  });
+
+  it('maps warning level to warning severity when no category is detected', () => {
+    const enriched = enrichLog(makeLog({ level: 'W', message: 'Slow response from service' }));
+
+    expect(enriched.severity).toBe('warning');
+    expect(enriched.highlight).toBe(true);
+    expect(enriched.category).toBeUndefined();
+  });
+
+  it('maps error and fatal levels to error severity when no category is detected', () => {
+    const errorLog = enrichLog(makeLog({ level: 'E', message: 'Operation failed due to status code' }));
+    const fatalLog = enrichLog(makeLog({ level: 'F', message: 'Process exited unexpectedly' }));
+
+    expect(errorLog.severity).toBe('error');
+    expect(fatalLog.severity).toBe('error');
+    expect(errorLog.highlight).toBe(true);
+    expect(fatalLog.highlight).toBe(true);
+  });
+
+  it('prioritizes emphasis mapping when no category matches', () => {
+    const warningEmphasis = enrichLog(
+      makeLog({ level: 'I', emphasis: 'warning', message: 'Slow branch completed' })
+    );
+    const criticalEmphasis = enrichLog(
+      makeLog({ level: 'I', emphasis: 'critical', message: 'Critical branch completed' })
+    );
+
+    expect(warningEmphasis.severity).toBe('warning');
+    expect(criticalEmphasis.severity).toBe('error');
+  });
+
+  it('uses raw text when message is empty and supports list enrichment', () => {
+    const [first, second] = enrichLogs([
+      makeLog({ message: '', raw: 'FATAL signal from raw payload' }),
+      makeLog({ message: '', raw: 'normal raw payload without category', level: 'D' })
+    ]);
+
+    expect(first?.category).toBe('FATAL');
+    expect(first?.severity).toBe('error');
+    expect(second?.severity).toBe('info');
+    expect(second?.highlight).toBe(false);
   });
 });

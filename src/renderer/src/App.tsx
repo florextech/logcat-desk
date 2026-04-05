@@ -560,7 +560,7 @@ export const App = (): JSX.Element => {
   );
 
   return (
-    <div className="flx-screen min-h-screen bg-[var(--bg)] text-[var(--foreground)]">
+    <div className="flx-screen min-h-screen bg-(--bg) text-(--foreground)">
       <div className="mx-auto flex min-h-screen max-w-[1480px] flex-col px-6 py-6">
         <main className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[28px] bg-transparent shadow-none">
           <div className="drag-region h-9" />
@@ -574,10 +574,10 @@ export const App = (): JSX.Element => {
                   src={logcatDeskMark}
                 />
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[var(--brand-500)]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-(--brand-500)">
                     {copy.common.appName}
                   </p>
-                  <p className="mt-1 text-sm text-[var(--muted)]">
+                  <p className="mt-1 text-sm text-(--muted)">
                     {copy.header.tagline}
                   </p>
                 </div>
@@ -599,7 +599,7 @@ export const App = (): JSX.Element => {
               </div>
             </div>
 
-            <div className="drag-region mt-3 flex items-center gap-3 text-sm text-[var(--muted)]">
+            <div className="drag-region mt-3 flex items-center gap-3 text-sm text-(--muted)">
               <span>
                 {selectedDevice
                   ? copy.header.selectedDevice(selectedDevice.model ?? selectedDevice.id)
@@ -730,7 +730,7 @@ export const App = (): JSX.Element => {
         <AnalysisModal
           aiMeta={analysisMeta}
           canEnhanceWithAI={settings.analysis.enableAIEnhancement}
-          canOpenAIChat={Boolean(analysisMeta?.used)}
+          canOpenAIChat={settings.analysis.enableAIEnhancement && Boolean(analysisResult)}
           isEnhancingWithAI={isEnhancingWithAI}
           result={analysisResult}
           onEnhanceWithAI={() => void handleEnhanceAnalysisWithAI()}

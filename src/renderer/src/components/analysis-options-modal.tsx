@@ -29,19 +29,19 @@ export const AnalysisOptionsModal = ({
   return (
     <ModalShell maxWidthClass="max-w-xl" onClose={onClose} title={copy.modals.analysisOptions.title}>
       <div className="space-y-5">
-        <p className="text-sm text-[var(--muted)]">{copy.modals.analysisOptions.intro(totalVisible)}</p>
+        <p className="text-sm text-(--muted)">{copy.modals.analysisOptions.intro(totalVisible)}</p>
 
         <div>
-          <label className="text-sm font-semibold text-[var(--foreground)]" htmlFor={limitInputId}>
+          <label className="text-sm font-semibold text-(--foreground)" htmlFor={limitInputId}>
             {copy.modals.analysisOptions.lastVisibleScopeLabel}
           </label>
-          <p className="mt-1 text-sm text-[var(--muted)]" id={limitHintId}>
+          <p className="mt-1 text-sm text-(--muted)" id={limitHintId}>
             {copy.modals.analysisOptions.lastVisibleScopeHint}
           </p>
           <input
             id={limitInputId}
             aria-describedby={limitHintId}
-            className="flx-focus mt-3 w-full rounded-xl border border-[var(--border)] bg-[rgb(11_13_12/0.84)] px-3 py-2 text-sm text-[var(--foreground)] outline-none"
+            className="flx-focus mt-3 w-full rounded-xl border border-(--border) bg-[rgb(11_13_12/0.84)] px-3 py-2 text-sm text-(--foreground) outline-none"
             max={totalVisible}
             min={1}
             type="number"

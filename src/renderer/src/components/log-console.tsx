@@ -41,17 +41,17 @@ const LogConsoleRow = ({
   const isSelectable = Boolean(onSelectLog);
   const rowContent = (
     <>
-      <span className="text-[var(--muted)]">
+      <span className="text-(--muted)">
         {log.monthDay && log.time ? `${log.monthDay} ${log.time}` : '--'}
       </span>
       <span className={`font-semibold ${tone.level}`}>{log.level}</span>
       <div className="truncate">
-        <span className="text-[var(--foreground)]">{log.tag}</span>
+        <span className="text-(--foreground)">{log.tag}</span>
         {log.pid ? <span className="ml-2 text-[rgb(118_183_61)]">#{log.pid}</span> : null}
       </div>
-      <div className="break-words text-[var(--foreground)]">
+      <div className="break-words text-(--foreground)">
         {enableHighlight && maybeEnriched.highlight && maybeEnriched.category ? (
-          <span className="mr-2 rounded-full border border-[rgb(255_255_255/0.1)] bg-[rgb(255_255_255/0.04)] px-2 py-[1px] text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
+          <span className="mr-2 rounded-full border border-[rgb(255_255_255/0.1)] bg-[rgb(255_255_255/0.04)] px-2 py-[1px] text-[10px] uppercase tracking-[0.14em] text-(--muted)">
             {maybeEnriched.category}
           </span>
         ) : null}
@@ -82,7 +82,7 @@ const LogConsoleRow = ({
         </div>
       )}
       <button
-        className="rounded-lg border border-[var(--border)] bg-[rgb(17_21_19/0.74)] px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] opacity-0 transition group-hover:opacity-100 hover:border-[rgb(189_241_70/0.3)] hover:text-[var(--foreground)]"
+        className="rounded-lg border border-(--border) bg-[rgb(17_21_19/0.74)] px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-(--muted) opacity-0 transition group-hover:opacity-100 hover:border-[rgb(189_241_70/0.3)] hover:text-(--foreground)"
         type="button"
         onClick={() => {
           void onCopyLine(log.raw);
@@ -153,7 +153,7 @@ export const LogConsole = ({
 
   return (
     <div className="flx-card flx-grid-glow relative flex h-full min-h-0 max-h-[calc(100vh-270px)] flex-col overflow-hidden bg-[rgb(11_13_12/0.92)]">
-      <div className="grid grid-cols-[8.5rem_4rem_16rem_1fr_4rem] gap-3 border-b border-[var(--border)] bg-[rgb(17_21_19/0.9)] px-4 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+      <div className="grid grid-cols-[8.5rem_4rem_16rem_1fr_4rem] gap-3 border-b border-(--border) bg-[rgb(17_21_19/0.9)] px-4 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-(--muted)">
         <span>{copy.console.time}</span>
         <span>{copy.console.level}</span>
         <span>{copy.console.tagPid}</span>
@@ -190,7 +190,7 @@ export const LogConsole = ({
       {isAtBottom ? null : (
         <div className="pointer-events-none absolute bottom-4 right-4">
           <button
-            className="pointer-events-auto rounded-full border border-[rgb(189_241_70/0.35)] bg-[rgb(12_15_13/0.95)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--brand-500)] shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition hover:border-[rgb(189_241_70/0.55)] hover:text-[var(--brand-700)]"
+            className="pointer-events-auto rounded-full border border-[rgb(189_241_70/0.35)] bg-[rgb(12_15_13/0.95)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-(--brand-500) shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition hover:border-[rgb(189_241_70/0.55)] hover:text-(--brand-700)"
             onClick={() => scrollToBottom('smooth')}
             type="button"
           >

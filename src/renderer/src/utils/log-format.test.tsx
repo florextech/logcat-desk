@@ -22,7 +22,7 @@ describe('log formatting helpers', () => {
     });
     expect(getLevelTone('D', 'normal')).toEqual({
       row: 'bg-[rgb(189_241_70/0.03)]',
-      level: 'text-[var(--brand-500)]'
+      level: 'text-(--brand-500)'
     });
   });
 

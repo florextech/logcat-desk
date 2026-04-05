@@ -37,7 +37,7 @@ export const AnalysisChatModal = ({
       <div className="flex h-[60vh] flex-col">
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
           {messages.length === 0 ? (
-            <p className="text-sm text-[var(--muted)]">{copy.modals.analysisChat.empty}</p>
+            <p className="text-sm text-(--muted)">{copy.modals.analysisChat.empty}</p>
           ) : (
             messages.map((message, index) => (
               <div
@@ -47,8 +47,8 @@ export const AnalysisChatModal = ({
                 <div
                   className={`${bubbleBase} ${
                     message.role === 'user'
-                      ? 'border border-[rgb(189_241_70/0.28)] bg-[rgb(189_241_70/0.1)] text-[var(--foreground)]'
-                      : 'border border-[rgb(38_48_40/0.85)] bg-[rgb(13_16_14/0.7)] text-[var(--foreground)]'
+                      ? 'border border-[rgb(189_241_70/0.28)] bg-[rgb(189_241_70/0.1)] text-(--foreground)'
+                      : 'border border-[rgb(38_48_40/0.85)] bg-[rgb(13_16_14/0.7)] text-(--foreground)'
                   }`}
                 >
                   {message.content}
@@ -58,7 +58,7 @@ export const AnalysisChatModal = ({
           )}
           {isSending ? (
             <div className="flex justify-start">
-              <div className={`${bubbleBase} border border-[rgb(38_48_40/0.85)] bg-[rgb(13_16_14/0.7)] text-[var(--muted)]`}>
+              <div className={`${bubbleBase} border border-[rgb(38_48_40/0.85)] bg-[rgb(13_16_14/0.7)] text-(--muted)`}>
                 {copy.modals.analysisChat.thinking}
               </div>
             </div>
@@ -67,7 +67,7 @@ export const AnalysisChatModal = ({
 
         <form className="mt-4 flex gap-2" onSubmit={submit}>
           <input
-            className="flx-focus w-full rounded-xl border border-[var(--border)] bg-[rgb(11_13_12/0.84)] px-3 py-2 text-sm text-[var(--foreground)] outline-none"
+            className="flx-focus w-full rounded-xl border border-(--border) bg-[rgb(11_13_12/0.84)] px-3 py-2 text-sm text-(--foreground) outline-none"
             placeholder={copy.modals.analysisChat.inputPlaceholder}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}

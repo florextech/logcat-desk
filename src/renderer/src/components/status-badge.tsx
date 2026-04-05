@@ -9,15 +9,15 @@ interface StatusBadgeProps {
 const toneByStatus: Record<SessionStatus, { dot: string; text: string }> = {
   idle: {
     dot: 'bg-[rgb(120_131_122)]',
-    text: 'text-[var(--muted)]'
+    text: 'text-(--muted)'
   },
   starting: {
     dot: 'bg-sky-300',
     text: 'text-sky-200'
   },
   streaming: {
-    dot: 'bg-[var(--brand-600)] shadow-[0_0_12px_rgba(189,241,70,0.7)] animate-pulse',
-    text: 'text-[var(--brand-700)]'
+    dot: 'bg-(--brand-600) shadow-[0_0_12px_rgba(189,241,70,0.7)] animate-pulse',
+    text: 'text-(--brand-700)'
   },
   paused: {
     dot: 'bg-amber-300',
@@ -25,7 +25,7 @@ const toneByStatus: Record<SessionStatus, { dot: string; text: string }> = {
   },
   stopped: {
     dot: 'bg-[rgb(120_131_122)]',
-    text: 'text-[var(--muted)]'
+    text: 'text-(--muted)'
   },
   error: {
     dot: 'bg-red-400 shadow-[0_0_12px_rgba(239,68,68,0.5)]',

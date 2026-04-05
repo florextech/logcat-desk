@@ -18,7 +18,7 @@ interface FloatingSelectProps<T extends string> {
 const ChevronIcon = ({ open }: { open: boolean }): JSX.Element => (
   <svg
     aria-hidden="true"
-    className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform ${open ? 'rotate-180' : ''}`}
+    className={`h-4 w-4 shrink-0 text-(--muted) transition-transform ${open ? 'rotate-180' : ''}`}
     fill="none"
     viewBox="0 0 24 24"
   >
@@ -33,7 +33,7 @@ const ChevronIcon = ({ open }: { open: boolean }): JSX.Element => (
 );
 
 const defaultButtonClassName =
-  'flx-focus flex w-full items-center justify-between rounded-2xl border border-[var(--border)] bg-[rgb(11_13_12/0.84)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[rgb(189_241_70/0.42)] disabled:cursor-not-allowed disabled:opacity-50';
+  'flx-focus flex w-full items-center justify-between rounded-2xl border border-(--border) bg-[rgb(11_13_12/0.84)] px-4 py-3 text-sm text-(--foreground) outline-none transition focus:border-[rgb(189_241_70/0.42)] disabled:cursor-not-allowed disabled:opacity-50';
 
 const layoutButtonClassName = 'flex w-full items-center justify-between gap-3 text-left';
 
@@ -285,10 +285,10 @@ export const FloatingSelect = <T extends string>({
                     aria-selected={active}
                     className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm transition ${
                       focused
-                        ? 'bg-[rgb(255_255_255/0.08)] text-[var(--foreground)]'
+                        ? 'bg-[rgb(255_255_255/0.08)] text-(--foreground)'
                         : active
-                        ? 'bg-[rgb(189_241_70/0.14)] font-semibold text-[var(--brand-700)]'
-                        : 'text-[var(--foreground)] hover:bg-[rgb(255_255_255/0.04)]'
+                        ? 'bg-[rgb(189_241_70/0.14)] font-semibold text-(--brand-700)'
+                        : 'text-(--foreground) hover:bg-[rgb(255_255_255/0.04)]'
                     }`}
                     role="option"
                     tabIndex={focused ? 0 : -1}
@@ -300,7 +300,7 @@ export const FloatingSelect = <T extends string>({
                     onMouseEnter={() => setFocusedIndex(optionIndex)}
                   >
                     <span>{option.label}</span>
-                    {active ? <span className="text-[var(--brand-700)]">✓</span> : null}
+                    {active ? <span className="text-(--brand-700)">✓</span> : null}
                   </button>
                 );
               })}

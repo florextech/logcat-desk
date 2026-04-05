@@ -26,13 +26,13 @@ export const getLevelTone = (
   if (level === 'D' || level === 'V') {
     return {
       row: 'bg-[rgb(189_241_70/0.03)]',
-      level: 'text-[var(--brand-500)]'
+      level: 'text-(--brand-500)'
     };
   }
 
   return {
     row: 'bg-transparent',
-    level: 'text-[var(--brand-700)]'
+    level: 'text-(--brand-700)'
   };
 };
 
@@ -58,7 +58,7 @@ export const getSeverityTone = (
 
   return {
     row: 'bg-transparent',
-    level: 'text-[var(--brand-700)]'
+    level: 'text-(--brand-700)'
   };
 };
 

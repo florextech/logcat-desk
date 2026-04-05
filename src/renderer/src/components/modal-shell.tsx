@@ -24,13 +24,13 @@ export const ModalShell = ({
         <div className="bg-[radial-gradient(circle_at_top,_rgba(189,241,70,0.08),_transparent_34%)]">
           <div className="flex items-center justify-between border-b border-[rgb(38_48_40/0.82)] px-6 py-5">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--brand-500)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-(--brand-500)">
                 {copy.common.panel}
               </p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)]">{title}</h2>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-(--foreground)">{title}</h2>
             </div>
             <button
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[rgb(38_48_40/0.82)] bg-[rgb(15_18_16/0.78)] text-sm text-[var(--muted)] transition hover:border-[rgb(189_241_70/0.22)] hover:text-[var(--foreground)]"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[rgb(38_48_40/0.82)] bg-[rgb(15_18_16/0.78)] text-sm text-(--muted) transition hover:border-[rgb(189_241_70/0.22)] hover:text-(--foreground)"
               onClick={onClose}
             >
               x

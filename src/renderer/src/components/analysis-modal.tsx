@@ -15,7 +15,7 @@ interface AnalysisModalProps {
 }
 
 const severityTone: Record<LogAnalysisResult['severity'], string> = {
-  low: 'text-[var(--brand-700)] border-[rgb(189_241_70/0.3)]',
+  low: 'text-(--brand-700) border-[rgb(189_241_70/0.3)]',
   medium: 'text-amber-200 border-amber-400/40',
   high: 'text-orange-300 border-orange-400/40',
   critical: 'text-red-300 border-red-400/40'
@@ -23,11 +23,11 @@ const severityTone: Record<LogAnalysisResult['severity'], string> = {
 
 const Section = ({ title, items }: { title: string; items: string[] }): JSX.Element => (
   <div>
-    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--brand-500)]">{title}</p>
+    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--brand-500)">{title}</p>
     {items.length === 0 ? (
-      <p className="mt-2 text-sm text-[var(--muted)]">-</p>
+      <p className="mt-2 text-sm text-(--muted)">-</p>
     ) : (
-      <ul className="mt-2 space-y-2 text-sm text-[var(--foreground)]">
+      <ul className="mt-2 space-y-2 text-sm text-(--foreground)">
         {items.map((item, index) => (
           <li key={`${title}-${index}`} className="rounded-xl border border-[rgb(38_48_40/0.82)] bg-[rgb(13_16_14/0.62)] px-3 py-2">
             {item}
@@ -58,9 +58,9 @@ export const AnalysisModal = ({
     <ModalShell maxWidthClass="max-w-3xl" onClose={onClose} title={copy.modals.analysis.title}>
       {result ? (
         <div className="space-y-5">
-          <div className="rounded-2xl border border-[var(--border)] bg-[rgb(11_13_12/0.82)] px-4 py-4">
+          <div className="rounded-2xl border border-(--border) bg-[rgb(11_13_12/0.82)] px-4 py-4">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-[var(--foreground)]">{copy.modals.analysis.summary}</p>
+              <p className="text-sm font-semibold text-(--foreground)">{copy.modals.analysis.summary}</p>
               <span
                 className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
                   severityTone[result.severity]
@@ -69,14 +69,14 @@ export const AnalysisModal = ({
                 {copy.modals.analysis.severity}: {copy.modals.analysis.severityLevels[result.severity]}
               </span>
             </div>
-            <p className="mt-2 text-sm leading-7 text-[var(--foreground)]">{result.summary}</p>
+            <p className="mt-2 text-sm leading-7 text-(--foreground)">{result.summary}</p>
             {showAIStatus ? (
               <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
                 <p>
                   {copy.modals.analysis.aiStatus}: {aiStatusText}
                 </p>
                 {aiMeta?.detail ? (
-                  <p className="mt-1 text-[11px] text-[var(--muted)]">{aiMeta.detail}</p>
+                  <p className="mt-1 text-[11px] text-(--muted)">{aiMeta.detail}</p>
                 ) : null}
               </div>
             ) : null}
@@ -128,7 +128,7 @@ export const AnalysisModal = ({
           <Section items={result.recommendations} title={copy.modals.analysis.recommendations} />
         </div>
       ) : (
-        <p className="text-sm text-[var(--muted)]">{copy.modals.analysis.noData}</p>
+        <p className="text-sm text-(--muted)">{copy.modals.analysis.noData}</p>
       )}
     </ModalShell>
   );

@@ -15,7 +15,7 @@ interface GroupedLogConsoleProps {
 }
 
 const actionButtonClass =
-  'inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[rgb(17_21_19/0.74)] text-[var(--muted)] transition hover:border-[rgb(189_241_70/0.3)] hover:text-[var(--foreground)]';
+  'inline-flex h-8 w-8 items-center justify-center rounded-lg border border-(--border) bg-[rgb(17_21_19/0.74)] text-(--muted) transition hover:border-[rgb(189_241_70/0.3)] hover:text-(--foreground)';
 
 const CopyIcon = (): JSX.Element => (
   <svg aria-hidden="true" fill="none" height="14" viewBox="0 0 24 24" width="14">
@@ -141,7 +141,7 @@ export const GroupedLogConsole = ({
 
   return (
     <div className="flx-card flx-grid-glow relative flex h-full min-h-0 max-h-[calc(100vh-270px)] flex-col overflow-hidden bg-[rgb(11_13_12/0.92)]">
-      <div className="grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)_4.5rem_7rem] gap-3 border-b border-[var(--border)] bg-[rgb(17_21_19/0.9)] px-4 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+      <div className="grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)_4.5rem_7rem] gap-3 border-b border-(--border) bg-[rgb(17_21_19/0.9)] px-4 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-(--muted)">
         <span>{copy.console.time}</span>
         <span>{copy.console.level}</span>
         <span>{copy.console.tagPid}</span>
@@ -186,15 +186,15 @@ export const GroupedLogConsole = ({
                     type="button"
                     onClick={() => onSelectLog(representative.id)}
                   >
-                    <span className="text-[var(--muted)]">{formatRange(group.firstSeen, group.lastSeen)}</span>
+                    <span className="text-(--muted)">{formatRange(group.firstSeen, group.lastSeen)}</span>
                     <span className={`font-semibold ${tone.level}`}>{representative.level}</span>
                     <div className="min-w-0 truncate">
-                      <span className="text-[var(--foreground)]">{representative.tag}</span>
+                      <span className="text-(--foreground)">{representative.tag}</span>
                       <span className="ml-2 text-[rgb(118_183_61)]">x{group.count}</span>
                     </div>
-                    <div className="min-w-0 break-all text-[var(--foreground)]">
+                    <div className="min-w-0 break-all text-(--foreground)">
                       {enableHighlight && representative.highlight && representative.category ? (
-                        <span className="mr-2 rounded-full border border-[rgb(255_255_255/0.1)] bg-[rgb(255_255_255/0.04)] px-2 py-[1px] text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
+                        <span className="mr-2 rounded-full border border-[rgb(255_255_255/0.1)] bg-[rgb(255_255_255/0.04)] px-2 py-[1px] text-[10px] uppercase tracking-[0.14em] text-(--muted)">
                           {representative.category}
                         </span>
                       ) : null}
@@ -203,15 +203,15 @@ export const GroupedLogConsole = ({
                   </button>
                 ) : (
                   <div className="col-span-4 grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)] gap-3">
-                    <span className="text-[var(--muted)]">{formatRange(group.firstSeen, group.lastSeen)}</span>
+                    <span className="text-(--muted)">{formatRange(group.firstSeen, group.lastSeen)}</span>
                     <span className={`font-semibold ${tone.level}`}>{representative.level}</span>
                     <div className="min-w-0 truncate">
-                      <span className="text-[var(--foreground)]">{representative.tag}</span>
+                      <span className="text-(--foreground)">{representative.tag}</span>
                       <span className="ml-2 text-[rgb(118_183_61)]">x{group.count}</span>
                     </div>
-                    <div className="min-w-0 break-all text-[var(--foreground)]">
+                    <div className="min-w-0 break-all text-(--foreground)">
                       {enableHighlight && representative.highlight && representative.category ? (
-                        <span className="mr-2 rounded-full border border-[rgb(255_255_255/0.1)] bg-[rgb(255_255_255/0.04)] px-2 py-[1px] text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
+                        <span className="mr-2 rounded-full border border-[rgb(255_255_255/0.1)] bg-[rgb(255_255_255/0.04)] px-2 py-[1px] text-[10px] uppercase tracking-[0.14em] text-(--muted)">
                           {representative.category}
                         </span>
                       ) : null}
@@ -286,29 +286,29 @@ export const GroupedLogConsole = ({
                             type="button"
                             onClick={() => onSelectLog(entry.id)}
                           >
-                            <span className="text-[var(--muted)]">
+                            <span className="text-(--muted)">
                               {entry.monthDay && entry.time ? `${entry.monthDay} ${entry.time}` : '--'}
                             </span>
                             <span className={`font-semibold ${childTone.level}`}>{entry.level}</span>
                             <div className="min-w-0 truncate">
-                              <span className="text-[var(--foreground)]">{entry.tag}</span>
+                              <span className="text-(--foreground)">{entry.tag}</span>
                               {entry.pid ? <span className="ml-2 text-[rgb(118_183_61)]">#{entry.pid}</span> : null}
                             </div>
-                            <div className="min-w-0 break-all text-[var(--foreground)]">
+                            <div className="min-w-0 break-all text-(--foreground)">
                               {highlightText(entry.message || entry.raw, searchQuery)}
                             </div>
                           </button>
                         ) : (
                           <div className="col-span-4 grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)] gap-3">
-                            <span className="text-[var(--muted)]">
+                            <span className="text-(--muted)">
                               {entry.monthDay && entry.time ? `${entry.monthDay} ${entry.time}` : '--'}
                             </span>
                             <span className={`font-semibold ${childTone.level}`}>{entry.level}</span>
                             <div className="min-w-0 truncate">
-                              <span className="text-[var(--foreground)]">{entry.tag}</span>
+                              <span className="text-(--foreground)">{entry.tag}</span>
                               {entry.pid ? <span className="ml-2 text-[rgb(118_183_61)]">#{entry.pid}</span> : null}
                             </div>
-                            <div className="min-w-0 break-all text-[var(--foreground)]">
+                            <div className="min-w-0 break-all text-(--foreground)">
                               {highlightText(entry.message || entry.raw, searchQuery)}
                             </div>
                           </div>
@@ -353,7 +353,7 @@ export const GroupedLogConsole = ({
       {isAtBottom ? null : (
         <div className="pointer-events-none absolute bottom-4 right-4">
           <button
-            className="pointer-events-auto rounded-full border border-[rgb(189_241_70/0.35)] bg-[rgb(12_15_13/0.95)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--brand-500)] shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition hover:border-[rgb(189_241_70/0.55)] hover:text-[var(--brand-700)]"
+            className="pointer-events-auto rounded-full border border-[rgb(189_241_70/0.35)] bg-[rgb(12_15_13/0.95)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-(--brand-500) shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition hover:border-[rgb(189_241_70/0.55)] hover:text-(--brand-700)"
             onClick={() => scrollToBottom('smooth')}
             type="button"
           >

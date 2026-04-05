@@ -32,7 +32,7 @@ const ActionRow = ({
   onClick,
   runLabel,
   disabled = false,
-  accent = 'text-[var(--brand-700)]'
+  accent = 'text-(--brand-700)'
 }: ActionRowProps): JSX.Element => (
   <button
     className="group flex items-center justify-between rounded-2xl border border-[rgb(38_48_40/0.82)] bg-[rgb(13_16_14/0.72)] px-4 py-4 text-left transition hover:border-[rgb(189_241_70/0.24)] hover:bg-[rgb(16_20_17/0.86)] disabled:cursor-not-allowed disabled:opacity-45"
@@ -40,10 +40,10 @@ const ActionRow = ({
     onClick={onClick}
   >
     <div>
-      <p className={`text-sm font-semibold ${disabled ? 'text-[var(--muted)]' : 'text-[var(--foreground)]'}`}>
+      <p className={`text-sm font-semibold ${disabled ? 'text-(--muted)' : 'text-(--foreground)'}`}>
         {label}
       </p>
-      <p className="mt-1 text-sm text-[var(--muted)]">{hint}</p>
+      <p className="mt-1 text-sm text-(--muted)">{hint}</p>
     </div>
     <span
       className={`rounded-full border border-[rgb(38_48_40/0.82)] bg-[rgb(17_21_19/0.84)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${accent}`}
@@ -73,18 +73,18 @@ export const ActionsModal = ({
   const tabClass = (isActive: boolean): string =>
     `inline-flex h-9 items-center justify-center rounded-xl px-3 text-[11px] font-semibold uppercase tracking-[0.14em] transition ${
       isActive
-        ? 'border border-[rgb(189_241_70/0.34)] bg-[rgb(189_241_70/0.12)] text-[var(--brand-700)]'
-        : 'text-[var(--muted)] hover:bg-[rgb(17_21_19/0.82)] hover:text-[var(--foreground)]'
+        ? 'border border-[rgb(189_241_70/0.34)] bg-[rgb(189_241_70/0.12)] text-(--brand-700)'
+        : 'text-(--muted) hover:bg-[rgb(17_21_19/0.82)] hover:text-(--foreground)'
     }`;
 
   return (
     <ModalShell maxWidthClass="max-w-xl" onClose={onClose} title={copy.modals.actions.title}>
       <div className="space-y-5">
-        <p className="text-sm leading-7 text-[var(--muted)]">
+        <p className="text-sm leading-7 text-(--muted)">
           {copy.modals.actions.intro}
         </p>
 
-        <div className="rounded-2xl border border-[var(--border)] bg-[rgb(11_13_12/0.82)] p-1">
+        <div className="rounded-2xl border border-(--border) bg-[rgb(11_13_12/0.82)] p-1">
           <div className="grid grid-cols-3 gap-1">
             <button
               className={tabClass(activeTab === 'cleanup')}

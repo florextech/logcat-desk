@@ -22,7 +22,7 @@ interface CommandBarProps {
 }
 
 const inputClassName =
-  'flx-focus rounded-2xl border border-[var(--border)] bg-[rgb(11_13_12/0.84)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[rgb(189_241_70/0.42)]';
+  'flx-focus rounded-2xl border border-(--border) bg-[rgb(11_13_12/0.84)] px-4 py-3 text-sm text-(--foreground) outline-none transition focus:border-[rgb(189_241_70/0.42)]';
 
 const actionClassName =
   'flx-btn flx-btn-secondary disabled:cursor-not-allowed disabled:opacity-50';
@@ -55,10 +55,10 @@ export const CommandBar = ({
     <div className="flx-card relative z-20 mx-6 mt-4 overflow-visible p-0">
       <div className="px-4 py-4">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--brand-500)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--brand-500)">
             {copy.filters.title}
           </p>
-          <p className="text-xs text-[var(--muted)]">{copy.filters.helper}</p>
+          <p className="text-xs text-(--muted)">{copy.filters.helper}</p>
         </div>
 
         <div className="grid grid-cols-[1.35fr_0.95fr_0.95fr_0.95fr_0.78fr] gap-3">
@@ -100,7 +100,7 @@ export const CommandBar = ({
         </div>
       </div>
 
-      <div className="border-t border-[var(--border)] bg-[rgb(17_21_19/0.48)] px-4 py-3">
+      <div className="border-t border-(--border) bg-[rgb(17_21_19/0.48)] px-4 py-3">
         <div className="flex flex-wrap items-center gap-3">
           <button
             className="flx-btn flx-btn-primary disabled:cursor-not-allowed disabled:opacity-50"

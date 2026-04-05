@@ -14,6 +14,86 @@ interface LogConsoleProps {
   onCopyLine: (line: string) => Promise<void>;
 }
 
+interface LogConsoleRowProps {
+  log: LogEntry;
+  enableHighlight: boolean;
+  searchQuery: string;
+  isSelected: boolean;
+  onSelectLog?: (logId: string) => void;
+  onCopyLine: (line: string) => Promise<void>;
+  copyLabel: string;
+}
+
+const LogConsoleRow = ({
+  log,
+  enableHighlight,
+  searchQuery,
+  isSelected,
+  onSelectLog,
+  onCopyLine,
+  copyLabel
+}: LogConsoleRowProps): JSX.Element => {
+  const maybeEnriched = log as Partial<EnrichedLog>;
+  const tone =
+    enableHighlight && maybeEnriched.highlight && maybeEnriched.severity
+      ? getSeverityTone(maybeEnriched.severity)
+      : getLevelTone(log.level, log.emphasis);
+  const isSelectable = Boolean(onSelectLog);
+  const rowContent = (
+    <>
+      <span className="text-[var(--muted)]">
+        {log.monthDay && log.time ? `${log.monthDay} ${log.time}` : '--'}
+      </span>
+      <span className={`font-semibold ${tone.level}`}>{log.level}</span>
+      <div className="truncate">
+        <span className="text-[var(--foreground)]">{log.tag}</span>
+        {log.pid ? <span className="ml-2 text-[rgb(118_183_61)]">#{log.pid}</span> : null}
+      </div>
+      <div className="break-words text-[var(--foreground)]">
+        {enableHighlight && maybeEnriched.highlight && maybeEnriched.category ? (
+          <span className="mr-2 rounded-full border border-[rgb(255_255_255/0.1)] bg-[rgb(255_255_255/0.04)] px-2 py-[1px] text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
+            {maybeEnriched.category}
+          </span>
+        ) : null}
+        {highlightText(log.message || log.raw, searchQuery)}
+      </div>
+    </>
+  );
+
+  return (
+    <div
+      className={`group grid grid-cols-[8.5rem_4rem_16rem_1fr_4rem] gap-3 border-b px-4 py-2 text-[12px] ${tone.row} ${
+        isSelected
+          ? 'border-[rgb(189_241_70/0.6)] shadow-[inset_0_0_0_1px_rgba(189,241,70,0.2)]'
+          : 'border-[rgb(38_48_40/0.55)]'
+      }`}
+    >
+      {isSelectable ? (
+        <button
+          className="col-span-4 grid grid-cols-[8.5rem_4rem_16rem_1fr] gap-3 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(189_241_70/0.45)]"
+          type="button"
+          onClick={() => onSelectLog?.(log.id)}
+        >
+          {rowContent}
+        </button>
+      ) : (
+        <div className="col-span-4 grid grid-cols-[8.5rem_4rem_16rem_1fr] gap-3">
+          {rowContent}
+        </div>
+      )}
+      <button
+        className="rounded-lg border border-[var(--border)] bg-[rgb(17_21_19/0.74)] px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] opacity-0 transition group-hover:opacity-100 hover:border-[rgb(189_241_70/0.3)] hover:text-[var(--foreground)]"
+        type="button"
+        onClick={() => {
+          void onCopyLine(log.raw);
+        }}
+      >
+        {copyLabel}
+      </button>
+    </div>
+  );
+};
+
 export const LogConsole = ({
   autoScroll,
   logs,
@@ -93,52 +173,18 @@ export const LogConsole = ({
           syncBottomState(isScrolledToBottom(scrollRef.current));
         }}
       >
-        {logs.map((log) => {
-          const maybeEnriched = log as Partial<EnrichedLog>;
-          const tone =
-            enableHighlight && maybeEnriched.highlight && maybeEnriched.severity
-              ? getSeverityTone(maybeEnriched.severity)
-              : getLevelTone(log.level, log.emphasis);
-          const isSelected = selectedLogId === log.id;
-
-          return (
-            <div
-              key={log.id}
-              className={`group grid grid-cols-[8.5rem_4rem_16rem_1fr_4rem] gap-3 border-b px-4 py-2 text-[12px] ${tone.row} ${
-                isSelected
-                  ? 'border-[rgb(189_241_70/0.6)] shadow-[inset_0_0_0_1px_rgba(189,241,70,0.2)]'
-                  : 'border-[rgb(38_48_40/0.55)]'
-              }`}
-              onClick={() => onSelectLog?.(log.id)}
-            >
-              <span className="text-[var(--muted)]">
-                {log.monthDay && log.time ? `${log.monthDay} ${log.time}` : '--'}
-              </span>
-              <span className={`font-semibold ${tone.level}`}>{log.level}</span>
-              <div className="truncate">
-                <span className="text-[var(--foreground)]">{log.tag}</span>
-                {log.pid ? <span className="ml-2 text-[rgb(118_183_61)]">#{log.pid}</span> : null}
-              </div>
-              <div className="break-words text-[var(--foreground)]">
-                {enableHighlight && maybeEnriched.highlight && maybeEnriched.category ? (
-                  <span className="mr-2 rounded-full border border-[rgb(255_255_255/0.1)] bg-[rgb(255_255_255/0.04)] px-2 py-[1px] text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
-                    {maybeEnriched.category}
-                  </span>
-                ) : null}
-                {highlightText(log.message || log.raw, searchQuery)}
-              </div>
-              <button
-                className="rounded-lg border border-[var(--border)] bg-[rgb(17_21_19/0.74)] px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] opacity-0 transition group-hover:opacity-100 hover:border-[rgb(189_241_70/0.3)] hover:text-[var(--foreground)]"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  void onCopyLine(log.raw);
-                }}
-              >
-                {copy.console.copy}
-              </button>
-            </div>
-          );
-        })}
+        {logs.map((log) => (
+          <LogConsoleRow
+            key={log.id}
+            copyLabel={copy.console.copy}
+            enableHighlight={enableHighlight}
+            isSelected={selectedLogId === log.id}
+            log={log}
+            searchQuery={searchQuery}
+            onCopyLine={onCopyLine}
+            onSelectLog={onSelectLog}
+          />
+        ))}
       </div>
 
       {isAtBottom ? null : (

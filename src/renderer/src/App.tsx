@@ -26,14 +26,163 @@ import {
 import { processLogsForRender } from '@renderer/utils/log-analysis/log-processing';
 import type { EnrichedLog } from '@renderer/utils/log-analysis/types';
 import { filterLogs } from '@renderer/utils/log-filtering';
-import type { AnalysisChatTurn, Locale } from '@shared/types';
+import type { AnalysisChatTurn, AnalysisConfig, Locale } from '@shared/types';
+
+const analysisAskAssistantErrorPattern =
+  /^Error invoking remote method 'analysis:ask-assistant': Error: (.+)$/s;
 
 const unwrapAnalysisChatIpcError = (message: string): string => {
-  const match = message.match(
-    /^Error invoking remote method 'analysis:ask-assistant': Error: (.+)$/s
-  );
+  const match = analysisAskAssistantErrorPattern.exec(message);
   return match?.[1]?.trim() || message.trim();
 };
+
+interface RunAnalysisForLogsHandlerDeps {
+  analysisEnabled: boolean;
+  locale: Locale;
+  clearError: () => void;
+  setError: (message: string) => void;
+  setIsAnalyzing: (value: boolean) => void;
+  setAnalysisBaseResult: (value: LogAnalysisResult | null) => void;
+  setAnalysisResult: (value: LogAnalysisResult | null) => void;
+  setAnalysisMeta: (value: AIEnhancementMeta | null) => void;
+  setAnalysisChatMessages: (value: AnalysisChatTurn[]) => void;
+  setIsAnalysisChatOpen: (value: boolean) => void;
+  setIsAnalysisOpen: (value: boolean) => void;
+  setIsAnalyzeOptionsOpen: (value: boolean) => void;
+  setIsActionsOpen: (value: boolean) => void;
+  analyzeErrorCopy: string;
+}
+
+const createRunAnalysisForLogsHandler =
+  (deps: RunAnalysisForLogsHandlerDeps) =>
+  async (logsToAnalyze: EnrichedLog[]): Promise<void> => {
+    if (!deps.analysisEnabled || logsToAnalyze.length === 0) {
+      return;
+    }
+
+    deps.setIsAnalyzing(true);
+    deps.clearError();
+
+    try {
+      const base = runLogAnalysis(logsToAnalyze, deps.locale);
+      deps.setAnalysisBaseResult(base);
+      deps.setAnalysisResult(base);
+      deps.setAnalysisMeta(null);
+      deps.setAnalysisChatMessages([]);
+      deps.setIsAnalysisChatOpen(false);
+      deps.setIsAnalysisOpen(true);
+      deps.setIsAnalyzeOptionsOpen(false);
+      deps.setIsActionsOpen(false);
+    } catch (analysisError) {
+      deps.setError(analysisError instanceof Error ? analysisError.message : deps.analyzeErrorCopy);
+    } finally {
+      deps.setIsAnalyzing(false);
+    }
+  };
+
+interface EnhanceAnalysisWithAIHandlerDeps {
+  analysisBaseResult: LogAnalysisResult | null;
+  analysisConfig: AnalysisConfig;
+  locale: Locale;
+  analyzeErrorCopy: string;
+  clearError: () => void;
+  setError: (message: string) => void;
+  setIsEnhancingWithAI: (value: boolean) => void;
+  setAnalysisMeta: (value: AIEnhancementMeta | null) => void;
+  setAnalysisResult: (value: LogAnalysisResult | null) => void;
+  setAnalysisChatMessages: (value: AnalysisChatTurn[]) => void;
+}
+
+const createEnhanceAnalysisWithAIHandler =
+  (deps: EnhanceAnalysisWithAIHandlerDeps) =>
+  async (): Promise<void> => {
+    if (!deps.analysisBaseResult) {
+      return;
+    }
+
+    deps.setIsEnhancingWithAI(true);
+    deps.clearError();
+
+    try {
+      const detailed = await maybeEnhanceLogAnalysisDetailed(deps.analysisBaseResult, deps.analysisConfig, deps.locale);
+      deps.setAnalysisMeta(detailed.meta);
+      if (detailed.meta.used) {
+        deps.setAnalysisResult(detailed.result);
+        deps.setAnalysisChatMessages([
+          {
+            role: 'assistant',
+            content: detailed.result.summary
+          }
+        ]);
+      }
+    } catch (error_) {
+      deps.setError(error_ instanceof Error ? error_.message : deps.analyzeErrorCopy);
+    } finally {
+      deps.setIsEnhancingWithAI(false);
+    }
+  };
+
+interface SendAIQuestionHandlerDeps {
+  analysisResult: LogAnalysisResult | null;
+  analysisConfig: AnalysisConfig;
+  locale: Locale;
+  analysisChatMessages: AnalysisChatTurn[];
+  analyzeErrorCopy: string;
+  failedCopyFactory: (reason: string) => string;
+  clearError: () => void;
+  setError: (message: string) => void;
+  setIsChatRequestPending: (value: boolean) => void;
+  setAnalysisChatMessages: (value: AnalysisChatTurn[] | ((current: AnalysisChatTurn[]) => AnalysisChatTurn[])) => void;
+}
+
+const createSendAIQuestionHandler =
+  (deps: SendAIQuestionHandlerDeps) =>
+  async (question: string): Promise<void> => {
+    if (!deps.analysisResult) {
+      return;
+    }
+
+    const userTurn: AnalysisChatTurn = {
+      role: 'user',
+      content: question
+    };
+    const history = deps.analysisChatMessages;
+
+    deps.setAnalysisChatMessages((current) => [...current, userTurn]);
+    deps.setIsChatRequestPending(true);
+    deps.clearError();
+
+    try {
+      const answer = await electronApi.askAnalysisAssistant({
+        analysis: deps.analysisResult,
+        config: deps.analysisConfig,
+        locale: deps.locale,
+        question,
+        history
+      });
+
+      deps.setAnalysisChatMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          content: answer
+        }
+      ]);
+    } catch (error_) {
+      const rawReason = error_ instanceof Error ? error_.message : deps.analyzeErrorCopy;
+      const reason = unwrapAnalysisChatIpcError(rawReason);
+      deps.setError(reason);
+      deps.setAnalysisChatMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          content: deps.failedCopyFactory(reason)
+        }
+      ]);
+    } finally {
+      deps.setIsChatRequestPending(false);
+    }
+  };
 
 export const App = (): JSX.Element => {
   const { copy, locale } = useI18n();
@@ -289,34 +438,22 @@ export const App = (): JSX.Element => {
     }
   };
 
-  const runAnalysisForLogs = async (logsToAnalyze: typeof processedLogs.enrichedLogs): Promise<void> => {
-    if (!settings.analysis.enableAnalysis) {
-      return;
-    }
-
-    if (logsToAnalyze.length === 0) {
-      return;
-    }
-
-    setIsAnalyzing(true);
-    clearError();
-
-    try {
-      const base = runLogAnalysis(logsToAnalyze, locale);
-      setAnalysisBaseResult(base);
-      setAnalysisResult(base);
-      setAnalysisMeta(null);
-      setAnalysisChatMessages([]);
-      setIsAnalysisChatOpen(false);
-      setIsAnalysisOpen(true);
-      setIsAnalyzeOptionsOpen(false);
-      setIsActionsOpen(false);
-    } catch (analysisError) {
-      setError(analysisError instanceof Error ? analysisError.message : copy.errors.analyzeLogs);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
+  const runAnalysisForLogs = createRunAnalysisForLogsHandler({
+    analysisEnabled: settings.analysis.enableAnalysis,
+    locale,
+    clearError,
+    setError,
+    setIsAnalyzing,
+    setAnalysisBaseResult,
+    setAnalysisResult,
+    setAnalysisMeta,
+    setAnalysisChatMessages,
+    setIsAnalysisChatOpen,
+    setIsAnalysisOpen,
+    setIsAnalyzeOptionsOpen,
+    setIsActionsOpen,
+    analyzeErrorCopy: copy.errors.analyzeLogs
+  });
 
   const handleOpenAnalyzeOptions = (): void => {
     if (!settings.analysis.enableAnalysis || processedLogs.enrichedLogs.length === 0) {
@@ -331,83 +468,35 @@ export const App = (): JSX.Element => {
     void runAnalysisForLogs([log]);
   };
 
-  const handleEnhanceAnalysisWithAI = async (): Promise<void> => {
-    if (!analysisBaseResult) {
-      return;
-    }
-
-    setIsEnhancingWithAI(true);
-    clearError();
-
-    try {
-      const detailed = await maybeEnhanceLogAnalysisDetailed(analysisBaseResult, settings.analysis, locale);
-      setAnalysisMeta(detailed.meta);
-      if (detailed.meta.used) {
-        setAnalysisResult(detailed.result);
-        setAnalysisChatMessages([
-          {
-            role: 'assistant',
-            content: detailed.result.summary
-          }
-        ]);
-      }
-    } catch (error_) {
-      setError(error_ instanceof Error ? error_.message : copy.errors.analyzeLogs);
-    } finally {
-      setIsEnhancingWithAI(false);
-    }
-  };
+  const handleEnhanceAnalysisWithAI = createEnhanceAnalysisWithAIHandler({
+    analysisBaseResult,
+    analysisConfig: settings.analysis,
+    locale,
+    analyzeErrorCopy: copy.errors.analyzeLogs,
+    clearError,
+    setError,
+    setIsEnhancingWithAI,
+    setAnalysisMeta,
+    setAnalysisResult,
+    setAnalysisChatMessages
+  });
 
   const handleOpenAIChat = (): void => {
     setIsAnalysisChatOpen(true);
   };
 
-  const handleSendAIQuestion = async (question: string): Promise<void> => {
-    if (!analysisResult) {
-      return;
-    }
-
-    const userTurn: AnalysisChatTurn = {
-      role: 'user',
-      content: question
-    };
-    const history = analysisChatMessages;
-
-    setAnalysisChatMessages((current) => [...current, userTurn]);
-    setIsChatRequestPending(true);
-    clearError();
-
-    try {
-      const answer = await electronApi.askAnalysisAssistant({
-        analysis: analysisResult,
-        config: settings.analysis,
-        locale,
-        question,
-        history
-      });
-
-      setAnalysisChatMessages((current) => [
-        ...current,
-        {
-          role: 'assistant',
-          content: answer
-        }
-      ]);
-    } catch (error_) {
-      const rawReason = error_ instanceof Error ? error_.message : copy.errors.analyzeLogs;
-      const reason = unwrapAnalysisChatIpcError(rawReason);
-      setError(reason);
-      setAnalysisChatMessages((current) => [
-        ...current,
-        {
-          role: 'assistant',
-          content: copy.modals.analysisChat.failed(reason)
-        }
-      ]);
-    } finally {
-      setIsChatRequestPending(false);
-    }
-  };
+  const handleSendAIQuestion = createSendAIQuestionHandler({
+    analysisResult,
+    analysisConfig: settings.analysis,
+    locale,
+    analysisChatMessages,
+    analyzeErrorCopy: copy.errors.analyzeLogs,
+    failedCopyFactory: copy.modals.analysisChat.failed,
+    clearError,
+    setError,
+    setIsChatRequestPending,
+    setAnalysisChatMessages
+  });
 
   const handleRunAnalyzeScope = async (): Promise<void> => {
     const safeLimit = Number.isFinite(analyzeLimit) ? Math.max(1, Math.floor(analyzeLimit)) : 1;

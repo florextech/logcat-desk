@@ -1,5 +1,6 @@
 const VOLATILE_PATTERNS: RegExp[] = [
-  /\b\d{4}-\d{2}-\d{2}[t\s]\d{2}:\d{2}:\d{2}(?:[.,]\d+)?(?:z|[+-]\d{2}:?\d{2})?\b/gi,
+  /\b\d{4}-\d{2}-\d{2}[t\s]\d{2}:\d{2}:\d{2}(?:[.,]\d+)?\b/gi,
+  /\b\d{4}-\d{2}-\d{2}[t\s]\d{2}:\d{2}:\d{2}(?:[.,]\d+)?(?:z|[+-]\d{2}:?\d{2})/gi,
   /\b\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}(?:\.\d+)?\b/g,
   /\b\d{2}:\d{2}:\d{2}(?:\.\d+)?\b/g,
   /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi,
@@ -23,8 +24,13 @@ export const normalizeLogMessage = (value: string): string => {
 export const createLogFingerprint = (normalizedMessage: string): string => {
   let hash = 0x811c9dc5;
 
-  for (let index = 0; index < normalizedMessage.length; index += 1) {
-    hash ^= normalizedMessage.charCodeAt(index);
+  for (const symbol of normalizedMessage) {
+    const codePoint = symbol.codePointAt(0);
+    if (codePoint === undefined) {
+      continue;
+    }
+
+    hash ^= codePoint;
     hash = Math.imul(hash, 0x01000193);
   }
 

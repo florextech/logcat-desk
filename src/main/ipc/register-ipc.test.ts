@@ -17,12 +17,14 @@ const {
   clearLogcatBufferMock,
   listDevicesMock,
   resolveAdbStatusMock,
-  enhanceAnalysisSummaryMock
+  enhanceAnalysisSummaryMock,
+  askAnalysisAssistantMock
 } = vi.hoisted(() => ({
   clearLogcatBufferMock: vi.fn(),
   listDevicesMock: vi.fn(),
   resolveAdbStatusMock: vi.fn(),
-  enhanceAnalysisSummaryMock: vi.fn()
+  enhanceAnalysisSummaryMock: vi.fn(),
+  askAnalysisAssistantMock: vi.fn()
 }));
 
 vi.mock('electron', () => ({
@@ -52,7 +54,8 @@ vi.mock('@main/services/adb/adb-resolver', () => ({
 }));
 
 vi.mock('@main/services/analysis/analysis-ai-service', () => ({
-  enhanceAnalysisSummary: enhanceAnalysisSummaryMock
+  enhanceAnalysisSummary: enhanceAnalysisSummaryMock,
+  askAnalysisAssistant: askAnalysisAssistantMock
 }));
 
 import { registerIpc } from '@main/ipc/register-ipc';
@@ -64,6 +67,7 @@ describe('registerIpc', () => {
     listDevicesMock.mockReset();
     resolveAdbStatusMock.mockReset();
     enhanceAnalysisSummaryMock.mockReset();
+    askAnalysisAssistantMock.mockReset();
     handleMock.mockReset();
     removeHandlerMock.mockReset();
     dialogObject.showMessageBox.mockReset();
@@ -124,6 +128,7 @@ describe('registerIpc', () => {
     });
     listDevicesMock.mockResolvedValue([{ id: 'device-1', state: 'device' }]);
     enhanceAnalysisSummaryMock.mockResolvedValue('enhanced summary');
+    askAnalysisAssistantMock.mockResolvedValue('assistant answer');
 
     registerIpc({
       mainWindow: mainWindow as never,
@@ -137,6 +142,7 @@ describe('registerIpc', () => {
     expect(handlers.has(ipcChannels.settingsGet)).toBe(true);
     expect(handlers.has(ipcChannels.logcatStart)).toBe(true);
     expect(handlers.has(ipcChannels.analysisEnhanceSummary)).toBe(true);
+    expect(handlers.has(ipcChannels.analysisAskAssistant)).toBe(true);
     expect(handlers.has(ipcChannels.updatesCheck)).toBe(true);
 
     listeners['log-batch']?.({ entries: [{ id: '1' }] });
@@ -216,6 +222,27 @@ describe('registerIpc', () => {
       })
     ).resolves.toBe('enhanced summary');
     expect(enhanceAnalysisSummaryMock).toHaveBeenCalledTimes(1);
+
+    await expect(
+      handlers.get(ipcChannels.analysisAskAssistant)?.({}, {
+        analysis: {
+          summary: 'summary',
+          probableCauses: [],
+          evidence: [],
+          recommendations: [],
+          severity: 'low'
+        },
+        config: {
+          enableAnalysis: true,
+          enableAIEnhancement: true,
+          ai: { provider: 'openai', apiKey: 'key' }
+        },
+        locale: 'en',
+        question: 'What should I do next?',
+        history: [{ role: 'assistant', content: 'Previous answer' }]
+      })
+    ).resolves.toBe('assistant answer');
+    expect(askAnalysisAssistantMock).toHaveBeenCalledTimes(1);
 
     await handlers.get(ipcChannels.clipboardCopy)?.({}, 'copied text');
     expect(clipboardWriteTextMock).toHaveBeenCalledWith('copied text');

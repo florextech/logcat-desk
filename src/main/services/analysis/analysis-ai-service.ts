@@ -1,4 +1,10 @@
-import type { AIConfig, EnhanceAnalysisSummaryInput, LogAnalysisPayload, Locale } from '@shared/types';
+import type {
+  AIConfig,
+  AskAnalysisAssistantInput,
+  EnhanceAnalysisSummaryInput,
+  LogAnalysisPayload,
+  Locale
+} from '@shared/types';
 
 const buildSummaryEnhancementPrompt = (input: LogAnalysisPayload, locale: Locale): string =>
   [
@@ -13,14 +19,42 @@ const buildSummaryEnhancementPrompt = (input: LogAnalysisPayload, locale: Locale
     `Current summary: ${input.summary}`
   ].join('\n');
 
+const buildAnalysisChatPrompt = (input: AskAnalysisAssistantInput): string => {
+  const historyLines = (input.history ?? [])
+    .slice(-12)
+    .map((entry) => `${entry.role === 'assistant' ? 'Assistant' : 'User'}: ${entry.content.trim()}`)
+    .join('\n');
+
+  return [
+    'You are an Android log analysis assistant.',
+    `Respond in ${input.locale === 'es' ? 'Spanish' : 'English'}.`,
+    'Base your answer only on the deterministic analysis context provided below and user question.',
+    'Be concrete and actionable, max 140 words.',
+    '',
+    `Summary: ${input.analysis.summary}`,
+    `Severity: ${input.analysis.severity}`,
+    `Probable causes: ${input.analysis.probableCauses.join(' | ') || 'None'}`,
+    `Evidence: ${input.analysis.evidence.slice(0, 8).join(' | ') || 'None'}`,
+    `Recommendations: ${input.analysis.recommendations.join(' | ') || 'None'}`,
+    historyLines ? `Conversation:\n${historyLines}` : 'Conversation: none',
+    `User question: ${input.question.trim()}`
+  ].join('\n');
+};
+
 const ensureSummary = (summary: string | undefined, provider: string): string => {
   const normalized = summary?.trim();
   if (!normalized) {
-    throw new Error(`${provider} analysis response was empty.`);
+    throw new Error(`${provider} response was empty.`);
   }
 
   return normalized;
 };
+
+const redactSecrets = (value: string): string =>
+  value
+    .replace(/sk-[a-zA-Z0-9_-]{12,}/g, 'sk-***')
+    .replace(/k-proj-[a-zA-Z0-9_-]{12,}/g, 'k-proj-***')
+    .replace(/api key[^\n:.]*[:=]\s*[^\s,;]+/gi, 'api key: ***');
 
 const parseProviderError = async (response: Response, provider: string): Promise<never> => {
   let detail = '';
@@ -46,7 +80,7 @@ const parseProviderError = async (response: Response, provider: string): Promise
     detail = '';
   }
 
-  const compactDetail = detail.replace(/\s+/g, ' ').trim();
+  const compactDetail = redactSecrets(detail.replace(/\s+/g, ' ').trim());
   const suffix = compactDetail ? `: ${compactDetail.slice(0, 220)}` : '';
   throw new Error(`${provider} request failed (HTTP ${response.status})${suffix}`);
 };
@@ -59,12 +93,12 @@ const requestOpenAI = async (ai: AIConfig, prompt: string): Promise<string> => {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: ai.model?.trim() || 'gpt-4o-mini',
+      model: ai.model?.trim() || 'gpt-4.1-mini',
       temperature: 0.2,
       messages: [
         {
           role: 'system',
-          content: 'You refine technical summaries while preserving factual content.'
+          content: 'You provide precise diagnostics without unsupported claims.'
         },
         {
           role: 'user',
@@ -133,12 +167,12 @@ const requestOpenRouter = async (ai: AIConfig, prompt: string): Promise<string> 
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: ai.model?.trim() || 'openai/gpt-4o-mini',
+      model: ai.model?.trim() || 'openai/gpt-4.1-mini',
       temperature: 0.2,
       messages: [
         {
           role: 'system',
-          content: 'Improve technical summaries without adding unsupported claims.'
+          content: 'Improve diagnostics without adding unsupported claims.'
         },
         {
           role: 'user',
@@ -173,7 +207,7 @@ const requestClaude = async (ai: AIConfig, prompt: string): Promise<string> => {
     },
     body: JSON.stringify({
       model: ai.model?.trim() || 'claude-3-5-haiku-latest',
-      max_tokens: 180,
+      max_tokens: 260,
       temperature: 0.2,
       system: 'You refine concise diagnostics while preserving deterministic facts.',
       messages: [
@@ -200,18 +234,7 @@ const requestClaude = async (ai: AIConfig, prompt: string): Promise<string> => {
   return ensureSummary(content, 'Claude');
 };
 
-export const enhanceAnalysisSummary = async (input: EnhanceAnalysisSummaryInput): Promise<string> => {
-  if (!input.config.enableAIEnhancement) {
-    throw new Error('AI enhancement is disabled.');
-  }
-
-  const ai = input.config.ai;
-  if (!ai || !ai.apiKey.trim()) {
-    throw new Error('AI API key is missing.');
-  }
-
-  const prompt = buildSummaryEnhancementPrompt(input.base, input.locale);
-
+const requestProvider = async (ai: AIConfig, prompt: string): Promise<string> => {
   if (ai.provider === 'openai') {
     return requestOpenAI(ai, prompt);
   }
@@ -225,4 +248,33 @@ export const enhanceAnalysisSummary = async (input: EnhanceAnalysisSummaryInput)
   }
 
   return requestClaude(ai, prompt);
+};
+
+const assertAIEnabled = (config: EnhanceAnalysisSummaryInput['config']): AIConfig => {
+  if (!config.enableAIEnhancement) {
+    throw new Error('AI enhancement is disabled.');
+  }
+
+  const ai = config.ai;
+  if (!ai || !ai.apiKey.trim()) {
+    throw new Error('AI API key is missing.');
+  }
+
+  return ai;
+};
+
+export const enhanceAnalysisSummary = async (input: EnhanceAnalysisSummaryInput): Promise<string> => {
+  const ai = assertAIEnabled(input.config);
+  const prompt = buildSummaryEnhancementPrompt(input.base, input.locale);
+  return requestProvider(ai, prompt);
+};
+
+export const askAnalysisAssistant = async (input: AskAnalysisAssistantInput): Promise<string> => {
+  const ai = assertAIEnabled(input.config);
+  if (!input.question.trim()) {
+    throw new Error('Question is empty.');
+  }
+
+  const prompt = buildAnalysisChatPrompt(input);
+  return requestProvider(ai, prompt);
 };

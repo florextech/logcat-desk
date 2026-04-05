@@ -37,10 +37,10 @@ const ANALYSIS_COPY = {
     noPatternCause: 'No matching rule signatures found in the current log set.',
     noPatternRecommendationA: 'Review highlighted logs manually for project-specific failures.',
     noPatternRecommendationB: 'Add a custom rule for repeated patterns in your domain.',
-    noCauseSummary: (severity: LogAnalysisSeverity): string =>
-      `No known critical patterns detected. Current severity: ${severity}.`,
-    withCauseSummary: (cause: string, extraCount: number, severity: LogAnalysisSeverity): string =>
-      `Possible cause: ${cause}.${extraCount > 0 ? ` Additional probable causes: ${extraCount}.` : ''} Severity: ${severity}.`
+    noCauseSummary: (): string =>
+      'No known critical patterns detected in the current logs.',
+    withCauseSummary: (cause: string, extraCount: number): string =>
+      `Possible cause: ${cause}.${extraCount > 0 ? ` Additional probable causes: ${extraCount}.` : ''}`
   },
   es: {
     unknownTag: 'desconocido',
@@ -49,10 +49,10 @@ const ANALYSIS_COPY = {
     noPatternCause: 'No se encontraron firmas de reglas coincidentes en el conjunto de logs actual.',
     noPatternRecommendationA: 'Revisa manualmente los logs resaltados para fallos especificos del proyecto.',
     noPatternRecommendationB: 'Agrega una regla personalizada para patrones repetidos de tu dominio.',
-    noCauseSummary: (severity: LogAnalysisSeverity): string =>
-      `No se detectaron patrones criticos conocidos. Severidad actual: ${severity}.`,
-    withCauseSummary: (cause: string, extraCount: number, severity: LogAnalysisSeverity): string =>
-      `Causa posible: ${cause}.${extraCount > 0 ? ` Causas probables adicionales: ${extraCount}.` : ''} Severidad: ${severity}.`
+    noCauseSummary: (): string =>
+      'No se detectaron patrones criticos conocidos en los logs actuales.',
+    withCauseSummary: (cause: string, extraCount: number): string =>
+      `Causa posible: ${cause}.${extraCount > 0 ? ` Causas probables adicionales: ${extraCount}.` : ''}`
   }
 } as const;
 
@@ -158,15 +158,15 @@ const computeSeverity = (
   return overall;
 };
 
-const summarize = (causes: string[], severity: LogAnalysisSeverity, locale: Locale): string => {
+const summarize = (causes: string[], locale: Locale): string => {
   const copy = ANALYSIS_COPY[locale];
 
   if (causes.length === 0) {
-    return copy.noCauseSummary(severity);
+    return copy.noCauseSummary();
   }
 
   const topCause = causes[0] ?? 'Unknown cause';
-  return copy.withCauseSummary(topCause, causes.length - 1, severity);
+  return copy.withCauseSummary(topCause, causes.length - 1);
 };
 
 const inferHeuristicNoRuleInsights = (
@@ -244,7 +244,7 @@ export const aggregateLogAnalysis = (
       : logs.slice(-5).map((log) => asEvidence(log, locale));
 
     return {
-      summary: summarize(inferred.causes, severity, locale),
+      summary: summarize(inferred.causes, locale),
       probableCauses,
       evidence,
       recommendations,
@@ -326,7 +326,7 @@ export const aggregateLogAnalysis = (
   const severity = computeSeverity(logs, sortedBuckets, matchedErrors);
 
   return {
-    summary: summarize(probableCauses, severity, locale),
+    summary: summarize(probableCauses, locale),
     probableCauses,
     evidence,
     recommendations,

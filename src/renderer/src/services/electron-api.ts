@@ -22,7 +22,7 @@ const rejectUnavailable = async (): Promise<never> => {
 
 const noopUnsubscribe = (): (() => void) => () => undefined;
 const globalScope = globalThis as typeof globalThis & {
-  logcatDesk?: RendererApi;
+  logcatDesk?: Partial<RendererApi>;
 };
 
 const fallbackApi: RendererApi = {
@@ -57,5 +57,10 @@ const fallbackApi: RendererApi = {
   onSessionState: (_listener: (state: SessionState) => void) => noopUnsubscribe()
 };
 
-export const electronApi: RendererApi = globalScope.logcatDesk ?? fallbackApi;
+const exposedApi = globalScope.logcatDesk;
+
+export const electronApi: RendererApi = {
+  ...fallbackApi,
+  ...(exposedApi ?? {})
+};
 export const hasElectronApi = Boolean(globalScope.logcatDesk);

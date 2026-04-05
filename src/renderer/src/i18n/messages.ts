@@ -124,7 +124,18 @@ export interface I18nMessages {
       aiStatusUsed: StringFactory<[provider: string]>;
       aiStatusFallback: StringFactory<[reason: string]>;
       aiStatusReasons: Record<'success' | 'disabled' | 'missing_api_key' | 'empty_response' | 'request_failed', string>;
+      enhanceWithAI: string;
+      enhancingWithAI: string;
+      openAIChat: string;
       noData: string;
+    };
+    analysisChat: {
+      title: string;
+      empty: string;
+      thinking: string;
+      inputPlaceholder: string;
+      send: string;
+      failed: StringFactory<[reason: string]>;
     };
     analysisOptions: {
       title: string;
@@ -320,7 +331,18 @@ const en: I18nMessages = {
         empty_response: 'empty response',
         request_failed: 'provider request failed'
       },
+      enhanceWithAI: 'Generate AI response',
+      enhancingWithAI: 'Generating...',
+      openAIChat: 'Open AI chat',
       noData: 'No analysis data available.'
+    },
+    analysisChat: {
+      title: 'AI Chat',
+      empty: 'No messages yet. Ask about probable causes, evidence, or next steps.',
+      thinking: 'Thinking...',
+      inputPlaceholder: 'Ask a follow-up question...',
+      send: 'Send',
+      failed: (reason) => `AI request failed: ${reason}`
     },
     analysisOptions: {
       title: 'Analyze Logs',
@@ -516,7 +538,18 @@ const es: I18nMessages = {
         empty_response: 'respuesta vacia',
         request_failed: 'fallo la solicitud al proveedor'
       },
+      enhanceWithAI: 'Generar respuesta con IA',
+      enhancingWithAI: 'Generando...',
+      openAIChat: 'Abrir chat IA',
       noData: 'No hay datos de analisis disponibles.'
+    },
+    analysisChat: {
+      title: 'Chat IA',
+      empty: 'Aun no hay mensajes. Pregunta por causas probables, evidencia o siguientes pasos.',
+      thinking: 'Pensando...',
+      inputPlaceholder: 'Escribe una pregunta de seguimiento...',
+      send: 'Enviar',
+      failed: (reason) => `Fallo la solicitud IA: ${reason}`
     },
     analysisOptions: {
       title: 'Analizar logs',

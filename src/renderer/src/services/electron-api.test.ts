@@ -62,6 +62,25 @@ describe('renderer electronApi service', () => {
         locale: 'en'
       })
     ).rejects.toThrow('The Electron preload API is unavailable.');
+    await expect(
+      module.electronApi.askAnalysisAssistant({
+        analysis: {
+          summary: 'summary',
+          probableCauses: [],
+          evidence: [],
+          recommendations: [],
+          severity: 'low'
+        },
+        config: {
+          enableAnalysis: true,
+          enableAIEnhancement: true,
+          ai: { provider: 'openai', apiKey: 'key' }
+        },
+        locale: 'en',
+        question: 'Any clue?',
+        history: []
+      })
+    ).rejects.toThrow('The Electron preload API is unavailable.');
     await expect(module.electronApi.copyToClipboard('copied')).rejects.toThrow(
       'The Electron preload API is unavailable.'
     );
@@ -78,6 +97,25 @@ describe('renderer electronApi service', () => {
     const module = await import('@renderer/services/electron-api');
 
     expect(module.hasElectronApi).toBe(true);
-    expect(module.electronApi).toBe(exposedApi);
+    await expect(module.electronApi.getSettings()).resolves.toEqual(defaultSettings);
+    await expect(
+      module.electronApi.askAnalysisAssistant({
+        analysis: {
+          summary: 'summary',
+          probableCauses: [],
+          evidence: [],
+          recommendations: [],
+          severity: 'low'
+        },
+        config: {
+          enableAnalysis: true,
+          enableAIEnhancement: true,
+          ai: { provider: 'openai', apiKey: 'key' }
+        },
+        locale: 'en',
+        question: 'Any clue?',
+        history: []
+      })
+    ).rejects.toThrow('The Electron preload API is unavailable.');
   });
 });

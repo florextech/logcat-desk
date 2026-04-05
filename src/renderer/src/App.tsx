@@ -1,5 +1,6 @@
 import { type JSX, useEffect, useMemo, useState } from 'react';
 import { ActionsModal } from '@renderer/components/actions-modal';
+import { AnalysisChatModal } from '@renderer/components/analysis-chat-modal';
 import { AnalysisModal } from '@renderer/components/analysis-modal';
 import { AnalysisOptionsModal } from '@renderer/components/analysis-options-modal';
 import { CommandBar } from '@renderer/components/command-bar';
@@ -25,7 +26,14 @@ import {
 import { processLogsForRender } from '@renderer/utils/log-analysis/log-processing';
 import type { EnrichedLog } from '@renderer/utils/log-analysis/types';
 import { filterLogs } from '@renderer/utils/log-filtering';
-import type { Locale } from '@shared/types';
+import type { AnalysisChatTurn, Locale } from '@shared/types';
+
+const unwrapAnalysisChatIpcError = (message: string): string => {
+  const match = message.match(
+    /^Error invoking remote method 'analysis:ask-assistant': Error: (.+)$/s
+  );
+  return match?.[1]?.trim() || message.trim();
+};
 
 export const App = (): JSX.Element => {
   const { copy, locale } = useI18n();
@@ -69,8 +77,13 @@ export const App = (): JSX.Element => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
+  const [isAnalysisChatOpen, setIsAnalysisChatOpen] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<LogAnalysisResult | null>(null);
+  const [analysisBaseResult, setAnalysisBaseResult] = useState<LogAnalysisResult | null>(null);
   const [analysisMeta, setAnalysisMeta] = useState<AIEnhancementMeta | null>(null);
+  const [isEnhancingWithAI, setIsEnhancingWithAI] = useState(false);
+  const [isChatRequestPending, setIsChatRequestPending] = useState(false);
+  const [analysisChatMessages, setAnalysisChatMessages] = useState<AnalysisChatTurn[]>([]);
 
   useEffect(() => {
     setAdbPathDraft(settings.adbPath);
@@ -290,9 +303,11 @@ export const App = (): JSX.Element => {
 
     try {
       const base = runLogAnalysis(logsToAnalyze, locale);
-      const detailed = await maybeEnhanceLogAnalysisDetailed(base, settings.analysis, locale);
-      setAnalysisResult(detailed.result);
-      setAnalysisMeta(detailed.meta);
+      setAnalysisBaseResult(base);
+      setAnalysisResult(base);
+      setAnalysisMeta(null);
+      setAnalysisChatMessages([]);
+      setIsAnalysisChatOpen(false);
       setIsAnalysisOpen(true);
       setIsAnalyzeOptionsOpen(false);
       setIsActionsOpen(false);
@@ -314,6 +329,84 @@ export const App = (): JSX.Element => {
 
   const handleAnalyzeSingleLog = (log: EnrichedLog): void => {
     void runAnalysisForLogs([log]);
+  };
+
+  const handleEnhanceAnalysisWithAI = async (): Promise<void> => {
+    if (!analysisBaseResult) {
+      return;
+    }
+
+    setIsEnhancingWithAI(true);
+    clearError();
+
+    try {
+      const detailed = await maybeEnhanceLogAnalysisDetailed(analysisBaseResult, settings.analysis, locale);
+      setAnalysisMeta(detailed.meta);
+      if (detailed.meta.used) {
+        setAnalysisResult(detailed.result);
+        setAnalysisChatMessages([
+          {
+            role: 'assistant',
+            content: detailed.result.summary
+          }
+        ]);
+      }
+    } catch (error_) {
+      setError(error_ instanceof Error ? error_.message : copy.errors.analyzeLogs);
+    } finally {
+      setIsEnhancingWithAI(false);
+    }
+  };
+
+  const handleOpenAIChat = (): void => {
+    setIsAnalysisChatOpen(true);
+  };
+
+  const handleSendAIQuestion = async (question: string): Promise<void> => {
+    if (!analysisResult) {
+      return;
+    }
+
+    const userTurn: AnalysisChatTurn = {
+      role: 'user',
+      content: question
+    };
+    const history = analysisChatMessages;
+
+    setAnalysisChatMessages((current) => [...current, userTurn]);
+    setIsChatRequestPending(true);
+    clearError();
+
+    try {
+      const answer = await electronApi.askAnalysisAssistant({
+        analysis: analysisResult,
+        config: settings.analysis,
+        locale,
+        question,
+        history
+      });
+
+      setAnalysisChatMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          content: answer
+        }
+      ]);
+    } catch (error_) {
+      const rawReason = error_ instanceof Error ? error_.message : copy.errors.analyzeLogs;
+      const reason = unwrapAnalysisChatIpcError(rawReason);
+      setError(reason);
+      setAnalysisChatMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          content: copy.modals.analysisChat.failed(reason)
+        }
+      ]);
+    } finally {
+      setIsChatRequestPending(false);
+    }
   };
 
   const handleRunAnalyzeScope = async (): Promise<void> => {
@@ -531,11 +624,28 @@ export const App = (): JSX.Element => {
       {isAnalysisOpen ? (
         <AnalysisModal
           aiMeta={analysisMeta}
+          canEnhanceWithAI={settings.analysis.enableAIEnhancement}
+          canOpenAIChat={Boolean(analysisMeta?.used)}
+          isEnhancingWithAI={isEnhancingWithAI}
           result={analysisResult}
+          onEnhanceWithAI={() => void handleEnhanceAnalysisWithAI()}
+          onOpenAIChat={handleOpenAIChat}
           onClose={() => {
             setIsAnalysisOpen(false);
+            setAnalysisBaseResult(null);
             setAnalysisMeta(null);
+            setAnalysisChatMessages([]);
+            setIsAnalysisChatOpen(false);
           }}
+        />
+      ) : null}
+
+      {isAnalysisChatOpen ? (
+        <AnalysisChatModal
+          isSending={isChatRequestPending}
+          messages={analysisChatMessages}
+          onClose={() => setIsAnalysisChatOpen(false)}
+          onSend={(question) => void handleSendAIQuestion(question)}
         />
       ) : null}
 

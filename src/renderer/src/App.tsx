@@ -1,6 +1,7 @@
 import { type JSX, useEffect, useMemo, useState } from 'react';
 import { ActionsModal } from '@renderer/components/actions-modal';
 import { AnalysisModal } from '@renderer/components/analysis-modal';
+import { AnalysisOptionsModal } from '@renderer/components/analysis-options-modal';
 import { CommandBar } from '@renderer/components/command-bar';
 import { DeviceModal } from '@renderer/components/device-modal';
 import { EmptyState } from '@renderer/components/empty-state';
@@ -16,11 +17,13 @@ import { useLogcatEvents } from '@renderer/hooks/use-logcat-events';
 import { electronApi } from '@renderer/services/electron-api';
 import { useAppStore } from '@renderer/store/app-store';
 import {
-  maybeEnhanceLogAnalysis,
+  maybeEnhanceLogAnalysisDetailed,
+  type AIEnhancementMeta,
   runLogAnalysis,
   type LogAnalysisResult
 } from '@renderer/utils/intelligent-analysis/log-analysis-engine';
 import { processLogsForRender } from '@renderer/utils/log-analysis/log-processing';
+import type { EnrichedLog } from '@renderer/utils/log-analysis/types';
 import { filterLogs } from '@renderer/utils/log-filtering';
 import type { Locale } from '@shared/types';
 
@@ -57,11 +60,17 @@ export const App = (): JSX.Element => {
   const [isExporting, setIsExporting] = useState(false);
   const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isStopPending, setIsStopPending] = useState(false);
+  const [isPausePending, setIsPausePending] = useState(false);
+  const [selectedLogId, setSelectedLogId] = useState<string | null>(null);
+  const [isAnalyzeOptionsOpen, setIsAnalyzeOptionsOpen] = useState(false);
+  const [analyzeLimit, setAnalyzeLimit] = useState(56);
   const [isDevicesOpen, setIsDevicesOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<LogAnalysisResult | null>(null);
+  const [analysisMeta, setAnalysisMeta] = useState<AIEnhancementMeta | null>(null);
 
   useEffect(() => {
     setAdbPathDraft(settings.adbPath);
@@ -112,6 +121,17 @@ export const App = (): JSX.Element => {
   );
   const selectedDevice = devices.find((device) => device.id === selectedDeviceId) ?? null;
 
+  useEffect(() => {
+    if (!selectedLogId) {
+      return;
+    }
+
+    const stillVisible = processedLogs.enrichedLogs.some((entry) => entry.id === selectedLogId);
+    if (!stillVisible) {
+      setSelectedLogId(null);
+    }
+  }, [processedLogs.enrichedLogs, selectedLogId]);
+
   const refreshDeviceList = async (): Promise<void> => {
     setIsRefreshing(true);
     clearError();
@@ -158,15 +178,29 @@ export const App = (): JSX.Element => {
   };
 
   const handleStopSession = async (): Promise<void> => {
+    if (isStopPending) {
+      return;
+    }
+
+    setIsStopPending(true);
+
     try {
       const nextState = await electronApi.stopLogcat();
       setSessionState(nextState);
     } catch (stopError) {
       setError(stopError instanceof Error ? stopError.message : copy.errors.stopLogcat);
+    } finally {
+      setIsStopPending(false);
     }
   };
 
   const handlePauseResume = async (): Promise<void> => {
+    if (isPausePending || isStopPending) {
+      return;
+    }
+
+    setIsPausePending(true);
+
     try {
       const nextState =
         sessionState.status === 'paused'
@@ -175,6 +209,8 @@ export const App = (): JSX.Element => {
       setSessionState(nextState);
     } catch (pauseError) {
       setError(pauseError instanceof Error ? pauseError.message : copy.errors.updateCaptureState);
+    } finally {
+      setIsPausePending(false);
     }
   };
 
@@ -240,8 +276,12 @@ export const App = (): JSX.Element => {
     }
   };
 
-  const handleAnalyzeLogs = async (): Promise<void> => {
+  const runAnalysisForLogs = async (logsToAnalyze: typeof processedLogs.enrichedLogs): Promise<void> => {
     if (!settings.analysis.enableAnalysis) {
+      return;
+    }
+
+    if (logsToAnalyze.length === 0) {
       return;
     }
 
@@ -249,16 +289,37 @@ export const App = (): JSX.Element => {
     clearError();
 
     try {
-      const base = runLogAnalysis(processedLogs.enrichedLogs);
-      const result = await maybeEnhanceLogAnalysis(base, settings.analysis);
-      setAnalysisResult(result);
+      const base = runLogAnalysis(logsToAnalyze, locale);
+      const detailed = await maybeEnhanceLogAnalysisDetailed(base, settings.analysis, locale);
+      setAnalysisResult(detailed.result);
+      setAnalysisMeta(detailed.meta);
       setIsAnalysisOpen(true);
+      setIsAnalyzeOptionsOpen(false);
       setIsActionsOpen(false);
     } catch (analysisError) {
       setError(analysisError instanceof Error ? analysisError.message : copy.errors.analyzeLogs);
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  const handleOpenAnalyzeOptions = (): void => {
+    if (!settings.analysis.enableAnalysis || processedLogs.enrichedLogs.length === 0) {
+      return;
+    }
+
+    setIsAnalyzeOptionsOpen(true);
+    setIsActionsOpen(false);
+  };
+
+  const handleAnalyzeSingleLog = (log: EnrichedLog): void => {
+    void runAnalysisForLogs([log]);
+  };
+
+  const handleRunAnalyzeScope = async (): Promise<void> => {
+    const safeLimit = Number.isFinite(analyzeLimit) ? Math.max(1, Math.floor(analyzeLimit)) : 1;
+    const subset = processedLogs.enrichedLogs.slice(-safeLimit);
+    await runAnalysisForLogs(subset);
   };
 
   const handleLocaleChange = async (nextLocale: Locale): Promise<void> => {
@@ -359,11 +420,16 @@ export const App = (): JSX.Element => {
           ) : null}
 
           <CommandBar
+            canAnalyze={settings.analysis.enableAnalysis && processedLogs.enrichedLogs.length > 0}
             canStart={Boolean(selectedDeviceId) && adbStatus.available}
             canClearLogs={filteredLogs.length > 0}
             filters={filters}
+            isAnalyzePending={isAnalyzing}
+            isPausePending={isPausePending}
             isPaused={paused}
+            isStopPending={isStopPending}
             isStreaming={streaming}
+            onAnalyze={handleOpenAnalyzeOptions}
             onClearLogs={clearLogs}
             onPauseResume={handlePauseResume}
             onSetFilters={setFilters}
@@ -392,6 +458,9 @@ export const App = (): JSX.Element => {
                   enableHighlight={settings.logAnalysis.enableHighlight}
                   groups={processedLogs.groupedLogs}
                   searchQuery={filters.search}
+                  selectedLogId={selectedLogId}
+                  onAnalyzeLog={handleAnalyzeSingleLog}
+                  onSelectLog={setSelectedLogId}
                   onCopyLine={(line) => electronApi.copyToClipboard(line)}
                 />
               ) : (
@@ -400,6 +469,8 @@ export const App = (): JSX.Element => {
                   enableHighlight={settings.logAnalysis.enableHighlight}
                   logs={settings.logAnalysis.enableHighlight ? processedLogs.enrichedLogs : filteredLogs}
                   searchQuery={filters.search}
+                  selectedLogId={selectedLogId}
+                  onSelectLog={setSelectedLogId}
                   onCopyLine={(line) => electronApi.copyToClipboard(line)}
                 />
               )
@@ -446,7 +517,7 @@ export const App = (): JSX.Element => {
           isCheckingUpdates={isCheckingUpdates}
           isAnalyzing={isAnalyzing}
           isExporting={isExporting}
-          onAnalyzeLogs={() => void handleAnalyzeLogs()}
+          onAnalyzeLogs={handleOpenAnalyzeOptions}
           onCheckForUpdates={() => void handleCheckForUpdates()}
           onClearBuffer={handleClearBuffer}
           onClearView={clearLogs}
@@ -457,7 +528,27 @@ export const App = (): JSX.Element => {
         />
       ) : null}
 
-      {isAnalysisOpen ? <AnalysisModal result={analysisResult} onClose={() => setIsAnalysisOpen(false)} /> : null}
+      {isAnalysisOpen ? (
+        <AnalysisModal
+          aiMeta={analysisMeta}
+          result={analysisResult}
+          onClose={() => {
+            setIsAnalysisOpen(false);
+            setAnalysisMeta(null);
+          }}
+        />
+      ) : null}
+
+      {isAnalyzeOptionsOpen ? (
+        <AnalysisOptionsModal
+          analyzeLimit={analyzeLimit}
+          isAnalyzing={isAnalyzing}
+          totalVisible={processedLogs.enrichedLogs.length}
+          onClose={() => setIsAnalyzeOptionsOpen(false)}
+          onLimitChange={setAnalyzeLimit}
+          onRun={() => void handleRunAnalyzeScope()}
+        />
+      ) : null}
     </div>
   );
 };

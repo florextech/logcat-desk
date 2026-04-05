@@ -1,7 +1,9 @@
 import type {
   AdbStatus,
+  AskAnalysisAssistantInput,
   AppSettings,
   DeviceListResponse,
+  EnhanceAnalysisSummaryInput,
   ExportLogsInput,
   ExportLogsResult,
   LogBatchPayload,
@@ -48,6 +50,8 @@ const fallbackApi: RendererApi = {
   clearLogcatBuffer: async (): Promise<void> => rejectUnavailable(),
   checkForUpdates: async (): Promise<UpdateCheckResult> => rejectUnavailable(),
   exportLogs: async (_input: ExportLogsInput): Promise<ExportLogsResult> => rejectUnavailable(),
+  enhanceAnalysisSummary: async (_input: EnhanceAnalysisSummaryInput): Promise<string> => rejectUnavailable(),
+  askAnalysisAssistant: async (_input: AskAnalysisAssistantInput): Promise<string> => rejectUnavailable(),
   copyToClipboard: async (): Promise<void> => rejectUnavailable(),
   onLogBatch: (_listener: (payload: LogBatchPayload) => void) => noopUnsubscribe(),
   onSessionState: (_listener: (state: SessionState) => void) => noopUnsubscribe()

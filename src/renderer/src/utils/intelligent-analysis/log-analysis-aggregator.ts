@@ -1,3 +1,4 @@
+import type { Locale } from '@shared/types';
 import type { AnalysisLog, LogAnalysisResult, LogAnalysisSeverity } from '@renderer/utils/intelligent-analysis/log-analysis-engine';
 import type { RuleMatch } from '@renderer/utils/intelligent-analysis/log-analysis-rules';
 
@@ -9,6 +10,18 @@ interface CauseBucket {
   recommendations: Set<string>;
 }
 
+interface LocalizedText {
+  en: string;
+  es: string;
+}
+
+interface HeuristicSignal {
+  cause: LocalizedText;
+  recommendation: LocalizedText;
+  severity: LogAnalysisSeverity;
+  test: (text: string) => boolean;
+}
+
 const SEVERITY_RANK: Record<LogAnalysisSeverity, number> = {
   low: 0,
   medium: 1,
@@ -16,12 +29,103 @@ const SEVERITY_RANK: Record<LogAnalysisSeverity, number> = {
   critical: 3
 };
 
+const ANALYSIS_COPY = {
+  en: {
+    unknownTag: 'unknown',
+    noLogsSummary: 'No logs available to analyze.',
+    noLogsRecommendation: 'Start a logcat session and collect logs before running analysis.',
+    noPatternCause: 'No matching rule signatures found in the current log set.',
+    noPatternRecommendationA: 'Review highlighted logs manually for project-specific failures.',
+    noPatternRecommendationB: 'Add a custom rule for repeated patterns in your domain.',
+    noCauseSummary: (severity: LogAnalysisSeverity): string =>
+      `No known critical patterns detected. Current severity: ${severity}.`,
+    withCauseSummary: (cause: string, extraCount: number, severity: LogAnalysisSeverity): string =>
+      `Possible cause: ${cause}.${extraCount > 0 ? ` Additional probable causes: ${extraCount}.` : ''} Severity: ${severity}.`
+  },
+  es: {
+    unknownTag: 'desconocido',
+    noLogsSummary: 'No hay logs disponibles para analizar.',
+    noLogsRecommendation: 'Inicia una sesion de logcat y captura logs antes de ejecutar el analisis.',
+    noPatternCause: 'No se encontraron firmas de reglas coincidentes en el conjunto de logs actual.',
+    noPatternRecommendationA: 'Revisa manualmente los logs resaltados para fallos especificos del proyecto.',
+    noPatternRecommendationB: 'Agrega una regla personalizada para patrones repetidos de tu dominio.',
+    noCauseSummary: (severity: LogAnalysisSeverity): string =>
+      `No se detectaron patrones criticos conocidos. Severidad actual: ${severity}.`,
+    withCauseSummary: (cause: string, extraCount: number, severity: LogAnalysisSeverity): string =>
+      `Causa posible: ${cause}.${extraCount > 0 ? ` Causas probables adicionales: ${extraCount}.` : ''} Severidad: ${severity}.`
+  }
+} as const;
+
+const HEURISTIC_SIGNALS: HeuristicSignal[] = [
+  {
+    cause: {
+      en: 'Request payload or parameters look invalid for the target API.',
+      es: 'La carga o parametros de la solicitud parecen invalidos para la API destino.'
+    },
+    recommendation: {
+      en: 'Validate request body/schema and required fields before sending.',
+      es: 'Valida body/esquema de la solicitud y campos requeridos antes de enviar.'
+    },
+    severity: 'medium',
+    test: (text) =>
+      /\bresponse code\s*400\b|\bhttp\s*400\b|\bstatus\s*400\b|\bbad request\b|\binvalid argument\b/.test(text)
+  },
+  {
+    cause: {
+      en: 'Response parsing/serialization appears incompatible with returned data.',
+      es: 'El parseo/serializacion de respuesta parece incompatible con los datos devueltos.'
+    },
+    recommendation: {
+      en: 'Review parser contracts (protobuf/json) and handle malformed payloads safely.',
+      es: 'Revisa contratos del parser (protobuf/json) y maneja payloads malformados de forma segura.'
+    },
+    severity: 'medium',
+    test: (text) =>
+      /\bparse proto exception\b|\bparse exception\b|\bserialization\b|\bdeserializ(e|ation)\b|\bmalformed\b|\bdecode\b/.test(
+        text
+      )
+  },
+  {
+    cause: {
+      en: 'Network transport instability is affecting request/response flow.',
+      es: 'La inestabilidad de transporte de red esta afectando el flujo de peticion/respuesta.'
+    },
+    recommendation: {
+      en: 'Inspect connectivity, DNS/TLS, and retry strategy for transient I/O failures.',
+      es: 'Inspecciona conectividad, DNS/TLS y estrategia de reintentos para fallos transitorios de I/O.'
+    },
+    severity: 'medium',
+    test: (text) =>
+      /\berrno=\-?\d+\b|\bsocket\b|\bfailed to connect\b|\bconnection refused\b|\bnetwork\b|\bdns\b|\bhost unreachable\b/.test(
+        text
+      )
+  },
+  {
+    cause: {
+      en: 'Upstream service returned server-side failures.',
+      es: 'El servicio upstream devolvio fallos del lado del servidor.'
+    },
+    recommendation: {
+      en: 'Check backend health and retries for 5xx responses before surfacing hard failures.',
+      es: 'Verifica salud del backend y reintentos para respuestas 5xx antes de marcar fallo duro.'
+    },
+    severity: 'high',
+    test: (text) =>
+      /\bresponse code\s*5\d\d\b|\bhttp\s*5\d\d\b|\bstatus\s*5\d\d\b|\binternal server error\b|\bservice unavailable\b/.test(
+        text
+      )
+  }
+];
+
 const byHigherSeverity = (left: LogAnalysisSeverity, right: LogAnalysisSeverity): LogAnalysisSeverity =>
   SEVERITY_RANK[left] >= SEVERITY_RANK[right] ? left : right;
 
-const asEvidence = (log: AnalysisLog): string => {
+const localize = (text: LocalizedText, locale: Locale): string => (locale === 'es' ? text.es : text.en);
+
+const asEvidence = (log: AnalysisLog, locale: Locale): string => {
   const timestamp = log.monthDay && log.time ? `${log.monthDay} ${log.time}` : log.receivedAt;
-  return `${timestamp} | ${log.tag || 'unknown'} | ${log.message || log.raw}`;
+  const copy = ANALYSIS_COPY[locale];
+  return `${timestamp} | ${log.tag || copy.unknownTag} | ${log.message || log.raw}`;
 };
 
 const hasCrashSignal = (logs: AnalysisLog[]): boolean =>
@@ -54,23 +158,73 @@ const computeSeverity = (
   return overall;
 };
 
-const summarize = (causes: string[], severity: LogAnalysisSeverity): string => {
+const summarize = (causes: string[], severity: LogAnalysisSeverity, locale: Locale): string => {
+  const copy = ANALYSIS_COPY[locale];
+
   if (causes.length === 0) {
-    return `No known critical patterns detected. Current severity: ${severity}.`;
+    return copy.noCauseSummary(severity);
   }
 
   const topCause = causes[0] ?? 'Unknown cause';
-  const extra = causes.length > 1 ? ` Additional probable causes: ${causes.length - 1}.` : '';
-  return `Possible cause: ${topCause}.${extra} Severity: ${severity}.`;
+  return copy.withCauseSummary(topCause, causes.length - 1, severity);
 };
 
-export const aggregateLogAnalysis = (logs: AnalysisLog[], matches: RuleMatch[]): LogAnalysisResult => {
+const inferHeuristicNoRuleInsights = (
+  logs: AnalysisLog[],
+  locale: Locale
+): {
+  causes: string[];
+  recommendations: string[];
+  evidence: string[];
+  severity: LogAnalysisSeverity;
+} => {
+  const matchedCauses: string[] = [];
+  const matchedRecommendations: string[] = [];
+  const matchedEvidence: string[] = [];
+  const evidenceSet = new Set<string>();
+  let inferredSeverity: LogAnalysisSeverity = 'low';
+
+  for (const signal of HEURISTIC_SIGNALS) {
+    const matchingLogs = logs.filter((log) => signal.test(`${log.message} ${log.raw}`.toLowerCase()));
+    if (matchingLogs.length === 0) {
+      continue;
+    }
+
+    matchedCauses.push(localize(signal.cause, locale));
+    matchedRecommendations.push(localize(signal.recommendation, locale));
+    inferredSeverity = byHigherSeverity(inferredSeverity, signal.severity);
+
+    for (const log of matchingLogs.slice(0, 2)) {
+      const line = asEvidence(log, locale);
+      if (evidenceSet.has(line)) {
+        continue;
+      }
+      evidenceSet.add(line);
+      matchedEvidence.push(line);
+    }
+  }
+
+  return {
+    causes: matchedCauses,
+    recommendations: matchedRecommendations,
+    evidence: matchedEvidence,
+    severity: inferredSeverity
+  };
+};
+
+export const aggregateLogAnalysis = (
+  logs: AnalysisLog[],
+  matches: RuleMatch[],
+  locale: Locale = 'en'
+): LogAnalysisResult => {
+  const copy = ANALYSIS_COPY[locale];
+
   if (logs.length === 0) {
     return {
-      summary: 'No logs available to analyze.',
+      summary: copy.noLogsSummary,
       probableCauses: [],
       evidence: [],
-      recommendations: ['Start a logcat session and collect logs before running analysis.'],
+      recommendations: [copy.noLogsRecommendation],
       severity: 'low'
     };
   }
@@ -78,16 +232,22 @@ export const aggregateLogAnalysis = (logs: AnalysisLog[], matches: RuleMatch[]):
   if (matches.length === 0) {
     const warnings = logs.filter((log) => log.severity === 'warning').length;
     const errors = logs.filter((log) => log.severity === 'error').length;
-    const severity: LogAnalysisSeverity = errors >= 3 ? 'high' : warnings > 0 ? 'medium' : 'low';
+    const baseSeverity: LogAnalysisSeverity = errors >= 3 ? 'high' : warnings > 0 ? 'medium' : 'low';
+    const inferred = inferHeuristicNoRuleInsights(logs, locale);
+    const severity = byHigherSeverity(baseSeverity, inferred.severity);
+    const probableCauses = inferred.causes.length > 0 ? inferred.causes : [copy.noPatternCause];
+    const recommendations = inferred.recommendations.length > 0
+      ? [...new Set([...inferred.recommendations, copy.noPatternRecommendationB])]
+      : [copy.noPatternRecommendationA, copy.noPatternRecommendationB];
+    const evidence = inferred.evidence.length > 0
+      ? inferred.evidence.slice(0, 5)
+      : logs.slice(-5).map((log) => asEvidence(log, locale));
 
     return {
-      summary: summarize([], severity),
-      probableCauses: ['No matching rule signatures found in the current log set.'],
-      evidence: logs.slice(-5).map((log) => asEvidence(log)),
-      recommendations: [
-        'Review highlighted logs manually for project-specific failures.',
-        'Add a custom rule for repeated patterns in your domain.'
-      ],
+      summary: summarize(inferred.causes, severity, locale),
+      probableCauses,
+      evidence,
+      recommendations,
       severity
     };
   }
@@ -166,7 +326,7 @@ export const aggregateLogAnalysis = (logs: AnalysisLog[], matches: RuleMatch[]):
   const severity = computeSeverity(logs, sortedBuckets, matchedErrors);
 
   return {
-    summary: summarize(probableCauses, severity),
+    summary: summarize(probableCauses, severity, locale),
     probableCauses,
     evidence,
     recommendations,

@@ -1,3 +1,4 @@
+import type { Locale } from '@shared/types';
 import type { LogAnalysisResult } from '@renderer/utils/intelligent-analysis/log-analysis-engine';
 import { BaseAIClient, buildSummaryEnhancementPrompt } from '@renderer/utils/intelligent-analysis/ai/ai-client.interface';
 
@@ -9,7 +10,7 @@ interface ClaudeResponse {
 }
 
 export class ClaudeClient extends BaseAIClient {
-  async generateAnalysis(input: LogAnalysisResult): Promise<string> {
+  async generateAnalysis(input: LogAnalysisResult, locale: Locale): Promise<string> {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -25,7 +26,7 @@ export class ClaudeClient extends BaseAIClient {
         messages: [
           {
             role: 'user',
-            content: buildSummaryEnhancementPrompt(input)
+            content: buildSummaryEnhancementPrompt(input, locale)
           }
         ]
       })

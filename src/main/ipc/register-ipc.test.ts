@@ -16,11 +16,13 @@ const { clipboardWriteTextMock, dialogObject, handleMock, removeHandlerMock, ope
 const {
   clearLogcatBufferMock,
   listDevicesMock,
-  resolveAdbStatusMock
+  resolveAdbStatusMock,
+  enhanceAnalysisSummaryMock
 } = vi.hoisted(() => ({
   clearLogcatBufferMock: vi.fn(),
   listDevicesMock: vi.fn(),
-  resolveAdbStatusMock: vi.fn()
+  resolveAdbStatusMock: vi.fn(),
+  enhanceAnalysisSummaryMock: vi.fn()
 }));
 
 vi.mock('electron', () => ({
@@ -49,6 +51,10 @@ vi.mock('@main/services/adb/adb-resolver', () => ({
   resolveAdbStatus: resolveAdbStatusMock
 }));
 
+vi.mock('@main/services/analysis/analysis-ai-service', () => ({
+  enhanceAnalysisSummary: enhanceAnalysisSummaryMock
+}));
+
 import { registerIpc } from '@main/ipc/register-ipc';
 
 describe('registerIpc', () => {
@@ -57,6 +63,7 @@ describe('registerIpc', () => {
     clearLogcatBufferMock.mockReset();
     listDevicesMock.mockReset();
     resolveAdbStatusMock.mockReset();
+    enhanceAnalysisSummaryMock.mockReset();
     handleMock.mockReset();
     removeHandlerMock.mockReset();
     dialogObject.showMessageBox.mockReset();
@@ -116,6 +123,7 @@ describe('registerIpc', () => {
       source: 'settings'
     });
     listDevicesMock.mockResolvedValue([{ id: 'device-1', state: 'device' }]);
+    enhanceAnalysisSummaryMock.mockResolvedValue('enhanced summary');
 
     registerIpc({
       mainWindow: mainWindow as never,
@@ -128,6 +136,7 @@ describe('registerIpc', () => {
     expect(removeHandlerMock).toHaveBeenCalled();
     expect(handlers.has(ipcChannels.settingsGet)).toBe(true);
     expect(handlers.has(ipcChannels.logcatStart)).toBe(true);
+    expect(handlers.has(ipcChannels.analysisEnhanceSummary)).toBe(true);
     expect(handlers.has(ipcChannels.updatesCheck)).toBe(true);
 
     listeners['log-batch']?.({ entries: [{ id: '1' }] });
@@ -188,6 +197,25 @@ describe('registerIpc', () => {
     await expect(
       handlers.get(ipcChannels.exportLogs)?.({}, { scope: 'visible', format: 'txt', suggestedName: 'demo' })
     ).resolves.toEqual({ canceled: false, filePath: '/tmp/logs.txt' });
+
+    await expect(
+      handlers.get(ipcChannels.analysisEnhanceSummary)?.({}, {
+        base: {
+          summary: 'summary',
+          probableCauses: [],
+          evidence: [],
+          recommendations: [],
+          severity: 'low'
+        },
+        config: {
+          enableAnalysis: true,
+          enableAIEnhancement: true,
+          ai: { provider: 'openai', apiKey: 'key' }
+        },
+        locale: 'en'
+      })
+    ).resolves.toBe('enhanced summary');
+    expect(enhanceAnalysisSummaryMock).toHaveBeenCalledTimes(1);
 
     await handlers.get(ipcChannels.clipboardCopy)?.({}, 'copied text');
     expect(clipboardWriteTextMock).toHaveBeenCalledWith('copied text');

@@ -4,11 +4,16 @@ import { FloatingSelect } from '@renderer/components/floating-select';
 import { useI18n } from '@renderer/i18n/provider';
 
 interface CommandBarProps {
+  canAnalyze: boolean;
   canStart: boolean;
   canClearLogs: boolean;
   filters: FilterState;
+  isAnalyzePending?: boolean;
+  isPausePending?: boolean;
   isPaused: boolean;
+  isStopPending?: boolean;
   isStreaming: boolean;
+  onAnalyze: () => void;
   onClearLogs: () => void;
   onPauseResume: () => void;
   onSetFilters: (filters: Partial<FilterState>) => void;
@@ -23,11 +28,16 @@ const actionClassName =
   'flx-btn flx-btn-secondary disabled:cursor-not-allowed disabled:opacity-50';
 
 export const CommandBar = ({
+  canAnalyze,
   canStart,
   canClearLogs,
   filters,
+  isAnalyzePending = false,
+  isPausePending = false,
   isPaused,
+  isStopPending = false,
   isStreaming,
+  onAnalyze,
   onClearLogs,
   onPauseResume,
   onSetFilters,
@@ -94,17 +104,25 @@ export const CommandBar = ({
         <div className="flex flex-wrap items-center gap-3">
           <button
             className="flx-btn flx-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={!canStart || isStreaming || isPaused}
+            disabled={!canStart || isStreaming || isPaused || isStopPending || isPausePending}
             onClick={onStart}
           >
             {copy.toolbar.start}
           </button>
 
-          <button className={actionClassName} disabled={!isStreaming && !isPaused} onClick={onStop}>
+          <button
+            className={actionClassName}
+            disabled={isStopPending || isPausePending || (!isStreaming && !isPaused)}
+            onClick={onStop}
+          >
             {copy.toolbar.stop}
           </button>
 
-          <button className={actionClassName} disabled={!isStreaming && !isPaused} onClick={onPauseResume}>
+          <button
+            className={actionClassName}
+            disabled={isPausePending || isStopPending || (!isStreaming && !isPaused)}
+            onClick={onPauseResume}
+          >
             {isPaused ? copy.toolbar.resume : copy.toolbar.pause}
           </button>
 
@@ -112,6 +130,13 @@ export const CommandBar = ({
             {copy.toolbar.clearLogs}
           </button>
 
+          <button
+            className={actionClassName}
+            disabled={!canAnalyze || isAnalyzePending || isStopPending || isPausePending}
+            onClick={onAnalyze}
+          >
+            {copy.toolbar.analyze}
+          </button>
         </div>
       </div>
     </div>

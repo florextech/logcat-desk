@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { EnrichedLog } from '@renderer/utils/log-analysis/types';
-import { maybeEnhanceLogAnalysis, runLogAnalysis, type LogAnalysisResult } from '@renderer/utils/intelligent-analysis/log-analysis-engine';
+import {
+  maybeEnhanceLogAnalysis,
+  maybeEnhanceLogAnalysisDetailed,
+  runLogAnalysis,
+  type LogAnalysisResult
+} from '@renderer/utils/intelligent-analysis/log-analysis-engine';
 
 const makeLog = (overrides: Partial<EnrichedLog>): EnrichedLog => ({
   id: 'log-1',
@@ -64,6 +69,41 @@ describe('intelligent log analysis engine', () => {
     expect(result.probableCauses[0]).toContain('No matching rule signatures');
   });
 
+  it('infers dynamic fallback causes for unmatched parse/network signals', () => {
+    const result = runLogAnalysis([
+      makeLog({
+        id: 'log-1',
+        sequence: 1,
+        level: 'W',
+        severity: 'warning',
+        tag: 'GLSUser',
+        message: 'Caused by: cmre: Parse Proto Exception with response code 400'
+      })
+    ]);
+
+    expect(result.probableCauses[0]).toContain('Request payload');
+    expect(result.recommendations.join(' ')).toContain('schema');
+    expect(result.summary).toContain('Possible cause');
+  });
+
+  it('returns localized diagnostics when locale is Spanish', () => {
+    const result = runLogAnalysis(
+      [
+        makeLog({
+          level: 'E',
+          severity: 'error',
+          tag: 'AndroidRuntime',
+          message: 'FATAL EXCEPTION: main java.lang.NullPointerException'
+        })
+      ],
+      'es'
+    );
+
+    expect(result.summary).toContain('Causa posible');
+    expect(result.probableCauses[0]).toContain('excepcion fatal');
+    expect(result.recommendations[0]).toContain('stack trace');
+  });
+
   it('keeps deterministic result when AI enhancement is disabled or incomplete', async () => {
     const base: LogAnalysisResult = {
       summary: 'Base summary',
@@ -96,5 +136,51 @@ describe('intelligent log analysis engine', () => {
         }
       })
     ).resolves.toEqual(base);
+  });
+
+  it('reports AI enhancement metadata for fallback scenarios', async () => {
+    const base: LogAnalysisResult = {
+      summary: 'Base summary',
+      probableCauses: ['Cause A'],
+      evidence: ['Evidence A'],
+      recommendations: ['Recommendation A'],
+      severity: 'medium'
+    };
+
+    await expect(
+      maybeEnhanceLogAnalysisDetailed(base, {
+        enableAnalysis: true,
+        enableAIEnhancement: false,
+        ai: {
+          provider: 'openai',
+          apiKey: 'ignored'
+        }
+      })
+    ).resolves.toMatchObject({
+      result: base,
+      meta: {
+        used: false,
+        attempted: false,
+        reason: 'disabled'
+      }
+    });
+
+    await expect(
+      maybeEnhanceLogAnalysisDetailed(base, {
+        enableAnalysis: true,
+        enableAIEnhancement: true,
+        ai: {
+          provider: 'openai',
+          apiKey: ''
+        }
+      })
+    ).resolves.toMatchObject({
+      result: base,
+      meta: {
+        used: false,
+        attempted: false,
+        reason: 'missing_api_key'
+      }
+    });
   });
 });

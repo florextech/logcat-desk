@@ -1,3 +1,4 @@
+import type { Locale } from '@shared/types';
 import type { LogAnalysisResult } from '@renderer/utils/intelligent-analysis/log-analysis-engine';
 import { BaseAIClient, buildSummaryEnhancementPrompt } from '@renderer/utils/intelligent-analysis/ai/ai-client.interface';
 
@@ -10,7 +11,7 @@ interface OpenAIResponse {
 }
 
 export class OpenAIClient extends BaseAIClient {
-  async generateAnalysis(input: LogAnalysisResult): Promise<string> {
+  async generateAnalysis(input: LogAnalysisResult, locale: Locale): Promise<string> {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -27,7 +28,7 @@ export class OpenAIClient extends BaseAIClient {
           },
           {
             role: 'user',
-            content: buildSummaryEnhancementPrompt(input)
+            content: buildSummaryEnhancementPrompt(input, locale)
           }
         ]
       })

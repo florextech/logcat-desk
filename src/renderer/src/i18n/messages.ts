@@ -14,6 +14,7 @@ export interface I18nMessages {
     save: string;
     saving: string;
     run: string;
+    close: string;
     english: string;
     spanish: string;
   };
@@ -39,6 +40,7 @@ export interface I18nMessages {
     pause: string;
     resume: string;
     clearLogs: string;
+    analyze: string;
   };
   console: {
     time: string;
@@ -116,7 +118,24 @@ export interface I18nMessages {
       evidence: string;
       recommendations: string;
       severity: string;
+      severityLevels: Record<'low' | 'medium' | 'high' | 'critical', string>;
+      aiStatus: string;
+      aiStatusRuleOnly: string;
+      aiStatusUsed: StringFactory<[provider: string]>;
+      aiStatusFallback: StringFactory<[reason: string]>;
+      aiStatusReasons: Record<'success' | 'disabled' | 'missing_api_key' | 'empty_response' | 'request_failed', string>;
       noData: string;
+    };
+    analysisOptions: {
+      title: string;
+      intro: StringFactory<[count: number]>;
+      selectedScopeLabel: string;
+      selectedScopeHint: string;
+      selectedScopeDisabledHint: string;
+      lastVisibleScopeLabel: string;
+      lastVisibleScopeHint: string;
+      allVisibleScopeLabel: string;
+      allVisibleScopeHint: string;
     };
     devices: {
       title: string;
@@ -159,6 +178,7 @@ const en: I18nMessages = {
     save: 'Save',
     saving: 'Saving...',
     run: 'Run',
+    close: 'Close',
     english: 'English',
     spanish: 'Spanish'
   },
@@ -199,7 +219,8 @@ const en: I18nMessages = {
     stop: 'Stop',
     pause: 'Pause',
     resume: 'Resume',
-    clearLogs: 'Clear logs'
+    clearLogs: 'Clear logs',
+    analyze: 'Analyze'
   },
   console: {
     time: 'Time',
@@ -282,7 +303,35 @@ const en: I18nMessages = {
       evidence: 'Evidence',
       recommendations: 'Recommendations',
       severity: 'Severity',
+      severityLevels: {
+        low: 'Low',
+        medium: 'Medium',
+        high: 'High',
+        critical: 'Critical'
+      },
+      aiStatus: 'AI enhancement',
+      aiStatusRuleOnly: 'Rule-based only',
+      aiStatusUsed: (provider) => `Used ${provider}`,
+      aiStatusFallback: (reason) => `Fallback to rules (${reason})`,
+      aiStatusReasons: {
+        success: 'applied',
+        disabled: 'disabled',
+        missing_api_key: 'missing API key',
+        empty_response: 'empty response',
+        request_failed: 'provider request failed'
+      },
       noData: 'No analysis data available.'
+    },
+    analysisOptions: {
+      title: 'Analyze Logs',
+      intro: (count) => `Analyze the latest visible logs from the current filtered set (${count}).`,
+      selectedScopeLabel: 'Selected log',
+      selectedScopeHint: 'Analyze only the currently selected row.',
+      selectedScopeDisabledHint: 'Select a log row first to enable this option.',
+      lastVisibleScopeLabel: 'Last visible logs',
+      lastVisibleScopeHint: 'Analyze only the most recent visible logs based on your filters.',
+      allVisibleScopeLabel: 'All visible logs',
+      allVisibleScopeHint: 'Analyze all logs currently visible in the table.'
     },
     devices: {
       title: 'Devices',
@@ -325,6 +374,7 @@ const es: I18nMessages = {
     save: 'Guardar',
     saving: 'Guardando...',
     run: 'Ejecutar',
+    close: 'Cerrar',
     english: 'Ingles',
     spanish: 'Espanol'
   },
@@ -365,7 +415,8 @@ const es: I18nMessages = {
     stop: 'Detener',
     pause: 'Pausar',
     resume: 'Reanudar',
-    clearLogs: 'Limpiar logs'
+    clearLogs: 'Limpiar logs',
+    analyze: 'Analizar'
   },
   console: {
     time: 'Hora',
@@ -448,7 +499,35 @@ const es: I18nMessages = {
       evidence: 'Evidencia',
       recommendations: 'Recomendaciones',
       severity: 'Severidad',
+      severityLevels: {
+        low: 'Baja',
+        medium: 'Media',
+        high: 'Alta',
+        critical: 'Critica'
+      },
+      aiStatus: 'Mejora con AI',
+      aiStatusRuleOnly: 'Solo reglas',
+      aiStatusUsed: (provider) => `Se uso ${provider}`,
+      aiStatusFallback: (reason) => `Fallback a reglas (${reason})`,
+      aiStatusReasons: {
+        success: 'aplicado',
+        disabled: 'desactivada',
+        missing_api_key: 'falta API key',
+        empty_response: 'respuesta vacia',
+        request_failed: 'fallo la solicitud al proveedor'
+      },
       noData: 'No hay datos de analisis disponibles.'
+    },
+    analysisOptions: {
+      title: 'Analizar logs',
+      intro: (count) => `Analiza los ultimos logs visibles del conjunto filtrado actual (${count}).`,
+      selectedScopeLabel: 'Log seleccionado',
+      selectedScopeHint: 'Analizar solo la fila seleccionada actualmente.',
+      selectedScopeDisabledHint: 'Selecciona una fila de log para habilitar esta opcion.',
+      lastVisibleScopeLabel: 'Ultimos logs visibles',
+      lastVisibleScopeHint: 'Analizar solo los logs visibles mas recientes segun tus filtros.',
+      allVisibleScopeLabel: 'Todos los visibles',
+      allVisibleScopeHint: 'Analizar todos los logs visibles actualmente en la tabla.'
     },
     devices: {
       title: 'Dispositivos',

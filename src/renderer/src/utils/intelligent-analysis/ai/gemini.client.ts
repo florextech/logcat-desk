@@ -1,3 +1,4 @@
+import type { Locale } from '@shared/types';
 import type { LogAnalysisResult } from '@renderer/utils/intelligent-analysis/log-analysis-engine';
 import { BaseAIClient, buildSummaryEnhancementPrompt } from '@renderer/utils/intelligent-analysis/ai/ai-client.interface';
 
@@ -12,7 +13,7 @@ interface GeminiResponse {
 }
 
 export class GeminiClient extends BaseAIClient {
-  async generateAnalysis(input: LogAnalysisResult): Promise<string> {
+  async generateAnalysis(input: LogAnalysisResult, locale: Locale): Promise<string> {
     const model = this.model ?? 'gemini-1.5-flash';
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(
       this.apiKey
@@ -26,7 +27,7 @@ export class GeminiClient extends BaseAIClient {
       body: JSON.stringify({
         contents: [
           {
-            parts: [{ text: buildSummaryEnhancementPrompt(input) }]
+            parts: [{ text: buildSummaryEnhancementPrompt(input, locale) }]
           }
         ],
         generationConfig: {

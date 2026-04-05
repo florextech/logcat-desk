@@ -9,6 +9,8 @@ interface LogConsoleProps {
   logs: LogEntry[];
   searchQuery: string;
   enableHighlight?: boolean;
+  selectedLogId?: string | null;
+  onSelectLog?: (logId: string) => void;
   onCopyLine: (line: string) => Promise<void>;
 }
 
@@ -17,6 +19,8 @@ export const LogConsole = ({
   logs,
   searchQuery,
   enableHighlight = true,
+  selectedLogId = null,
+  onSelectLog,
   onCopyLine
 }: LogConsoleProps): JSX.Element => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -95,11 +99,17 @@ export const LogConsole = ({
             enableHighlight && maybeEnriched.highlight && maybeEnriched.severity
               ? getSeverityTone(maybeEnriched.severity)
               : getLevelTone(log.level, log.emphasis);
+          const isSelected = selectedLogId === log.id;
 
           return (
             <div
               key={log.id}
-              className={`group grid grid-cols-[8.5rem_4rem_16rem_1fr_4rem] gap-3 border-b border-[rgb(38_48_40/0.55)] px-4 py-2 text-[12px] ${tone.row}`}
+              className={`group grid grid-cols-[8.5rem_4rem_16rem_1fr_4rem] gap-3 border-b px-4 py-2 text-[12px] ${tone.row} ${
+                isSelected
+                  ? 'border-[rgb(189_241_70/0.6)] shadow-[inset_0_0_0_1px_rgba(189,241,70,0.2)]'
+                  : 'border-[rgb(38_48_40/0.55)]'
+              }`}
+              onClick={() => onSelectLog?.(log.id)}
             >
               <span className="text-[var(--muted)]">
                 {log.monthDay && log.time ? `${log.monthDay} ${log.time}` : '--'}
@@ -119,7 +129,10 @@ export const LogConsole = ({
               </div>
               <button
                 className="rounded-lg border border-[var(--border)] bg-[rgb(17_21_19/0.74)] px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] opacity-0 transition group-hover:opacity-100 hover:border-[rgb(189_241_70/0.3)] hover:text-[var(--foreground)]"
-                onClick={() => void onCopyLine(log.raw)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void onCopyLine(log.raw);
+                }}
               >
                 {copy.console.copy}
               </button>

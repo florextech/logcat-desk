@@ -1,6 +1,6 @@
 import { type JSX, useEffect, useRef, useState } from 'react';
 import { useI18n } from '@renderer/i18n/provider';
-import type { LogGroup } from '@renderer/utils/log-analysis/types';
+import type { EnrichedLog, LogGroup } from '@renderer/utils/log-analysis/types';
 import { getLevelTone, getSeverityTone, highlightText } from '@renderer/utils/log-format';
 
 interface GroupedLogConsoleProps {
@@ -8,6 +8,9 @@ interface GroupedLogConsoleProps {
   groups: LogGroup[];
   searchQuery: string;
   enableHighlight: boolean;
+  selectedLogId?: string | null;
+  onSelectLog?: (logId: string) => void;
+  onAnalyzeLog?: (log: EnrichedLog) => void;
   onCopyLine: (line: string) => Promise<void>;
 }
 
@@ -29,6 +32,18 @@ const ExpandIcon = ({ expanded }: { expanded: boolean }): JSX.Element => (
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth="2"
+    />
+  </svg>
+);
+
+const AIIcon = (): JSX.Element => (
+  <svg aria-hidden="true" fill="none" height="14" viewBox="0 0 24 24" width="14">
+    <path
+      d="M12 3.2l1.4 3.6L17 8.2l-3.6 1.4L12 13.2l-1.4-3.6L7 8.2l3.6-1.4L12 3.2zM6 13.5l.9 2.3 2.3.9-2.3.9L6 20l-.9-2.3-2.3-.9 2.3-.9L6 13.5zM18 13.5l.9 2.3 2.3.9-2.3.9L18 20l-.9-2.3-2.3-.9 2.3-.9.9-2.3z"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.6"
     />
   </svg>
 );
@@ -55,6 +70,9 @@ export const GroupedLogConsole = ({
   groups,
   searchQuery,
   enableHighlight,
+  selectedLogId = null,
+  onSelectLog,
+  onAnalyzeLog,
   onCopyLine
 }: GroupedLogConsoleProps): JSX.Element => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -123,7 +141,7 @@ export const GroupedLogConsole = ({
 
   return (
     <div className="flx-card flx-grid-glow relative flex h-full min-h-0 max-h-[calc(100vh-270px)] flex-col overflow-hidden bg-[rgb(11_13_12/0.92)]">
-      <div className="grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)_4.5rem_4.5rem] gap-3 border-b border-[var(--border)] bg-[rgb(17_21_19/0.9)] px-4 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+      <div className="grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)_4.5rem_7rem] gap-3 border-b border-[var(--border)] bg-[rgb(17_21_19/0.9)] px-4 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
         <span>{copy.console.time}</span>
         <span>{copy.console.level}</span>
         <span>{copy.console.tagPid}</span>
@@ -151,10 +169,18 @@ export const GroupedLogConsole = ({
             enableHighlight && representative.highlight
               ? getSeverityTone(representative.severity)
               : getLevelTone(representative.level, representative.emphasis);
+          const isRepresentativeSelected = selectedLogId === representative.id;
 
           return (
             <div key={group.fingerprint} className="border-b border-[rgb(38_48_40/0.55)]">
-              <div className={`group grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)_4.5rem_4.5rem] gap-3 px-4 py-2 text-[12px] ${tone.row}`}>
+              <div
+                className={`group grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)_4.5rem_7rem] gap-3 px-4 py-2 text-[12px] ${tone.row} ${
+                  isRepresentativeSelected
+                    ? 'shadow-[inset_0_0_0_1px_rgba(189,241,70,0.2)]'
+                    : ''
+                }`}
+                onClick={() => onSelectLog?.(representative.id)}
+              >
                 <span className="text-[var(--muted)]">{formatRange(group.firstSeen, group.lastSeen)}</span>
                 <span className={`font-semibold ${tone.level}`}>{representative.level}</span>
                 <div className="min-w-0 truncate">
@@ -172,26 +198,44 @@ export const GroupedLogConsole = ({
                 <button
                   aria-label={copy.console.copy}
                   className={`${actionButtonClass} justify-self-end opacity-0 group-hover:opacity-100`}
-                  onClick={() => void onCopyLine(representative.raw)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    void onCopyLine(representative.raw);
+                  }}
                   title={copy.console.copy}
                   type="button"
                 >
                   <CopyIcon />
                 </button>
-                <button
-                  aria-label={isExpanded ? copy.console.collapse : copy.console.expand}
-                  className={`${actionButtonClass} justify-self-end`}
-                  onClick={() =>
-                    setExpanded((current) => ({
-                      ...current,
-                      [group.fingerprint]: !current[group.fingerprint]
-                    }))
-                  }
-                  title={isExpanded ? copy.console.collapse : copy.console.expand}
-                  type="button"
-                >
-                  <ExpandIcon expanded={isExpanded} />
-                </button>
+                <div className="flex justify-end gap-2">
+                  <button
+                    aria-label={copy.toolbar.analyze}
+                    className={actionButtonClass}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onAnalyzeLog?.(representative);
+                    }}
+                    title={copy.toolbar.analyze}
+                    type="button"
+                  >
+                    <AIIcon />
+                  </button>
+                  <button
+                    aria-label={isExpanded ? copy.console.collapse : copy.console.expand}
+                    className={actionButtonClass}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setExpanded((current) => ({
+                        ...current,
+                        [group.fingerprint]: !current[group.fingerprint]
+                      }));
+                    }}
+                    title={isExpanded ? copy.console.collapse : copy.console.expand}
+                    type="button"
+                  >
+                    <ExpandIcon expanded={isExpanded} />
+                  </button>
+                </div>
               </div>
 
               {isExpanded ? (
@@ -201,11 +245,17 @@ export const GroupedLogConsole = ({
                       enableHighlight && entry.highlight
                         ? getSeverityTone(entry.severity)
                         : getLevelTone(entry.level, entry.emphasis);
+                    const isChildSelected = selectedLogId === entry.id;
 
                     return (
                       <div
                         key={entry.id}
-                        className={`group grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)_4.5rem_4.5rem] gap-3 border-t border-[rgb(38_48_40/0.35)] px-4 py-2 pl-8 text-[12px] ${childTone.row}`}
+                        className={`group grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)_4.5rem_7rem] gap-3 border-t border-[rgb(38_48_40/0.35)] px-4 py-2 pl-8 text-[12px] ${childTone.row} ${
+                          isChildSelected
+                            ? 'shadow-[inset_0_0_0_1px_rgba(189,241,70,0.2)]'
+                            : ''
+                        }`}
+                        onClick={() => onSelectLog?.(entry.id)}
                       >
                         <span className="text-[var(--muted)]">
                           {entry.monthDay && entry.time ? `${entry.monthDay} ${entry.time}` : '--'}
@@ -221,13 +271,30 @@ export const GroupedLogConsole = ({
                         <button
                           aria-label={copy.console.copy}
                           className={`${actionButtonClass} justify-self-end opacity-0 group-hover:opacity-100`}
-                          onClick={() => void onCopyLine(entry.raw)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void onCopyLine(entry.raw);
+                          }}
                           title={copy.console.copy}
                           type="button"
                         >
                           <CopyIcon />
                         </button>
-                        <div className="h-8 w-8 justify-self-end" />
+                        <div className="flex justify-end gap-2">
+                          <button
+                            aria-label={copy.toolbar.analyze}
+                            className={actionButtonClass}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onAnalyzeLog?.(entry);
+                            }}
+                            title={copy.toolbar.analyze}
+                            type="button"
+                          >
+                            <AIIcon />
+                          </button>
+                          <div className="h-8 w-8" />
+                        </div>
                       </div>
                     );
                   })}

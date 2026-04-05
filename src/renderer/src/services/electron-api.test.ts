@@ -45,6 +45,23 @@ describe('renderer electronApi service', () => {
     await expect(
       module.electronApi.exportLogs({ scope: 'visible', format: 'txt', suggestedName: 'capture' })
     ).rejects.toThrow('The Electron preload API is unavailable.');
+    await expect(
+      module.electronApi.enhanceAnalysisSummary({
+        base: {
+          summary: 'summary',
+          probableCauses: [],
+          evidence: [],
+          recommendations: [],
+          severity: 'low'
+        },
+        config: {
+          enableAnalysis: true,
+          enableAIEnhancement: true,
+          ai: { provider: 'openai', apiKey: 'key' }
+        },
+        locale: 'en'
+      })
+    ).rejects.toThrow('The Electron preload API is unavailable.');
     await expect(module.electronApi.copyToClipboard('copied')).rejects.toThrow(
       'The Electron preload API is unavailable.'
     );

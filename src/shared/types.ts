@@ -76,6 +76,35 @@ export interface AnalysisConfig {
   ai?: AIConfig;
 }
 
+export type AnalysisSeverity = 'low' | 'medium' | 'high' | 'critical';
+
+export interface LogAnalysisPayload {
+  summary: string;
+  probableCauses: string[];
+  evidence: string[];
+  recommendations: string[];
+  severity: AnalysisSeverity;
+}
+
+export interface EnhanceAnalysisSummaryInput {
+  base: LogAnalysisPayload;
+  config: AnalysisConfig;
+  locale: Locale;
+}
+
+export interface AnalysisChatTurn {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface AskAnalysisAssistantInput {
+  analysis: LogAnalysisPayload;
+  config: AnalysisConfig;
+  locale: Locale;
+  question: string;
+  history?: AnalysisChatTurn[];
+}
+
 export interface AdbStatus {
   available: boolean;
   resolvedPath: string | null;
@@ -143,6 +172,8 @@ export interface RendererApi {
   clearLogcatBuffer: (input: ClearBufferInput) => Promise<void>;
   checkForUpdates: () => Promise<UpdateCheckResult>;
   exportLogs: (input: ExportLogsInput) => Promise<ExportLogsResult>;
+  enhanceAnalysisSummary: (input: EnhanceAnalysisSummaryInput) => Promise<string>;
+  askAnalysisAssistant: (input: AskAnalysisAssistantInput) => Promise<string>;
   copyToClipboard: (text: string) => Promise<void>;
   onLogBatch: (listener: (payload: LogBatchPayload) => void) => () => void;
   onSessionState: (listener: (state: SessionState) => void) => () => void;

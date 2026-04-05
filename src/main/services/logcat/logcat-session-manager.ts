@@ -149,12 +149,21 @@ export class LogcatSessionManager extends EventEmitter {
       this.flushTimer = null;
     }
 
-    const terminatedByTimeout = await Promise.race<boolean>([
-      closed.then(() => false),
-      new Promise<boolean>((resolve) => {
-        setTimeout(() => resolve(true), LogcatSessionManager.FORCE_KILL_TIMEOUT_MS);
-      })
-    ]);
+    let forceKillTimer: ReturnType<typeof setTimeout> | null = null;
+    let terminatedByTimeout = false;
+
+    try {
+      terminatedByTimeout = await Promise.race<boolean>([
+        closed.then(() => false),
+        new Promise<boolean>((resolve) => {
+          forceKillTimer = setTimeout(() => resolve(true), LogcatSessionManager.FORCE_KILL_TIMEOUT_MS);
+        })
+      ]);
+    } finally {
+      if (forceKillTimer) {
+        clearTimeout(forceKillTimer);
+      }
+    }
 
     if (terminatedByTimeout && this.child === child) {
       child.kill('SIGKILL');

@@ -20,7 +20,8 @@ export const AnalysisOptionsModal = ({
   onRun
 }: AnalysisOptionsModalProps): JSX.Element => {
   const { copy } = useI18n();
-  const safeLimit = Number.isFinite(analyzeLimit) ? Math.max(1, Math.floor(analyzeLimit)) : 1;
+  const normalizedLimit = Number.isFinite(analyzeLimit) ? Math.max(1, Math.floor(analyzeLimit)) : 1;
+  const safeLimit = totalVisible > 0 ? Math.min(totalVisible, normalizedLimit) : 1;
   const disabledRun = isAnalyzing || totalVisible === 0 || safeLimit < 1;
   const limitInputId = 'analysis-options-limit-input';
   const limitHintId = 'analysis-options-limit-hint';

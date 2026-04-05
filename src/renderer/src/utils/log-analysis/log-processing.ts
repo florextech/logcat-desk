@@ -12,8 +12,16 @@ export const processLogsForRender = (
   logs: LogEntry[],
   options: {
     enableGrouping: boolean;
+    enableHighlight: boolean;
   }
 ): ProcessedLogs => {
+  if (!options.enableGrouping && !options.enableHighlight) {
+    return {
+      enrichedLogs: logs as EnrichedLog[],
+      groupedLogs: []
+    };
+  }
+
   const enrichedLogs = enrichLogs(logs);
 
   return {

@@ -179,22 +179,46 @@ export const GroupedLogConsole = ({
                     ? 'shadow-[inset_0_0_0_1px_rgba(189,241,70,0.2)]'
                     : ''
                 }`}
-                onClick={() => onSelectLog?.(representative.id)}
               >
-                <span className="text-[var(--muted)]">{formatRange(group.firstSeen, group.lastSeen)}</span>
-                <span className={`font-semibold ${tone.level}`}>{representative.level}</span>
-                <div className="min-w-0 truncate">
-                  <span className="text-[var(--foreground)]">{representative.tag}</span>
-                  <span className="ml-2 text-[rgb(118_183_61)]">x{group.count}</span>
-                </div>
-                <div className="min-w-0 break-all text-[var(--foreground)]">
-                  {enableHighlight && representative.highlight && representative.category ? (
-                    <span className="mr-2 rounded-full border border-[rgb(255_255_255/0.1)] bg-[rgb(255_255_255/0.04)] px-2 py-[1px] text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
-                      {representative.category}
-                    </span>
-                  ) : null}
-                  {highlightText(group.message, searchQuery)}
-                </div>
+                {onSelectLog ? (
+                  <button
+                    className="col-span-4 grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)] gap-3 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(189_241_70/0.45)]"
+                    type="button"
+                    onClick={() => onSelectLog(representative.id)}
+                  >
+                    <span className="text-[var(--muted)]">{formatRange(group.firstSeen, group.lastSeen)}</span>
+                    <span className={`font-semibold ${tone.level}`}>{representative.level}</span>
+                    <div className="min-w-0 truncate">
+                      <span className="text-[var(--foreground)]">{representative.tag}</span>
+                      <span className="ml-2 text-[rgb(118_183_61)]">x{group.count}</span>
+                    </div>
+                    <div className="min-w-0 break-all text-[var(--foreground)]">
+                      {enableHighlight && representative.highlight && representative.category ? (
+                        <span className="mr-2 rounded-full border border-[rgb(255_255_255/0.1)] bg-[rgb(255_255_255/0.04)] px-2 py-[1px] text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
+                          {representative.category}
+                        </span>
+                      ) : null}
+                      {highlightText(group.message, searchQuery)}
+                    </div>
+                  </button>
+                ) : (
+                  <div className="col-span-4 grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)] gap-3">
+                    <span className="text-[var(--muted)]">{formatRange(group.firstSeen, group.lastSeen)}</span>
+                    <span className={`font-semibold ${tone.level}`}>{representative.level}</span>
+                    <div className="min-w-0 truncate">
+                      <span className="text-[var(--foreground)]">{representative.tag}</span>
+                      <span className="ml-2 text-[rgb(118_183_61)]">x{group.count}</span>
+                    </div>
+                    <div className="min-w-0 break-all text-[var(--foreground)]">
+                      {enableHighlight && representative.highlight && representative.category ? (
+                        <span className="mr-2 rounded-full border border-[rgb(255_255_255/0.1)] bg-[rgb(255_255_255/0.04)] px-2 py-[1px] text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
+                          {representative.category}
+                        </span>
+                      ) : null}
+                      {highlightText(group.message, searchQuery)}
+                    </div>
+                  </div>
+                )}
                 <button
                   aria-label={copy.console.copy}
                   className={`${actionButtonClass} justify-self-end opacity-0 group-hover:opacity-100`}
@@ -255,19 +279,40 @@ export const GroupedLogConsole = ({
                             ? 'shadow-[inset_0_0_0_1px_rgba(189,241,70,0.2)]'
                             : ''
                         }`}
-                        onClick={() => onSelectLog?.(entry.id)}
                       >
-                        <span className="text-[var(--muted)]">
-                          {entry.monthDay && entry.time ? `${entry.monthDay} ${entry.time}` : '--'}
-                        </span>
-                        <span className={`font-semibold ${childTone.level}`}>{entry.level}</span>
-                        <div className="min-w-0 truncate">
-                          <span className="text-[var(--foreground)]">{entry.tag}</span>
-                          {entry.pid ? <span className="ml-2 text-[rgb(118_183_61)]">#{entry.pid}</span> : null}
-                        </div>
-                        <div className="min-w-0 break-all text-[var(--foreground)]">
-                          {highlightText(entry.message || entry.raw, searchQuery)}
-                        </div>
+                        {onSelectLog ? (
+                          <button
+                            className="col-span-4 grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)] gap-3 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(189_241_70/0.45)]"
+                            type="button"
+                            onClick={() => onSelectLog(entry.id)}
+                          >
+                            <span className="text-[var(--muted)]">
+                              {entry.monthDay && entry.time ? `${entry.monthDay} ${entry.time}` : '--'}
+                            </span>
+                            <span className={`font-semibold ${childTone.level}`}>{entry.level}</span>
+                            <div className="min-w-0 truncate">
+                              <span className="text-[var(--foreground)]">{entry.tag}</span>
+                              {entry.pid ? <span className="ml-2 text-[rgb(118_183_61)]">#{entry.pid}</span> : null}
+                            </div>
+                            <div className="min-w-0 break-all text-[var(--foreground)]">
+                              {highlightText(entry.message || entry.raw, searchQuery)}
+                            </div>
+                          </button>
+                        ) : (
+                          <div className="col-span-4 grid grid-cols-[12rem_4rem_15rem_minmax(0,1fr)] gap-3">
+                            <span className="text-[var(--muted)]">
+                              {entry.monthDay && entry.time ? `${entry.monthDay} ${entry.time}` : '--'}
+                            </span>
+                            <span className={`font-semibold ${childTone.level}`}>{entry.level}</span>
+                            <div className="min-w-0 truncate">
+                              <span className="text-[var(--foreground)]">{entry.tag}</span>
+                              {entry.pid ? <span className="ml-2 text-[rgb(118_183_61)]">#{entry.pid}</span> : null}
+                            </div>
+                            <div className="min-w-0 break-all text-[var(--foreground)]">
+                              {highlightText(entry.message || entry.raw, searchQuery)}
+                            </div>
+                          </div>
+                        )}
                         <button
                           aria-label={copy.console.copy}
                           className={`${actionButtonClass} justify-self-end opacity-0 group-hover:opacity-100`}

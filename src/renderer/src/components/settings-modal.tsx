@@ -198,8 +198,8 @@ export const SettingsModal = ({
           <div className="space-y-5">
             <label className="flex items-center justify-between rounded-2xl border border-[var(--border)] bg-[rgb(11_13_12/0.82)] px-4 py-4">
               <div>
-                <p className="text-sm font-medium text-[var(--foreground)]">{copy.modals.settings.enableAnalysisTitle}</p>
-                <p className="mt-1 text-sm text-[var(--muted)]">{copy.modals.settings.enableAnalysisHint}</p>
+                <p className="text-sm font-medium text-(--foreground)">{copy.modals.settings.enableAnalysisTitle}</p>
+                <p className="mt-1 text-sm text-(--muted)">{copy.modals.settings.enableAnalysisHint}</p>
               </div>
               <input
                 checked={analysis.enableAnalysis}

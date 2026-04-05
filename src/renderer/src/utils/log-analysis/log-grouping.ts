@@ -3,7 +3,7 @@ import type { EnrichedLog, LogGroup } from '@renderer/utils/log-analysis/types';
 
 const toTimestamp = (entry: EnrichedLog): number => {
   const parsed = Date.parse(entry.receivedAt);
-  return Number.isNaN(parsed) ? Date.now() : parsed;
+  return Number.isNaN(parsed) ? entry.sequence : parsed;
 };
 
 export const groupLogs = (logs: EnrichedLog[]): LogGroup[] => {

@@ -3,11 +3,11 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { defaultSettings, type AppSettings } from '@shared/types';
 
-const FALLBACK_AI_CONFIG = {
+const DEFAULT_AI_CONFIG = defaultSettings.analysis.ai ?? {
   provider: 'openai',
   apiKey: '',
   model: ''
-} as const;
+};
 
 export class SettingsStore {
   private readonly filePath = join(app.getPath('userData'), 'settings.json');
@@ -32,7 +32,7 @@ export class SettingsStore {
 
   async update(partial: Partial<AppSettings>): Promise<AppSettings> {
     const current = await this.getSettings();
-    const currentAi = current.analysis.ai ?? defaultSettings.analysis.ai ?? FALLBACK_AI_CONFIG;
+    const currentAi = current.analysis.ai ?? DEFAULT_AI_CONFIG;
     const nextAiPartial = partial.analysis?.ai;
     const next = this.mergeWithDefaults({
       ...current,
@@ -62,7 +62,7 @@ export class SettingsStore {
   }
 
   private mergeWithDefaults(partial: Partial<AppSettings>): AppSettings {
-    const defaultAi = defaultSettings.analysis.ai ?? FALLBACK_AI_CONFIG;
+    const defaultAi = DEFAULT_AI_CONFIG;
     const partialAi = partial.analysis?.ai;
 
     return {
@@ -89,7 +89,20 @@ export class SettingsStore {
   }
 
   private async persist(settings: AppSettings): Promise<void> {
+    const persistedAi = settings.analysis.ai ?? DEFAULT_AI_CONFIG;
+    const serialized: AppSettings = {
+      ...settings,
+      analysis: {
+        ...settings.analysis,
+        ai: {
+          provider: persistedAi.provider,
+          apiKey: '',
+          model: persistedAi.model ?? ''
+        }
+      }
+    };
+
     await mkdir(dirname(this.filePath), { recursive: true });
-    await writeFile(this.filePath, JSON.stringify(settings, null, 2), 'utf8');
+    await writeFile(this.filePath, JSON.stringify(serialized, null, 2), 'utf8');
   }
 }

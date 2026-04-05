@@ -114,8 +114,23 @@ const createEnhanceAnalysisWithAIHandler =
             content: detailed.result.summary
           }
         ]);
+      } else {
+        deps.setAnalysisResult(deps.analysisBaseResult);
+        deps.setAnalysisChatMessages([
+          {
+            role: 'assistant',
+            content: deps.analysisBaseResult.summary
+          }
+        ]);
       }
     } catch (error_) {
+      deps.setAnalysisResult(deps.analysisBaseResult);
+      deps.setAnalysisChatMessages([
+        {
+          role: 'assistant',
+          content: deps.analysisBaseResult.summary
+        }
+      ]);
       deps.setError(error_ instanceof Error ? error_.message : deps.analyzeErrorCopy);
     } finally {
       deps.setIsEnhancingWithAI(false);
@@ -277,9 +292,10 @@ export const App = (): JSX.Element => {
   const processedLogs = useMemo(
     () =>
       processLogsForRender(filteredLogs, {
-        enableGrouping: settings.logAnalysis.enableGrouping
+        enableGrouping: settings.logAnalysis.enableGrouping,
+        enableHighlight: settings.logAnalysis.enableHighlight
       }),
-    [filteredLogs, settings.logAnalysis.enableGrouping]
+    [filteredLogs, settings.logAnalysis.enableGrouping, settings.logAnalysis.enableHighlight]
   );
   const selectedDevice = devices.find((device) => device.id === selectedDeviceId) ?? null;
 

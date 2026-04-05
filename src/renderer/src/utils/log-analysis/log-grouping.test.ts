@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { EnrichedLog } from '@renderer/utils/log-analysis/types';
 import { groupLogs } from '@renderer/utils/log-analysis/log-grouping';
 
@@ -53,23 +53,17 @@ describe('log grouping', () => {
     expect(npeGroup?.lastSeen).toBe(Date.parse('2026-04-01T17:00:05.000Z'));
   });
 
-  it('falls back to raw content and current time when message/timestamp are invalid', () => {
-    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1_717_171_717_000);
+  it('falls back to raw content and stable sequence timestamp when receivedAt is invalid', () => {
+    const groups = groupLogs([
+      makeLog('log-9', 'raw-only', 'invalid-date', {
+        message: '',
+        raw: 'raw-only'
+      })
+    ]);
 
-    try {
-      const groups = groupLogs([
-        makeLog('log-9', 'raw-only', 'invalid-date', {
-          message: '',
-          raw: 'raw-only'
-        })
-      ]);
-
-      expect(groups).toHaveLength(1);
-      expect(groups[0]?.message).toBe('raw-only');
-      expect(groups[0]?.firstSeen).toBe(1_717_171_717_000);
-      expect(groups[0]?.lastSeen).toBe(1_717_171_717_000);
-    } finally {
-      nowSpy.mockRestore();
-    }
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.message).toBe('raw-only');
+    expect(groups[0]?.firstSeen).toBe(9);
+    expect(groups[0]?.lastSeen).toBe(9);
   });
 });

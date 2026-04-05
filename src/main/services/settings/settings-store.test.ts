@@ -164,4 +164,29 @@ describe('SettingsStore', () => {
       }
     });
   });
+
+  it('does not persist AI apiKey to disk', async () => {
+    const store = new SettingsStore();
+    await store.getSettings();
+
+    await store.update({
+      analysis: {
+        ...defaultSettings.analysis,
+        enableAIEnhancement: true,
+        ai: {
+          ...defaultSettings.analysis.ai,
+          provider: 'openai',
+          apiKey: 'super-secret',
+          model: 'gpt-4.1-mini'
+        }
+      }
+    });
+
+    const rawFile = await readFile(join(tempDir, 'settings.json'), 'utf8');
+    const persisted = JSON.parse(rawFile) as typeof defaultSettings;
+
+    expect(persisted.analysis.ai?.apiKey).toBe('');
+    expect(persisted.analysis.ai?.provider).toBe('openai');
+    expect(persisted.analysis.ai?.model).toBe('gpt-4.1-mini');
+  });
 });

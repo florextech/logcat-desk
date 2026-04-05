@@ -49,10 +49,10 @@ export const SettingsModal = ({
     label
   }));
   const tabClass = (isActive: boolean): string =>
-    `inline-flex h-9 items-center justify-center rounded-xl border px-3 text-[11px] font-semibold uppercase tracking-[0.14em] transition ${
+    `inline-flex h-9 items-center justify-center rounded-xl px-3 text-[11px] font-semibold uppercase tracking-[0.14em] transition ${
       isActive
-        ? 'border-[rgb(189_241_70/0.34)] bg-[rgb(189_241_70/0.12)] text-[var(--brand-700)]'
-        : 'border-transparent text-[var(--muted)] hover:border-[rgb(38_48_40/0.85)] hover:bg-[rgb(17_21_19/0.82)] hover:text-[var(--foreground)]'
+        ? 'border border-[rgb(189_241_70/0.34)] bg-[rgb(189_241_70/0.12)] text-[var(--brand-700)]'
+        : 'text-[var(--muted)] hover:bg-[rgb(17_21_19/0.82)] hover:text-[var(--foreground)]'
     }`;
 
   return (

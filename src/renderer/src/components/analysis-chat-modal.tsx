@@ -1,4 +1,4 @@
-import { type FormEvent, type JSX, useState } from 'react';
+import { type JSX, type SyntheticEvent, useState } from 'react';
 import { ModalShell } from '@renderer/components/modal-shell';
 import { useI18n } from '@renderer/i18n/provider';
 import type { AnalysisChatTurn } from '@shared/types';
@@ -21,7 +21,7 @@ export const AnalysisChatModal = ({
   const { copy } = useI18n();
   const [draft, setDraft] = useState('');
 
-  const submit = (event: FormEvent<HTMLFormElement>): void => {
+  const submit = (event: SyntheticEvent<HTMLFormElement>): void => {
     event.preventDefault();
     const question = draft.trim();
     if (!question || isSending) {

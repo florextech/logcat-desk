@@ -90,6 +90,17 @@ describe('SettingsStore', () => {
     expect(second).toBe(first);
   });
 
+  it('recovers from invalid JSON by restoring defaults', async () => {
+    await writeFile(join(tempDir, 'settings.json'), '{ invalid-json', 'utf8');
+    const store = new SettingsStore();
+
+    const result = await store.getSettings();
+    expect(result).toEqual(defaultSettings);
+
+    const raw = await readFile(join(tempDir, 'settings.json'), 'utf8');
+    expect(JSON.parse(raw)).toEqual(defaultSettings);
+  });
+
   it('updates nested filters while preserving other settings', async () => {
     const store = new SettingsStore();
     await store.getSettings();
@@ -162,6 +173,41 @@ describe('SettingsStore', () => {
         apiKey: 'api-123',
         model: 'openai/gpt-4o-mini'
       }
+    });
+  });
+
+  it('preserves current AI provider/key when only model override is provided', async () => {
+    const store = new SettingsStore();
+    await store.getSettings();
+
+    await store.update({
+      analysis: {
+        ...defaultSettings.analysis,
+        ai: {
+          ...defaultSettings.analysis.ai,
+          provider: 'claude',
+          apiKey: 'first-key',
+          model: 'claude-3-5-haiku-latest'
+        }
+      }
+    });
+
+    const updated = await store.update({
+      analysis: {
+        ai: {
+          model: 'claude-3-7-sonnet',
+          provider: 'claude',
+          apiKey: 'first-key'
+        },
+        enableAnalysis: false,
+        enableAIEnhancement: false
+      }
+    });
+
+    expect(updated.analysis.ai).toEqual({
+      provider: 'claude',
+      apiKey: 'first-key',
+      model: 'claude-3-7-sonnet'
     });
   });
 

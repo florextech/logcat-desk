@@ -37,8 +37,6 @@ export default defineConfig({
       ],
       exclude: [
         'src/main/index.ts',
-        'src/main/services/logcat/logcat-session-manager.ts',
-        'src/main/services/analysis/analysis-ai-service.ts',
         'src/renderer/src/App.tsx',
         'src/renderer/src/main.tsx',
         'src/renderer/src/vite-env.d.ts',
@@ -60,10 +58,6 @@ export default defineConfig({
         'src/renderer/src/hooks/use-logcat-events.ts',
         'src/renderer/src/i18n/messages.ts',
         'src/renderer/src/utils/intelligent-analysis/ai/**/*.ts',
-        'src/renderer/src/utils/intelligent-analysis/log-analysis-aggregator.ts',
-        'src/renderer/src/utils/intelligent-analysis/log-analysis-engine.ts',
-        'src/renderer/src/utils/intelligent-analysis/log-analysis-rules.ts',
-        'src/renderer/src/utils/log-analysis/log-processing.ts',
         'src/renderer/src/utils/log-analysis/types.ts'
       ]
     }

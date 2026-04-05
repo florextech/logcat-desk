@@ -64,6 +64,14 @@ describe('app store', () => {
     expect(useAppStore.getState().selectedDeviceId).toBe('device-2');
   });
 
+  it('falls back to null selection when no devices are available', () => {
+    useAppStore.setState({ selectedDeviceId: 'device-2' });
+
+    useAppStore.getState().setDevices([], 'missing-device');
+
+    expect(useAppStore.getState().selectedDeviceId).toBeNull();
+  });
+
   it('keeps only the most recent rendered logs', () => {
     useAppStore.getState().appendLogs(Array.from({ length: 5003 }, (_, index) => makeLog(index + 1)));
 
@@ -95,6 +103,81 @@ describe('app store', () => {
       provider: 'claude',
       apiKey: 'token'
     });
+  });
+
+  it('keeps current AI values when analysis config update omits ai', () => {
+    useAppStore.getState().setAnalysisAI({
+      provider: 'openrouter',
+      apiKey: 'token-1',
+      model: 'openai/gpt-4.1-mini'
+    });
+
+    useAppStore.getState().setAnalysisConfig({
+      enableAnalysis: false
+    });
+
+    expect(useAppStore.getState().settings.analysis).toMatchObject({
+      enableAnalysis: false,
+      ai: {
+        provider: 'openrouter',
+        apiKey: 'token-1',
+        model: 'openai/gpt-4.1-mini'
+      }
+    });
+  });
+
+  it('uses default AI fallback when current analysis.ai is undefined', () => {
+    useAppStore.setState({
+      settings: {
+        ...defaultSettings,
+        analysis: {
+          ...defaultSettings.analysis,
+          ai: undefined
+        }
+      }
+    });
+
+    useAppStore.getState().setAnalysisAI({
+      model: 'gpt-custom'
+    });
+
+    expect(useAppStore.getState().settings.analysis.ai).toEqual({
+      provider: 'openai',
+      apiKey: '',
+      model: 'gpt-custom'
+    });
+  });
+
+  it('falls back to hardcoded AI defaults when both state and shared defaults omit ai', () => {
+    const originalAi = defaultSettings.analysis.ai;
+    defaultSettings.analysis.ai = undefined;
+
+    try {
+      useAppStore.setState({
+        settings: {
+          ...defaultSettings,
+          analysis: {
+            ...defaultSettings.analysis,
+            ai: undefined
+          }
+        }
+      });
+
+      useAppStore.getState().setAnalysisConfig({
+        enableAIEnhancement: true
+      });
+      useAppStore.getState().setAnalysisAI({
+        apiKey: 'fallback-key'
+      });
+
+      expect(useAppStore.getState().settings.analysis.ai).toEqual({
+        provider: 'openai',
+        apiKey: 'fallback-key',
+        model: ''
+      });
+    } finally {
+      defaultSettings.analysis.ai = originalAi;
+    }
   });
 
   it('updates adb status, session state, selected device and error state', () => {

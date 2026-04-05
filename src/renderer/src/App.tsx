@@ -730,7 +730,11 @@ export const App = (): JSX.Element => {
         <AnalysisModal
           aiMeta={analysisMeta}
           canEnhanceWithAI={settings.analysis.enableAIEnhancement}
-          canOpenAIChat={settings.analysis.enableAIEnhancement && Boolean(analysisResult)}
+          canOpenAIChat={
+            settings.analysis.enableAIEnhancement &&
+            Boolean(settings.analysis.ai?.apiKey.trim()) &&
+            Boolean(analysisResult)
+          }
           isEnhancingWithAI={isEnhancingWithAI}
           result={analysisResult}
           onEnhanceWithAI={() => void handleEnhanceAnalysisWithAI()}

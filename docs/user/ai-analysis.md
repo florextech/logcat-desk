@@ -30,7 +30,8 @@ Default models when `model` is empty:
 
 - API keys are never hardcoded in the repository.
 - The key field is masked in the UI (`type="password"`).
-- Keys are stored locally in Electron `userData/settings.json`.
+- API keys are not persisted in plain text in Electron `userData/settings.json`.
+- After restart you may need to re-enter your key unless a secure storage mechanism is added.
 - Provider error details are sanitized before being surfaced to renderer UI.
 - Logcat data is not sent automatically. Provider requests happen only when users trigger AI actions.
 
@@ -41,4 +42,3 @@ Default models when `model` is empty:
 - If custom model is invalid for your account, clear model and retry with provider default.
 - Check outbound network/proxy/firewall access to provider endpoints.
 - If AI fails, deterministic analysis still works (rule-based fallback).
-

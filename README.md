@@ -45,6 +45,14 @@ Logcat Desk is a desktop app for macOS focused on Android developers who want a 
 - Copy visible logs or single rows to the clipboard
 - Persist ADB path, auto-scroll, selected device, and filters
 
+## Intelligent analysis and AI keys
+
+See [docs/user/ai-analysis.md](./docs/user/ai-analysis.md) for setup, API key handling, providers, and troubleshooting.
+
+## User documentation
+
+See [docs/user/README.md](./docs/user/README.md) for complete user guides (quick start, workflows, settings, AI, troubleshooting).
+
 ## Project structure
 
 ```text
@@ -138,6 +146,8 @@ GitHub-generated release notes are configured through [.github/release.yml](./.g
 - Support guide: [SUPPORT.md](./SUPPORT.md)
 - Changelog: [CHANGELOG.md](./CHANGELOG.md)
 - Roadmap: [ROADMAP.md](./ROADMAP.md)
+- User docs: [docs/user/README.md](./docs/user/README.md)
+- AI analysis and providers: [docs/user/ai-analysis.md](./docs/user/ai-analysis.md)
 - Repository governance: [docs/maintainers/repository-governance.md](./docs/maintainers/repository-governance.md)
 - GitHub launch checklist: [docs/maintainers/github-launch-checklist.md](./docs/maintainers/github-launch-checklist.md)
 - macOS distribution setup: [docs/maintainers/macos-distribution.md](./docs/maintainers/macos-distribution.md)

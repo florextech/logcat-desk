@@ -8,27 +8,50 @@ The format is based on Keep a Changelog, and versioning is intended to follow Se
 
 ### Added
 
-- Pending
+- Added `GroupedLogConsole` component that visually groups consecutive logs by tag/severity for easier reading.
+- Added log highlighting in `LogConsole` based on severity level (error, warning, info, debug, verbose).
+- Added intelligent log analysis engine with deterministic rules (`log-analysis-engine`, `log-analysis-aggregator`, `log-analysis-rules`) that aggregates patterns and produces structured diagnostics.
+- Added AI-powered analysis with multi-provider support: OpenAI, Anthropic Claude, Google Gemini, and OpenRouter.
+- Added `Analysis` modal to display analysis results and AI-generated summaries.
+- Added `Analysis Options` modal to configure analysis behavior before running.
+- Added AI chat interface (`analysis-chat-modal`) for interactive follow-up questions about the analyzed logs.
+- Added `AnalysisConfig` and `AIConfig` types in shared types for managing analysis and AI configuration.
+- Added new Settings section for log analysis: enable/disable grouping, highlighting, select AI provider, model, and API key.
+- Added `FloatingSelect` component for provider and model selection dropdowns.
+- Added new IPC channels to bridge AI analysis requests and responses between main and renderer processes.
+- Added `analysis-ai-service` in the main process to handle AI provider calls securely.
+- Added user documentation: `ai-analysis.md`, `getting-started.md`, `settings.md`, `troubleshooting.md`, and `workflows.md`.
+- Added comprehensive unit tests for log analysis engine, aggregator, rules, normalizer, grouping, highlighter, AI service, session manager lifecycle, and app/settings store.
 
 ### Changed
 
-- Pending
+- Changed `LogConsole` to delegate grouped rendering to `GroupedLogConsole` when log grouping is enabled.
+- Changed `CommandBar` to expose the analysis trigger action.
+- Changed app store to manage `analysisConfig` and `aiConfig` state slices.
+- Changed settings store to persist and restore AI and log analysis configuration across sessions.
+- Changed `logcat-session-manager` to improve state transitions and expose lifecycle events.
+- Changed log processing utilities to streamline enrichment and grouping pipeline.
+- Changed Tailwind CSS class names across all components to use the new CSS variable parentheses syntax (`var(--color)` → `(--color)`) for compatibility with Tailwind v4.
+- Changed Vitest configuration to add proper coverage thresholds and exclude generated/mock files.
 
 ### Fixed
 
-- Pending
+- Fixed OpenAI chat button visibility so it only appears when a valid API key is configured.
+- Fixed log normalizer edge cases that caused inconsistent message normalization.
 
 ### Documentation
 
-- Pending
+- Added full user guide under `docs/user/` covering getting started, AI analysis, settings reference, troubleshooting, and common workflows.
+- Updated `README.md` and `SUPPORT.md` with links to the new user guide.
 
 ### CI
 
-- Pending
+- Updated `version-bump` workflow to use the latest action versions.
 
 ### Notes
 
-- Replace placeholders with the final release notes before merging.
+- AI analysis requires a valid API key for the selected provider (OpenAI, Anthropic, Gemini, or OpenRouter). Keys are stored locally and never transmitted elsewhere.
+- Log grouping and highlighting can be toggled independently from the Settings modal.
 
 ## [0.1.1] - 2026-04-01
 

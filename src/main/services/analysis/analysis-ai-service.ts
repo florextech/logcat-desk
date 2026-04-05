@@ -52,9 +52,9 @@ const ensureSummary = (summary: string | undefined, provider: string): string =>
 
 const redactSecrets = (value: string): string =>
   value
-    .replace(/sk-[a-zA-Z0-9_-]{12,}/g, 'sk-***')
-    .replace(/k-proj-[a-zA-Z0-9_-]{12,}/g, 'k-proj-***')
-    .replace(/api key[^\n:.]*[:=]\s*[^\s,;]+/gi, 'api key: ***');
+    .replaceAll(/sk-[a-zA-Z0-9_-]{12,}/g, 'sk-***')
+    .replaceAll(/k-proj-[a-zA-Z0-9_-]{12,}/g, 'k-proj-***')
+    .replaceAll(/api key[^\n:.]*[:=]\s*[^\s,;]+/gi, 'api key: ***');
 
 const parseProviderError = async (response: Response, provider: string): Promise<never> => {
   let detail = '';
@@ -80,7 +80,7 @@ const parseProviderError = async (response: Response, provider: string): Promise
     detail = '';
   }
 
-  const compactDetail = redactSecrets(detail.replace(/\s+/g, ' ').trim());
+  const compactDetail = redactSecrets(detail.replaceAll(/\s+/g, ' ').trim());
   const suffix = compactDetail ? `: ${compactDetail.slice(0, 220)}` : '';
   throw new Error(`${provider} request failed (HTTP ${response.status})${suffix}`);
 };
@@ -256,7 +256,7 @@ const assertAIEnabled = (config: EnhanceAnalysisSummaryInput['config']): AIConfi
   }
 
   const ai = config.ai;
-  if (!ai || !ai.apiKey.trim()) {
+  if (!ai?.apiKey.trim()) {
     throw new Error('AI API key is missing.');
   }
 

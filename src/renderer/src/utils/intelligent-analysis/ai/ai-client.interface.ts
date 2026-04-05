@@ -1,5 +1,4 @@
-import type { AIConfig } from '@shared/types';
-import type { Locale } from '@shared/types';
+import type { AIConfig, Locale } from '@shared/types';
 import type { LogAnalysisResult } from '@renderer/utils/intelligent-analysis/log-analysis-engine';
 
 export interface AIClient {
@@ -21,7 +20,7 @@ export abstract class BaseAIClient implements AIClient {
 
   protected get model(): string | undefined {
     const model = this.config.model?.trim();
-    return model ? model : undefined;
+    return model || undefined;
   }
 }
 

@@ -86,6 +86,8 @@ export interface I18nMessages {
     settings: {
       title: string;
       adb: string;
+      generalTab: string;
+      analysisTab: string;
       adbReady: string;
       adbMissing: string;
       adbHint: StringFactory<[path: string | null]>;
@@ -277,6 +279,8 @@ const en: I18nMessages = {
     settings: {
       title: 'Settings',
       adb: 'ADB',
+      generalTab: 'General',
+      analysisTab: 'Analysis & AI',
       adbReady: 'ADB ready',
       adbMissing: 'ADB unavailable',
       adbHint: (path) => path ?? 'Use PATH or configure the binary path manually.',
@@ -484,6 +488,8 @@ const es: I18nMessages = {
     settings: {
       title: 'Configuracion',
       adb: 'ADB',
+      generalTab: 'General',
+      analysisTab: 'Analisis e IA',
       adbReady: 'ADB listo',
       adbMissing: 'ADB no disponible',
       adbHint: (path) => path ?? 'Usa PATH o configura la ruta manualmente.',

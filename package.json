@@ -50,6 +50,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@electron/notarize": "^3.1.0",
     "@tailwindcss/postcss": "^4.3.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -72,6 +73,7 @@
   "build": {
     "appId": "com.florexlabs.logcatdesk",
     "productName": "Logcat Desk",
+    "afterSign": "scripts/notarize.cjs",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -86,6 +88,11 @@
     "mac": {
       "category": "public.app-category.developer-tools",
       "icon": "build/icon.icns",
+      "identity": "Developer ID Application",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.inherit.plist",
       "target": [
         "zip",
         "dmg"

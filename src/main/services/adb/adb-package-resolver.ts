@@ -28,7 +28,7 @@ const parsePidMap = (stdout: string): Map<number, string> => {
       nameRaw = parts[1] ?? '';
     } else if (parts.length > 8 && PID_COLUMN.test(parts[1])) {
       pidRaw = parts[1];
-      nameRaw = parts[8] ?? '';
+      nameRaw = parts.at(-1) ?? '';
     }
 
     const pid = Number(pidRaw);

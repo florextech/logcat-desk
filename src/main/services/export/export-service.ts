@@ -31,7 +31,13 @@ export class ExportService {
 
     const content =
       input.format === 'json'
-        ? JSON.stringify(input.entries ?? [], null, 2)
+        ? JSON.stringify(
+            input.scope === 'all'
+              ? this.sessionManager.getAllEntries()
+              : input.entries ?? [],
+            null,
+            2
+          )
         : input.scope === 'all'
           ? this.sessionManager.getAllLogsAsText()
           : input.content ?? '';

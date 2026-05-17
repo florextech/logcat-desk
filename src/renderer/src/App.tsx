@@ -465,8 +465,7 @@ export const App = (): JSX.Element => {
         scope,
         format,
         suggestedName,
-        content: scope === 'visible' ? filteredLogs.map((entry) => entry.raw).join('\n') : undefined,
-        entries: scope === 'visible' ? filteredLogs : logs
+        content: scope === 'visible' ? filteredLogs.map((entry) => entry.raw).join('\n') : undefined
       });
     } catch (exportError) {
       setError(exportError instanceof Error ? exportError.message : copy.errors.exportLogs);
@@ -488,7 +487,7 @@ export const App = (): JSX.Element => {
         scope,
         format: 'json',
         suggestedName,
-        entries: scope === 'visible' ? filteredLogs : logs
+        entries: scope === 'visible' ? filteredLogs : undefined
       });
     } catch (exportError) {
       setError(exportError instanceof Error ? exportError.message : copy.errors.exportLogs);
@@ -724,7 +723,7 @@ export const App = (): JSX.Element => {
 
           <div className="mx-6 mt-3 flex flex-wrap items-center gap-2 text-xs text-(--muted)">
             <span className="rounded-xl border border-(--border) bg-[rgb(12_15_13/0.78)] px-3 py-1">
-              Project: {activeProjectId}
+              {copy.header.projectLabel(activeProjectId)}
             </span>
             {devices.map((device) => (
               <button
@@ -742,7 +741,7 @@ export const App = (): JSX.Element => {
             ))}
             <input
               className="rounded-xl border border-(--border) bg-[rgb(12_15_13/0.78)] px-2 py-1 text-xs text-(--foreground) outline-none"
-              placeholder="Preset name"
+              placeholder={copy.filters.presetNamePlaceholder}
               value={presetDraftName}
               onChange={(event) => setPresetDraftName(event.target.value)}
             />

@@ -170,4 +170,16 @@ describe('LogcatSessionManager lifecycle', () => {
     manager.resume();
     expect(manager.getState().status).toBe('idle');
   });
+
+  it('cleans up capture storage when stop is called without active child', async () => {
+    const manager = new LogcatSessionManager();
+
+    (manager as unknown as { captureDirPath: string | null }).captureDirPath = '/tmp/logcat-desk-capture-test';
+    (manager as unknown as { captureFilePath: string | null }).captureFilePath = '/tmp/logcat-desk-capture-test/session.log';
+
+    await manager.stop(false);
+
+    expect((manager as unknown as { captureDirPath: string | null }).captureDirPath).toBeNull();
+    expect((manager as unknown as { captureFilePath: string | null }).captureFilePath).toBeNull();
+  });
 });

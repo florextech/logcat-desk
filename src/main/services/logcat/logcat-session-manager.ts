@@ -31,6 +31,8 @@ export class LogcatSessionManager extends EventEmitter {
   private pidToPackage = new Map<number, string>();
   private captureDirPath: string | null = null;
   private captureFilePath: string | null = null;
+  private captureWriteQueue: Promise<void> = Promise.resolve();
+  private captureWriteFailed = false;
 
   getCaptureFilePath(): string | null {
     return this.captureFilePath;
@@ -42,6 +44,10 @@ export class LogcatSessionManager extends EventEmitter {
 
   getAllLogsAsText(): string {
     return this.allEntries.map((entry) => entry.raw).join('\n');
+  }
+
+  getAllEntries(): LogEntry[] {
+    return [...this.allEntries];
   }
 
   async start({ adbPath, deviceId, pidToPackage }: StartSessionArgs): Promise<void> {
@@ -56,6 +62,8 @@ export class LogcatSessionManager extends EventEmitter {
     this.captureDirPath = await mkdtemp(join(tmpdir(), 'logcat-desk-capture-'));
     this.captureFilePath = join(this.captureDirPath, 'session.log');
     await writeFile(this.captureFilePath, '', 'utf8');
+    this.captureWriteQueue = Promise.resolve();
+    this.captureWriteFailed = false;
 
     this.sequence = 0;
     this.expectedExitReason = null;
@@ -151,6 +159,9 @@ export class LogcatSessionManager extends EventEmitter {
 
   async stop(emitState = true): Promise<void> {
     if (!this.child) {
+      await this.captureWriteQueue;
+      await this.cleanupCaptureStorage();
+
       if (emitState) {
         this.updateState({
           status: 'stopped',
@@ -195,6 +206,9 @@ export class LogcatSessionManager extends EventEmitter {
       child.kill('SIGKILL');
       await closed;
     }
+
+    await this.captureWriteQueue;
+    await this.cleanupCaptureStorage();
   }
 
   pause(): void {
@@ -242,9 +256,7 @@ export class LogcatSessionManager extends EventEmitter {
 
       const entry = this.parseEntry(line, deviceId);
       this.allEntries.push(entry);
-      if (this.captureFilePath) {
-        void appendFile(this.captureFilePath, `${entry.raw}\n`, 'utf8');
-      }
+      this.enqueueCaptureWrite(entry.raw);
 
       if (this.paused) {
         this.pausedQueue.push(entry);
@@ -329,5 +341,37 @@ export class LogcatSessionManager extends EventEmitter {
   private updateState(state: SessionState): void {
     this.state = state;
     this.emit('session-state', state);
+  }
+
+  private enqueueCaptureWrite(rawLine: string): void {
+    if (!this.captureFilePath) {
+      return;
+    }
+
+    const targetPath = this.captureFilePath;
+    this.captureWriteQueue = this.captureWriteQueue
+      .then(async () => {
+        await appendFile(targetPath, `${rawLine}\n`, 'utf8');
+      })
+      .catch((error_) => {
+        if (!this.captureWriteFailed) {
+          this.captureWriteFailed = true;
+          console.warn(
+            '[logcat-session-manager] Failed to persist capture log file:',
+            error_ instanceof Error ? error_.message : String(error_)
+          );
+        }
+      });
+  }
+
+  private async cleanupCaptureStorage(): Promise<void> {
+    if (!this.captureDirPath) {
+      return;
+    }
+
+    await rm(this.captureDirPath, { recursive: true, force: true });
+    this.captureDirPath = null;
+    this.captureFilePath = null;
+    this.captureWriteFailed = false;
   }
 }

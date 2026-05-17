@@ -164,8 +164,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setSessionState: (sessionState) => set({ sessionState }),
   selectDevice: (deviceId) => set({ selectedDeviceId: deviceId }),
   setError: (error) => set({ error }),
-  clearError: () => set({ error: null })
-  ,
+  clearError: () => set({ error: null }),
   setActiveProjectId: (projectId) => set({ activeProjectId: projectId }),
   saveFilterPreset: (name) =>
     set((state) => {

@@ -135,8 +135,8 @@ export const ActionsModal = ({
             />
             <ActionRow
               disabled={!canSaveSelectedSnippet}
-              hint="Save currently selected row as snippet."
-              label="Save selected snippet"
+              hint={copy.modals.actions.saveSelectedSnippetHint}
+              label={copy.modals.actions.saveSelectedSnippetLabel}
               onClick={onSaveSelectedSnippet}
               runLabel={copy.common.run}
             />
@@ -173,8 +173,8 @@ export const ActionsModal = ({
             />
             <ActionRow
               disabled={isExporting}
-              hint="Export visible entries as structured JSON."
-              label="Export visible .json"
+              hint={copy.modals.actions.exportVisibleJsonHint}
+              label={copy.modals.actions.exportVisibleJsonLabel}
               onClick={onExportVisibleJson}
               runLabel={copy.common.run}
             />
@@ -187,8 +187,8 @@ export const ActionsModal = ({
             />
             <ActionRow
               disabled={isExporting}
-              hint="Export full captured session as structured JSON."
-              label="Export full .json"
+              hint={copy.modals.actions.exportFullJsonHint}
+              label={copy.modals.actions.exportFullJsonLabel}
               onClick={onExportAllJson}
               runLabel={copy.common.run}
             />

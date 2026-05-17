@@ -73,7 +73,7 @@ export const CommandBar = ({
               onClick={onSavePreset}
               type="button"
             >
-              Save preset
+              {copy.filters.savePreset}
             </button>
           </div>
         </div>
@@ -90,7 +90,7 @@ export const CommandBar = ({
                   {preset.name}
                 </button>
                 <button
-                  aria-label={`Delete ${preset.name}`}
+                  aria-label={copy.filters.deletePresetAria(preset.name)}
                   className="text-[10px] text-(--muted) hover:text-red-300"
                   onClick={() => onDeletePreset(preset.id)}
                   type="button"

@@ -44,6 +44,9 @@ describe('SettingsStore', () => {
       JSON.stringify({
         adbPath: '/custom/adb',
         locale: 'en',
+        filterPresets: [{ id: 'p1', name: 'Preset 1', filters: { text: 'x' }, updatedAt: 'now' }],
+        projectSessions: { proj: { filters: { text: 'x' }, lastDeviceId: 'dev', updatedAt: 'now' } },
+        savedSnippets: [{ id: 's1', createdAt: 'now', deviceId: 'dev', level: 'I', tag: 'Tag', message: 'm', raw: 'r' }],
         filters: {
           text: 'crash'
         },
@@ -73,6 +76,34 @@ describe('SettingsStore', () => {
         ...defaultSettings.filters,
         text: 'crash'
       },
+      filterPresets: [{
+        id: 'p1',
+        name: 'Preset 1',
+        filters: {
+          ...defaultSettings.filters,
+          text: 'x'
+        },
+        updatedAt: 'now'
+      }],
+      projectSessions: {
+        proj: {
+          filters: {
+            ...defaultSettings.filters,
+            text: 'x'
+          },
+          lastDeviceId: 'dev',
+          updatedAt: 'now'
+        }
+      },
+      savedSnippets: [{
+        id: 's1',
+        createdAt: 'now',
+        deviceId: 'dev',
+        level: 'I',
+        tag: 'Tag',
+        message: 'm',
+        raw: 'r'
+      }],
       logAnalysis: {
         ...defaultSettings.logAnalysis,
         enableGrouping: true

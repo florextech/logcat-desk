@@ -17,6 +17,7 @@ const makeLog = (sequence: number): LogEntry => ({
 describe('app store', () => {
   beforeEach(() => {
     useAppStore.setState({
+      activeProjectId: 'default',
       adbStatus: {
         available: false,
         resolvedPath: null,
@@ -225,5 +226,51 @@ describe('app store', () => {
 
     useAppStore.getState().clearLogs();
     expect(useAppStore.getState().logs).toEqual([]);
+  });
+
+  it('supports presets, project sessions and snippets', () => {
+    useAppStore.getState().setFilters({ text: 'crash', minLevel: 'E' });
+    useAppStore.getState().saveFilterPreset('Crashes');
+
+    const presetId = useAppStore.getState().settings.filterPresets[0]?.id;
+    expect(presetId).toBeTruthy();
+
+    useAppStore.getState().setFilters({ text: 'network', minLevel: 'W' });
+    useAppStore.getState().applyFilterPreset(presetId as string);
+    expect(useAppStore.getState().filters.text).toBe('crash');
+
+    useAppStore.getState().setActiveProjectId('project-a');
+    useAppStore.getState().selectDevice('device-9');
+    useAppStore.getState().saveSessionSnapshot();
+
+    useAppStore.getState().setFilters({ text: 'other' });
+    useAppStore.getState().selectDevice('device-3');
+    useAppStore.getState().restoreSessionSnapshot();
+
+    expect(useAppStore.getState().filters.text).toBe('crash');
+    expect(useAppStore.getState().selectedDeviceId).toBe('device-9');
+
+    useAppStore.getState().appendLogs([makeLog(1)]);
+    useAppStore.getState().addSnippet('log-1');
+    expect(useAppStore.getState().settings.savedSnippets[0]?.raw).toBe('raw-1');
+
+    useAppStore.getState().deleteFilterPreset(presetId as string);
+    expect(useAppStore.getState().settings.filterPresets).toHaveLength(0);
+  });
+
+  it('keeps state unchanged for preset/session/snippet guard clauses', () => {
+    const before = useAppStore.getState();
+
+    useAppStore.getState().saveFilterPreset('   ');
+    useAppStore.getState().applyFilterPreset('missing-preset');
+    useAppStore.getState().restoreSessionSnapshot();
+    useAppStore.getState().addSnippet('missing-log');
+
+    const after = useAppStore.getState();
+
+    expect(after.settings.filterPresets).toEqual(before.settings.filterPresets);
+    expect(after.filters).toEqual(before.filters);
+    expect(after.selectedDeviceId).toEqual(before.selectedDeviceId);
+    expect(after.settings.savedSnippets).toEqual(before.settings.savedSnippets);
   });
 });

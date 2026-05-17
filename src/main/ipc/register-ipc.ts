@@ -1,7 +1,10 @@
 import { app, clipboard, dialog, ipcMain, shell } from 'electron';
 import type { BrowserWindow } from 'electron';
+import { createHash } from 'node:crypto';
+import { resolve } from 'node:path';
 import { clearLogcatBuffer, listDevices } from '@main/services/adb/device-service';
 import { resolveAdbStatus } from '@main/services/adb/adb-resolver';
+import { AdbPackageResolver } from '@main/services/adb/adb-package-resolver';
 import { askAnalysisAssistant, enhanceAnalysisSummary } from '@main/services/analysis/analysis-ai-service';
 import { ExportService } from '@main/services/export/export-service';
 import { LogcatSessionManager } from '@main/services/logcat/logcat-session-manager';
@@ -44,6 +47,9 @@ export const registerIpc = ({
   exportService,
   updateService
 }: RegisterIpcDependencies): void => {
+  const workspaceToken = process.env.LOGCAT_DESK_PROJECT_ID ?? resolve(process.cwd());
+  const projectId = createHash('sha1').update(workspaceToken).digest('hex').slice(0, 12);
+
   const safeHandle = <TArgs extends unknown[], TResult>(
     channel: string,
     listener: (_event: Electron.IpcMainInvokeEvent, ...args: TArgs) => Promise<TResult> | TResult
@@ -59,6 +65,8 @@ export const registerIpc = ({
   sessionManager.on('session-state', (state) => {
     mainWindow.webContents.send(ipcChannels.events.sessionState, state);
   });
+
+  safeHandle(ipcChannels.appContextGet, async () => ({ projectId }));
 
   safeHandle(ipcChannels.settingsGet, async () => settingsStore.getSettings());
 
@@ -85,10 +93,12 @@ export const registerIpc = ({
 
   safeHandle(ipcChannels.logcatStart, async (_, input: StartSessionInput) => {
     const adbStatus = await resolveConfiguredAdb(settingsStore, input.adbPath);
+    const pidToPackage = await new AdbPackageResolver(adbStatus.resolvedPath as string, input.deviceId).resolvePidMap();
     await settingsStore.update({ lastDeviceId: input.deviceId });
     await sessionManager.start({
       adbPath: adbStatus.resolvedPath as string,
-      deviceId: input.deviceId
+      deviceId: input.deviceId,
+      pidToPackage
     });
     return sessionManager.getState();
   });

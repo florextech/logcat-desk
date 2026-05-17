@@ -29,6 +29,7 @@ const logs: LogEntry[] = [
     raw: '03-27 13:00:00.456 101 201 I OkHttp: request finished com.network',
     level: 'I',
     tag: 'OkHttp',
+    packageName: 'com.network',
     message: 'request finished',
     emphasis: 'normal',
     receivedAt: '2026-03-27T13:00:00.000Z'
@@ -54,5 +55,9 @@ describe('filterLogs', () => {
 
   it('matches package text against the raw log line', () => {
     expect(filterLogs(logs, { ...baseFilters, packageName: 'com.network' })).toEqual([logs[1]]);
+  });
+
+  it('matches package text against resolved packageName field', () => {
+    expect(filterLogs(logs, { ...baseFilters, packageName: 'com.net' })).toEqual([logs[1]]);
   });
 });

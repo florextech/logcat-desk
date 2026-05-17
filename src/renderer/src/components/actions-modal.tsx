@@ -4,6 +4,7 @@ import { ModalShell } from '@renderer/components/modal-shell';
 
 interface ActionsModalProps {
   canAnalyze: boolean;
+  canSaveSelectedSnippet: boolean;
   isCheckingUpdates: boolean;
   isAnalyzing: boolean;
   isExporting: boolean;
@@ -14,7 +15,10 @@ interface ActionsModalProps {
   onClose: () => void;
   onCopyVisible: () => void;
   onExportAll: () => void;
+  onExportAllJson: () => void;
   onExportVisible: () => void;
+  onExportVisibleJson: () => void;
+  onSaveSelectedSnippet: () => void;
 }
 
 interface ActionRowProps {
@@ -55,6 +59,7 @@ const ActionRow = ({
 
 export const ActionsModal = ({
   canAnalyze,
+  canSaveSelectedSnippet,
   isCheckingUpdates,
   isAnalyzing,
   isExporting,
@@ -65,7 +70,10 @@ export const ActionsModal = ({
   onClose,
   onCopyVisible,
   onExportAll,
-  onExportVisible
+  onExportAllJson,
+  onExportVisible,
+  onExportVisibleJson,
+  onSaveSelectedSnippet
 }: ActionsModalProps): JSX.Element => {
   const { copy } = useI18n();
   type ActionTab = 'cleanup' | 'maintenance' | 'export';
@@ -125,6 +133,13 @@ export const ActionsModal = ({
               onClick={onClearBuffer}
               runLabel={copy.common.run}
             />
+            <ActionRow
+              disabled={!canSaveSelectedSnippet}
+              hint={copy.modals.actions.saveSelectedSnippetHint}
+              label={copy.modals.actions.saveSelectedSnippetLabel}
+              onClick={onSaveSelectedSnippet}
+              runLabel={copy.common.run}
+            />
           </div>
         ) : null}
 
@@ -158,9 +173,23 @@ export const ActionsModal = ({
             />
             <ActionRow
               disabled={isExporting}
+              hint={copy.modals.actions.exportVisibleJsonHint}
+              label={copy.modals.actions.exportVisibleJsonLabel}
+              onClick={onExportVisibleJson}
+              runLabel={copy.common.run}
+            />
+            <ActionRow
+              disabled={isExporting}
               hint={copy.modals.actions.exportFullHint}
               label={copy.modals.actions.exportFullLabel}
               onClick={onExportAll}
+              runLabel={copy.common.run}
+            />
+            <ActionRow
+              disabled={isExporting}
+              hint={copy.modals.actions.exportFullJsonHint}
+              label={copy.modals.actions.exportFullJsonLabel}
+              onClick={onExportAllJson}
               runLabel={copy.common.run}
             />
             <ActionRow

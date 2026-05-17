@@ -48,6 +48,7 @@ const LogConsoleRow = ({
       <div className="truncate">
         <span className="text-(--foreground)">{log.tag}</span>
         {log.pid ? <span className="ml-2 text-[rgb(118_183_61)]">#{log.pid}</span> : null}
+        {log.packageName ? <span className="ml-2 text-[rgb(110_126_113)]">{log.packageName}</span> : null}
       </div>
       <div className="break-words text-(--foreground)">
         {enableHighlight && maybeEnriched.highlight && maybeEnriched.category ? (

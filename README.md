@@ -107,19 +107,78 @@ npm run pack:mac
 npm run dist:mac
 ```
 
-## Temporary macOS workaround for unsigned builds
+## Signed macOS distribution (Gatekeeper-friendly)
 
-Until signed and notarized releases are fully configured, macOS may block builds downloaded from the internet.
+Logcat Desk uses Electron + `electron-builder` with:
 
-If you trust the app and need to open an unsigned build locally, you can remove the quarantine attribute:
+- Developer ID code signing
+- Hardened Runtime
+- Apple notarization
+- Stapled `.dmg` artifacts
+
+This ensures users can install and open the app without manual quarantine removal.
+
+### Requirements
+
+- Active Apple Developer Program membership
+- `Developer ID Application` certificate exported as `.p12`
+- App-specific password for your Apple ID
+- Apple Team ID
+
+### Create the Developer ID certificate
+
+1. Open Keychain Access on macOS.
+2. Find your `Developer ID Application` certificate.
+3. Export it as `.p12` with a strong password.
+4. Convert it to base64 for CI usage:
 
 ```bash
-xattr -dr com.apple.quarantine "/Applications/Logcat Desk.app"
+base64 -i "Developer ID Application.p12"
 ```
 
-You can also point the command at a build in `Downloads` or any other folder.
+Use that value in `CSC_LINK`, and the export password in `CSC_KEY_PASSWORD`.
 
-This is only a temporary local workaround for trusted builds. It does not replace proper Apple signing and notarization.
+### Create an app-specific password
+
+1. Sign in to [appleid.apple.com](https://appleid.apple.com).
+2. Open **Sign-In and Security**.
+3. Generate an **App-Specific Password**.
+4. Save it in `APPLE_APP_SPECIFIC_PASSWORD`.
+
+Use your Apple ID email for `APPLE_ID` and your Apple Team ID for `APPLE_TEAM_ID`.
+
+### Environment variables (local or CI)
+
+Never hardcode secrets. Provide them through environment variables:
+
+```bash
+export CSC_LINK="<base64-p12>"
+export CSC_KEY_PASSWORD="<p12-password>"
+export APPLE_ID="<apple-id-email>"
+export APPLE_APP_SPECIFIC_PASSWORD="<app-specific-password>"
+export APPLE_TEAM_ID="<team-id>"
+```
+
+### Build signed artifacts
+
+```bash
+npm run dist:mac
+```
+
+### Verify signing and Gatekeeper acceptance
+
+```bash
+codesign --verify --deep --strict --verbose=2 "release/Logcat Desk.app"
+spctl --assess --type execute --verbose=4 "release/Logcat Desk.app"
+```
+
+If you are testing unsigned local debug builds only, quarantine removal can still be used as a temporary dev-only workaround.
+
+## macOS builds
+
+Official macOS releases are signed and notarized by Florex Labs.
+
+If you build the app locally from source, the generated app may not be signed or notarized, so macOS Gatekeeper may show a warning. This is expected for local/community builds.
 
 ## Notes
 

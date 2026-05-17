@@ -3,6 +3,7 @@ import { ipcChannels } from '@shared/ipc';
 import type { RendererApi } from '@shared/types';
 
 const api: RendererApi = {
+  getAppContext: () => ipcRenderer.invoke(ipcChannels.appContextGet),
   getSettings: () => ipcRenderer.invoke(ipcChannels.settingsGet),
   updateSettings: (partial) => ipcRenderer.invoke(ipcChannels.settingsUpdate, partial),
   getAdbStatus: () => ipcRenderer.invoke(ipcChannels.adbStatusGet),

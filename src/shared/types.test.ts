@@ -29,6 +29,9 @@ describe('shared types defaults', () => {
       lastDeviceId: null,
       locale: 'es',
       filters: defaultFilters,
+      filterPresets: [],
+      projectSessions: {},
+      savedSnippets: [],
       logAnalysis: defaultLogAnalysisConfig,
       analysis: defaultAnalysisConfig
     });

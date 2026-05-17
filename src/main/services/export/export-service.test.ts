@@ -71,6 +71,33 @@ describe('ExportService', () => {
     await expect(readFile(filePath, 'utf8')).resolves.toBe('visible only');
   });
 
+  it('exports structured json using provided entries', async () => {
+    const filePath = join(tempDir, 'visible.json');
+    const dialog = {
+      showSaveDialog: vi.fn().mockResolvedValue({
+        canceled: false,
+        filePath
+      })
+    };
+    const sessionManager = {
+      getAllLogsAsText: vi.fn()
+    };
+
+    const service = new ExportService(sessionManager as never);
+
+    await service.exportWithDialog(
+      {
+        scope: 'visible',
+        format: 'json',
+        suggestedName: 'capture',
+        entries: [{ id: '1', raw: 'x' }] as never
+      },
+      dialog as never
+    );
+
+    await expect(readFile(filePath, 'utf8')).resolves.toContain('"id": "1"');
+  });
+
   it('returns canceled when the dialog is dismissed', async () => {
     const dialog = {
       showSaveDialog: vi.fn().mockResolvedValue({

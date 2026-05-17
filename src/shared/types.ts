@@ -34,6 +34,7 @@ export interface LogEntry {
   tid?: number;
   level: LogLevel;
   tag: string;
+  packageName?: string;
   message: string;
   emphasis: Emphasis;
   receivedAt: string;
@@ -47,12 +48,38 @@ export interface FilterState {
   search: string;
 }
 
+export interface FilterPreset {
+  id: string;
+  name: string;
+  filters: FilterState;
+  updatedAt: string;
+}
+
+export interface ProjectSessionSnapshot {
+  filters: FilterState;
+  lastDeviceId: string | null;
+  updatedAt: string;
+}
+
+export interface SavedSnippet {
+  id: string;
+  createdAt: string;
+  deviceId: string;
+  level: LogLevel;
+  tag: string;
+  message: string;
+  raw: string;
+}
+
 export interface AppSettings {
   adbPath: string;
   autoScroll: boolean;
   lastDeviceId: string | null;
   locale: Locale;
   filters: FilterState;
+  filterPresets: FilterPreset[];
+  projectSessions: Record<string, ProjectSessionSnapshot>;
+  savedSnippets: SavedSnippet[];
   logAnalysis: LogAnalysisConfig;
   analysis: AnalysisConfig;
 }
@@ -135,13 +162,14 @@ export interface ClearBufferInput {
 }
 
 export type ExportScope = 'visible' | 'all';
-export type ExportFormat = 'txt' | 'log';
+export type ExportFormat = 'txt' | 'log' | 'json';
 
 export interface ExportLogsInput {
   scope: ExportScope;
   format: ExportFormat;
   suggestedName: string;
   content?: string;
+  entries?: LogEntry[];
 }
 
 export interface ExportLogsResult {
@@ -161,6 +189,7 @@ export interface LogBatchPayload {
 }
 
 export interface RendererApi {
+  getAppContext: () => Promise<AppContext>;
   getSettings: () => Promise<AppSettings>;
   updateSettings: (partial: Partial<AppSettings>) => Promise<AppSettings>;
   getAdbStatus: () => Promise<AdbStatus>;
@@ -177,6 +206,10 @@ export interface RendererApi {
   copyToClipboard: (text: string) => Promise<void>;
   onLogBatch: (listener: (payload: LogBatchPayload) => void) => () => void;
   onSessionState: (listener: (state: SessionState) => void) => () => void;
+}
+
+export interface AppContext {
+  projectId: string;
 }
 
 export const defaultFilters: FilterState = {
@@ -208,6 +241,9 @@ export const defaultSettings: AppSettings = {
   lastDeviceId: null,
   locale: 'es',
   filters: defaultFilters,
+  filterPresets: [],
+  projectSessions: {},
+  savedSnippets: [],
   logAnalysis: defaultLogAnalysisConfig,
   analysis: defaultAnalysisConfig
 };

@@ -1,4 +1,5 @@
 export const ipcChannels = {
+  appContextGet: 'app-context:get',
   settingsGet: 'settings:get',
   settingsUpdate: 'settings:update',
   adbStatusGet: 'adb-status:get',

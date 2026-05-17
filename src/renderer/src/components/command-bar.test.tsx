@@ -25,6 +25,10 @@ describe('CommandBar', () => {
         onSetFilters={vi.fn()}
         onStart={vi.fn()}
         onStop={vi.fn()}
+        presets={[]}
+        onSavePreset={vi.fn()}
+        onApplyPreset={vi.fn()}
+        onDeletePreset={vi.fn()}
       />
     );
 
@@ -47,6 +51,10 @@ describe('CommandBar', () => {
         onSetFilters={vi.fn()}
         onStart={vi.fn()}
         onStop={vi.fn()}
+        presets={[]}
+        onSavePreset={vi.fn()}
+        onApplyPreset={vi.fn()}
+        onDeletePreset={vi.fn()}
       />
     );
 

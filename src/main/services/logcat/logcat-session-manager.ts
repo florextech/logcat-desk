@@ -1,11 +1,15 @@
 import { type ChildProcessByStdio, spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
+import { appendFile, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { Readable } from 'node:stream';
 import type { LogBatchPayload, LogEntry, LogLevel, SessionState } from '@shared/types';
 
 interface StartSessionArgs {
   adbPath: string;
   deviceId: string;
+  pidToPackage?: Map<number, string>;
 }
 
 const THREADTIME_PATTERN =
@@ -24,6 +28,13 @@ export class LogcatSessionManager extends EventEmitter {
   private pausedQueue: LogEntry[] = [];
   private flushTimer: NodeJS.Timeout | null = null;
   private allEntries: LogEntry[] = [];
+  private pidToPackage = new Map<number, string>();
+  private captureDirPath: string | null = null;
+  private captureFilePath: string | null = null;
+
+  getCaptureFilePath(): string | null {
+    return this.captureFilePath;
+  }
 
   getState(): SessionState {
     return this.state;
@@ -33,8 +44,18 @@ export class LogcatSessionManager extends EventEmitter {
     return this.allEntries.map((entry) => entry.raw).join('\n');
   }
 
-  async start({ adbPath, deviceId }: StartSessionArgs): Promise<void> {
+  async start({ adbPath, deviceId, pidToPackage }: StartSessionArgs): Promise<void> {
     await this.stop(false);
+
+    if (this.captureDirPath) {
+      await rm(this.captureDirPath, { recursive: true, force: true });
+      this.captureDirPath = null;
+      this.captureFilePath = null;
+    }
+
+    this.captureDirPath = await mkdtemp(join(tmpdir(), 'logcat-desk-capture-'));
+    this.captureFilePath = join(this.captureDirPath, 'session.log');
+    await writeFile(this.captureFilePath, '', 'utf8');
 
     this.sequence = 0;
     this.expectedExitReason = null;
@@ -43,6 +64,11 @@ export class LogcatSessionManager extends EventEmitter {
     this.emitQueue = [];
     this.pausedQueue = [];
     this.allEntries = [];
+    this.pidToPackage = new Map();
+
+    if (pidToPackage) {
+      this.pidToPackage = new Map(pidToPackage);
+    }
 
     this.updateState({
       status: 'starting',
@@ -216,6 +242,9 @@ export class LogcatSessionManager extends EventEmitter {
 
       const entry = this.parseEntry(line, deviceId);
       this.allEntries.push(entry);
+      if (this.captureFilePath) {
+        void appendFile(this.captureFilePath, `${entry.raw}\n`, 'utf8');
+      }
 
       if (this.paused) {
         this.pausedQueue.push(entry);
@@ -271,6 +300,7 @@ export class LogcatSessionManager extends EventEmitter {
     }
 
     const [, monthDay, time, pid, tid, level, tag, message] = parsed;
+    const numericPid = Number(pid);
     const emphasis =
       level === 'E' || level === 'F' || /(exception|fatal|anr)/i.test(message)
         ? 'critical'
@@ -285,10 +315,11 @@ export class LogcatSessionManager extends EventEmitter {
       raw: rawLine,
       monthDay,
       time,
-      pid: Number(pid),
+      pid: numericPid,
       tid: Number(tid),
       level: level as LogLevel,
       tag: tag.trim(),
+      packageName: this.pidToPackage.get(numericPid),
       message,
       emphasis,
       receivedAt: new Date().toISOString()

@@ -202,6 +202,7 @@ const createSendAIQuestionHandler =
 export const App = (): JSX.Element => {
   const { copy, locale } = useI18n();
   const {
+    activeProjectId,
     adbStatus,
     devices,
     filters,
@@ -220,7 +221,14 @@ export const App = (): JSX.Element => {
     setAnalysisConfig,
     setSettings,
     setSessionState,
-    selectDevice
+    selectDevice,
+    setActiveProjectId,
+    saveFilterPreset,
+    applyFilterPreset,
+    deleteFilterPreset,
+    saveSessionSnapshot,
+    restoreSessionSnapshot,
+    addSnippet
   } = useAppStore();
 
   const { ready, refreshDevices } = useAppBootstrap();
@@ -248,10 +256,38 @@ export const App = (): JSX.Element => {
   const [isEnhancingWithAI, setIsEnhancingWithAI] = useState(false);
   const [isChatRequestPending, setIsChatRequestPending] = useState(false);
   const [analysisChatMessages, setAnalysisChatMessages] = useState<AnalysisChatTurn[]>([]);
+  const [presetDraftName, setPresetDraftName] = useState('');
 
   useEffect(() => {
     setAdbPathDraft(settings.adbPath);
   }, [settings.adbPath]);
+
+  useEffect(() => {
+    electronApi
+      .getAppContext()
+      .then((context) => {
+        setActiveProjectId(context.projectId);
+      })
+      .catch(() => {
+        setActiveProjectId('default');
+      });
+  }, [setActiveProjectId]);
+
+  useEffect(() => {
+    if (!ready) {
+      return;
+    }
+
+    restoreSessionSnapshot();
+  }, [ready, activeProjectId, restoreSessionSnapshot]);
+
+  useEffect(() => {
+    if (!ready) {
+      return;
+    }
+
+    saveSessionSnapshot();
+  }, [ready, activeProjectId, filters, selectedDeviceId, saveSessionSnapshot]);
 
   useEffect(() => {
     if (!ready) {
@@ -264,6 +300,9 @@ export const App = (): JSX.Element => {
           autoScroll: settings.autoScroll,
           lastDeviceId: selectedDeviceId,
           filters,
+          filterPresets: settings.filterPresets,
+          projectSessions: settings.projectSessions,
+          savedSnippets: settings.savedSnippets,
           logAnalysis: settings.logAnalysis,
           analysis: settings.analysis
         })
@@ -284,6 +323,9 @@ export const App = (): JSX.Element => {
     settings.autoScroll,
     settings.logAnalysis,
     settings.analysis,
+    settings.filterPresets,
+    settings.projectSessions,
+    settings.savedSnippets,
     setError,
     setSettings
   ]);
@@ -423,7 +465,30 @@ export const App = (): JSX.Element => {
         scope,
         format,
         suggestedName,
-        content: scope === 'visible' ? filteredLogs.map((entry) => entry.raw).join('\n') : undefined
+        content: scope === 'visible' ? filteredLogs.map((entry) => entry.raw).join('\n') : undefined,
+        entries: scope === 'visible' ? filteredLogs : logs
+      });
+    } catch (exportError) {
+      setError(exportError instanceof Error ? exportError.message : copy.errors.exportLogs);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const exportStructuredJson = async (scope: 'visible' | 'all'): Promise<void> => {
+    setIsExporting(true);
+    clearError();
+
+    try {
+      const suggestedName = `logcat-${selectedDeviceId ?? 'session'}-${new Date()
+        .toISOString()
+        .replaceAll(':', '-')}`;
+
+      await electronApi.exportLogs({
+        scope,
+        format: 'json',
+        suggestedName,
+        entries: scope === 'visible' ? filteredLogs : logs
       });
     } catch (exportError) {
       setError(exportError instanceof Error ? exportError.message : copy.errors.exportLogs);
@@ -452,6 +517,24 @@ export const App = (): JSX.Element => {
     } finally {
       setIsCheckingUpdates(false);
     }
+  };
+
+  const handleSavePreset = (): void => {
+    const next = presetDraftName.trim();
+    if (!next) {
+      return;
+    }
+
+    saveFilterPreset(next);
+    setPresetDraftName('');
+  };
+
+  const handleAddSnippet = (): void => {
+    if (!selectedLogId) {
+      return;
+    }
+
+    addSnippet(selectedLogId);
   };
 
   const runAnalysisForLogs = createRunAnalysisForLogsHandler({
@@ -633,7 +716,37 @@ export const App = (): JSX.Element => {
             onSetFilters={setFilters}
             onStart={handleStartSession}
             onStop={handleStopSession}
+            presets={settings.filterPresets.map((preset) => ({ id: preset.id, name: preset.name }))}
+            onSavePreset={handleSavePreset}
+            onApplyPreset={applyFilterPreset}
+            onDeletePreset={deleteFilterPreset}
           />
+
+          <div className="mx-6 mt-3 flex flex-wrap items-center gap-2 text-xs text-(--muted)">
+            <span className="rounded-xl border border-(--border) bg-[rgb(12_15_13/0.78)] px-3 py-1">
+              Project: {activeProjectId}
+            </span>
+            {devices.map((device) => (
+              <button
+                key={device.id}
+                className={`rounded-xl border px-3 py-1 transition ${
+                  selectedDeviceId === device.id
+                    ? 'border-[rgb(189_241_70/0.5)] bg-[rgb(189_241_70/0.12)] text-(--brand-700)'
+                    : 'border-(--border) bg-[rgb(12_15_13/0.58)] text-(--muted) hover:text-(--foreground)'
+                }`}
+                onClick={() => selectDevice(device.id)}
+                type="button"
+              >
+                {device.model ?? device.id}
+              </button>
+            ))}
+            <input
+              className="rounded-xl border border-(--border) bg-[rgb(12_15_13/0.78)] px-2 py-1 text-xs text-(--foreground) outline-none"
+              placeholder="Preset name"
+              value={presetDraftName}
+              onChange={(event) => setPresetDraftName(event.target.value)}
+            />
+          </div>
 
           <section className="min-h-0 flex-1 px-6 pb-6 pt-4">
             {filteredLogs.length === 0 ? (
@@ -723,6 +836,10 @@ export const App = (): JSX.Element => {
           onCopyVisible={handleCopyVisible}
           onExportAll={() => void exportLogs('all', 'log')}
           onExportVisible={() => void exportLogs('visible', 'txt')}
+          onExportVisibleJson={() => void exportStructuredJson('visible')}
+          onExportAllJson={() => void exportStructuredJson('all')}
+          onSaveSelectedSnippet={handleAddSnippet}
+          canSaveSelectedSnippet={Boolean(selectedLogId)}
         />
       ) : null}
 

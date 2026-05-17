@@ -1,4 +1,5 @@
 import type {
+  AppContext,
   AdbStatus,
   AskAnalysisAssistantInput,
   AppSettings,
@@ -26,6 +27,7 @@ const globalScope = globalThis as typeof globalThis & {
 };
 
 const fallbackApi: RendererApi = {
+  getAppContext: async (): Promise<AppContext> => ({ projectId: 'default' }),
   getSettings: async (): Promise<AppSettings> => defaultSettings,
   updateSettings: async (): Promise<AppSettings> => defaultSettings,
   getAdbStatus: async (): Promise<AdbStatus> => ({

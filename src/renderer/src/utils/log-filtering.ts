@@ -23,8 +23,11 @@ export const filterLogs = (logs: LogEntry[], filters: FilterState): LogEntry[] =
       return false;
     }
 
-    if (packageName && !entry.raw.toLowerCase().includes(packageName)) {
-      return false;
+    if (packageName) {
+      const haystack = `${entry.packageName ?? ''}\n${entry.raw}`.toLowerCase();
+      if (!haystack.includes(packageName)) {
+        return false;
+      }
     }
 
     return true;

@@ -257,4 +257,20 @@ describe('app store', () => {
     useAppStore.getState().deleteFilterPreset(presetId as string);
     expect(useAppStore.getState().settings.filterPresets).toHaveLength(0);
   });
+
+  it('keeps state unchanged for preset/session/snippet guard clauses', () => {
+    const before = useAppStore.getState();
+
+    useAppStore.getState().saveFilterPreset('   ');
+    useAppStore.getState().applyFilterPreset('missing-preset');
+    useAppStore.getState().restoreSessionSnapshot();
+    useAppStore.getState().addSnippet('missing-log');
+
+    const after = useAppStore.getState();
+
+    expect(after.settings.filterPresets).toEqual(before.settings.filterPresets);
+    expect(after.filters).toEqual(before.filters);
+    expect(after.selectedDeviceId).toEqual(before.selectedDeviceId);
+    expect(after.settings.savedSnippets).toEqual(before.settings.savedSnippets);
+  });
 });

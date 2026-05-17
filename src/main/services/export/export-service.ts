@@ -11,7 +11,7 @@ export class ExportService {
     input: ExportLogsInput,
     dialog: Dialog
   ): Promise<ExportLogsResult> {
-    const extension = input.format === 'log' ? 'log' : 'txt';
+    const extension = input.format === 'log' ? 'log' : input.format === 'json' ? 'json' : 'txt';
     const suggestedPath = join(process.env.HOME ?? process.cwd(), `${input.suggestedName}.${extension}`);
 
     const result = await dialog.showSaveDialog({
@@ -19,7 +19,7 @@ export class ExportService {
       defaultPath: suggestedPath,
       filters: [
         {
-          name: input.format === 'log' ? 'Log files' : 'Text files',
+          name: input.format === 'log' ? 'Log files' : input.format === 'json' ? 'JSON files' : 'Text files',
           extensions: [extension]
         }
       ]
@@ -30,7 +30,17 @@ export class ExportService {
     }
 
     const content =
-      input.scope === 'all' ? this.sessionManager.getAllLogsAsText() : input.content ?? '';
+      input.format === 'json'
+        ? JSON.stringify(
+            input.scope === 'all'
+              ? this.sessionManager.getAllEntries()
+              : input.entries ?? [],
+            null,
+            2
+          )
+        : input.scope === 'all'
+          ? this.sessionManager.getAllLogsAsText()
+          : input.content ?? '';
 
     await writeFile(result.filePath, content, 'utf8');
 

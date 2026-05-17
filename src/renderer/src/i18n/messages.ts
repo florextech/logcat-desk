@@ -24,10 +24,14 @@ export interface I18nMessages {
     noDeviceSelected: string;
     selectedDevice: StringFactory<[name: string]>;
     visibleCount: StringFactory<[count: string]>;
+    projectLabel: StringFactory<[projectId: string]>;
   };
   filters: {
     title: string;
     helper: string;
+    savePreset: string;
+    deletePresetAria: StringFactory<[name: string]>;
+    presetNamePlaceholder: string;
     textPlaceholder: string;
     tagPlaceholder: string;
     packagePlaceholder: string;
@@ -82,6 +86,12 @@ export interface I18nMessages {
       maintenance: string;
       checkUpdatesLabel: string;
       checkUpdatesHint: string;
+      saveSelectedSnippetLabel: string;
+      saveSelectedSnippetHint: string;
+      exportVisibleJsonLabel: string;
+      exportVisibleJsonHint: string;
+      exportFullJsonLabel: string;
+      exportFullJsonHint: string;
     };
     settings: {
       title: string;
@@ -208,11 +218,15 @@ const en: I18nMessages = {
     tagline: 'Android log streaming and filtering',
     noDeviceSelected: 'No device selected',
     selectedDevice: (name) => `Device: ${name}`,
-    visibleCount: (count) => `${count} visible`
+    visibleCount: (count) => `${count} visible`,
+    projectLabel: (projectId) => `Project: ${projectId}`
   },
   filters: {
     title: 'Filters',
     helper: 'Text, tag, package, search and level',
+    savePreset: 'Save preset',
+    deletePresetAria: (name) => `Delete ${name}`,
+    presetNamePlaceholder: 'Preset name',
     textPlaceholder: 'Free text or stack trace',
     tagPlaceholder: 'Tag',
     packagePlaceholder: 'Package name',
@@ -274,7 +288,13 @@ const en: I18nMessages = {
       copyVisibleHint: 'Copy visible logs to the clipboard.',
       maintenance: 'Maintenance',
       checkUpdatesLabel: 'Check for updates',
-      checkUpdatesHint: 'Check GitHub for the latest available release.'
+      checkUpdatesHint: 'Check GitHub for the latest available release.',
+      saveSelectedSnippetLabel: 'Save selected snippet',
+      saveSelectedSnippetHint: 'Save currently selected row as snippet.',
+      exportVisibleJsonLabel: 'Export visible .json',
+      exportVisibleJsonHint: 'Export visible entries as structured JSON.',
+      exportFullJsonLabel: 'Export full .json',
+      exportFullJsonHint: 'Export full captured session as structured JSON.'
     },
     settings: {
       title: 'Settings',
@@ -417,11 +437,15 @@ const es: I18nMessages = {
     tagline: 'Streaming y filtros de logs Android',
     noDeviceSelected: 'Sin dispositivo seleccionado',
     selectedDevice: (name) => `Dispositivo: ${name}`,
-    visibleCount: (count) => `${count} visibles`
+    visibleCount: (count) => `${count} visibles`,
+    projectLabel: (projectId) => `Proyecto: ${projectId}`
   },
   filters: {
     title: 'Filtros',
     helper: 'Texto, tag, paquete, busqueda y nivel',
+    savePreset: 'Guardar preset',
+    deletePresetAria: (name) => `Eliminar ${name}`,
+    presetNamePlaceholder: 'Nombre del preset',
     textPlaceholder: 'Texto libre o stack trace',
     tagPlaceholder: 'Tag',
     packagePlaceholder: 'Nombre del paquete',
@@ -483,7 +507,13 @@ const es: I18nMessages = {
       copyVisibleHint: 'Copiar los logs visibles al portapapeles.',
       maintenance: 'Mantenimiento',
       checkUpdatesLabel: 'Buscar actualizaciones',
-      checkUpdatesHint: 'Revisar en GitHub si hay una version mas reciente.'
+      checkUpdatesHint: 'Revisar en GitHub si hay una version mas reciente.',
+      saveSelectedSnippetLabel: 'Guardar snippet seleccionado',
+      saveSelectedSnippetHint: 'Guardar la fila seleccionada como snippet.',
+      exportVisibleJsonLabel: 'Exportar visible .json',
+      exportVisibleJsonHint: 'Exportar entradas visibles como JSON estructurado.',
+      exportFullJsonLabel: 'Exportar completo .json',
+      exportFullJsonHint: 'Exportar sesion completa capturada como JSON estructurado.'
     },
     settings: {
       title: 'Configuracion',

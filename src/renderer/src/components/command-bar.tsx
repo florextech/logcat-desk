@@ -19,6 +19,10 @@ interface CommandBarProps {
   onSetFilters: (filters: Partial<FilterState>) => void;
   onStart: () => void;
   onStop: () => void;
+  presets: { id: string; name: string }[];
+  onSavePreset: () => void;
+  onApplyPreset: (presetId: string) => void;
+  onDeletePreset: (presetId: string) => void;
 }
 
 const inputClassName =
@@ -42,7 +46,11 @@ export const CommandBar = ({
   onPauseResume,
   onSetFilters,
   onStart,
-  onStop
+  onStop,
+  presets,
+  onSavePreset,
+  onApplyPreset,
+  onDeletePreset
 }: CommandBarProps): JSX.Element => {
   const { copy } = useI18n();
   const levelLabels: Record<FilterState['minLevel'], string> = copy.filters.levels;
@@ -58,8 +66,41 @@ export const CommandBar = ({
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-(--brand-500)">
             {copy.filters.title}
           </p>
-          <p className="text-xs text-(--muted)">{copy.filters.helper}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-(--muted)">{copy.filters.helper}</p>
+            <button
+              className="rounded-xl border border-(--border) bg-[rgb(17_21_19/0.7)] px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-(--brand-700)"
+              onClick={onSavePreset}
+              type="button"
+            >
+              {copy.filters.savePreset}
+            </button>
+          </div>
         </div>
+
+        {presets.length > 0 ? (
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {presets.map((preset) => (
+              <div key={preset.id} className="inline-flex items-center gap-1 rounded-xl border border-(--border) bg-[rgb(17_21_19/0.62)] px-2 py-1">
+                <button
+                  className="text-xs text-(--foreground)"
+                  onClick={() => onApplyPreset(preset.id)}
+                  type="button"
+                >
+                  {preset.name}
+                </button>
+                <button
+                  aria-label={copy.filters.deletePresetAria(preset.name)}
+                  className="text-[10px] text-(--muted) hover:text-red-300"
+                  onClick={() => onDeletePreset(preset.id)}
+                  type="button"
+                >
+                  x
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
 
         <div className="grid grid-cols-[1.35fr_0.95fr_0.95fr_0.95fr_0.78fr] gap-3">
           <input

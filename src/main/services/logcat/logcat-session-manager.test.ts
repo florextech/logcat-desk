@@ -158,4 +158,50 @@ describe('LogcatSessionManager internal logic', () => {
 
     expect(signals).toEqual(['SIGTERM', 'SIGKILL']);
   });
+
+  it('skips blank lines while consuming chunks', async () => {
+    const manager = new LogcatSessionManager();
+    const batches: string[] = [];
+
+    manager.on('log-batch', (payload) => {
+      batches.push(...payload.entries.map((entry: { raw: string }) => entry.raw));
+    });
+
+    (
+      manager as unknown as {
+        consumeChunk: (chunk: string, deviceId: string) => void;
+      }
+    ).consumeChunk('\n\n03-27 13:00:00.123  100  200 I ActivityManager: hello\n\n', 'device-1');
+
+    await vi.advanceTimersByTimeAsync(80);
+
+    expect(batches).toEqual(['03-27 13:00:00.123  100  200 I ActivityManager: hello']);
+  });
+
+  it('handles capture write failures without throwing and warns once', async () => {
+    const manager = new LogcatSessionManager();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    (manager as unknown as { captureFilePath: string | null }).captureFilePath = '/no/such/dir/session.log';
+
+    (
+      manager as unknown as {
+        enqueueCaptureWrite: (rawLine: string) => void;
+        captureWriteQueue: Promise<void>;
+      }
+    ).enqueueCaptureWrite('line-1');
+
+    await (manager as unknown as { captureWriteQueue: Promise<void> }).captureWriteQueue;
+
+    (
+      manager as unknown as {
+        enqueueCaptureWrite: (rawLine: string) => void;
+      }
+    ).enqueueCaptureWrite('line-2');
+
+    await (manager as unknown as { captureWriteQueue: Promise<void> }).captureWriteQueue;
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    warnSpy.mockRestore();
+  });
 });

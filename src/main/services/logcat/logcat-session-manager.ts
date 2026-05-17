@@ -1,11 +1,15 @@
 import { type ChildProcessByStdio, spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
+import { appendFile, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { Readable } from 'node:stream';
 import type { LogBatchPayload, LogEntry, LogLevel, SessionState } from '@shared/types';
 
 interface StartSessionArgs {
   adbPath: string;
   deviceId: string;
+  pidToPackage?: Map<number, string>;
 }
 
 const THREADTIME_PATTERN =
@@ -24,6 +28,15 @@ export class LogcatSessionManager extends EventEmitter {
   private pausedQueue: LogEntry[] = [];
   private flushTimer: NodeJS.Timeout | null = null;
   private allEntries: LogEntry[] = [];
+  private pidToPackage = new Map<number, string>();
+  private captureDirPath: string | null = null;
+  private captureFilePath: string | null = null;
+  private captureWriteQueue: Promise<void> = Promise.resolve();
+  private captureWriteFailed = false;
+
+  getCaptureFilePath(): string | null {
+    return this.captureFilePath;
+  }
 
   getState(): SessionState {
     return this.state;
@@ -33,8 +46,24 @@ export class LogcatSessionManager extends EventEmitter {
     return this.allEntries.map((entry) => entry.raw).join('\n');
   }
 
-  async start({ adbPath, deviceId }: StartSessionArgs): Promise<void> {
+  getAllEntries(): LogEntry[] {
+    return [...this.allEntries];
+  }
+
+  async start({ adbPath, deviceId, pidToPackage }: StartSessionArgs): Promise<void> {
     await this.stop(false);
+
+    if (this.captureDirPath) {
+      await rm(this.captureDirPath, { recursive: true, force: true });
+      this.captureDirPath = null;
+      this.captureFilePath = null;
+    }
+
+    this.captureDirPath = await mkdtemp(join(tmpdir(), 'logcat-desk-capture-'));
+    this.captureFilePath = join(this.captureDirPath, 'session.log');
+    await writeFile(this.captureFilePath, '', 'utf8');
+    this.captureWriteQueue = Promise.resolve();
+    this.captureWriteFailed = false;
 
     this.sequence = 0;
     this.expectedExitReason = null;
@@ -43,6 +72,11 @@ export class LogcatSessionManager extends EventEmitter {
     this.emitQueue = [];
     this.pausedQueue = [];
     this.allEntries = [];
+    this.pidToPackage = new Map();
+
+    if (pidToPackage) {
+      this.pidToPackage = new Map(pidToPackage);
+    }
 
     this.updateState({
       status: 'starting',
@@ -125,6 +159,9 @@ export class LogcatSessionManager extends EventEmitter {
 
   async stop(emitState = true): Promise<void> {
     if (!this.child) {
+      await this.captureWriteQueue;
+      await this.cleanupCaptureStorage();
+
       if (emitState) {
         this.updateState({
           status: 'stopped',
@@ -169,6 +206,9 @@ export class LogcatSessionManager extends EventEmitter {
       child.kill('SIGKILL');
       await closed;
     }
+
+    await this.captureWriteQueue;
+    await this.cleanupCaptureStorage();
   }
 
   pause(): void {
@@ -216,6 +256,7 @@ export class LogcatSessionManager extends EventEmitter {
 
       const entry = this.parseEntry(line, deviceId);
       this.allEntries.push(entry);
+      this.enqueueCaptureWrite(entry.raw);
 
       if (this.paused) {
         this.pausedQueue.push(entry);
@@ -271,6 +312,7 @@ export class LogcatSessionManager extends EventEmitter {
     }
 
     const [, monthDay, time, pid, tid, level, tag, message] = parsed;
+    const numericPid = Number(pid);
     const emphasis =
       level === 'E' || level === 'F' || /(exception|fatal|anr)/i.test(message)
         ? 'critical'
@@ -285,10 +327,11 @@ export class LogcatSessionManager extends EventEmitter {
       raw: rawLine,
       monthDay,
       time,
-      pid: Number(pid),
+      pid: numericPid,
       tid: Number(tid),
       level: level as LogLevel,
       tag: tag.trim(),
+      packageName: this.pidToPackage.get(numericPid),
       message,
       emphasis,
       receivedAt: new Date().toISOString()
@@ -298,5 +341,37 @@ export class LogcatSessionManager extends EventEmitter {
   private updateState(state: SessionState): void {
     this.state = state;
     this.emit('session-state', state);
+  }
+
+  private enqueueCaptureWrite(rawLine: string): void {
+    if (!this.captureFilePath) {
+      return;
+    }
+
+    const targetPath = this.captureFilePath;
+    this.captureWriteQueue = this.captureWriteQueue
+      .then(async () => {
+        await appendFile(targetPath, `${rawLine}\n`, 'utf8');
+      })
+      .catch((error_) => {
+        if (!this.captureWriteFailed) {
+          this.captureWriteFailed = true;
+          console.warn(
+            '[logcat-session-manager] Failed to persist capture log file:',
+            error_ instanceof Error ? error_.message : String(error_)
+          );
+        }
+      });
+  }
+
+  private async cleanupCaptureStorage(): Promise<void> {
+    if (!this.captureDirPath) {
+      return;
+    }
+
+    await rm(this.captureDirPath, { recursive: true, force: true });
+    this.captureDirPath = null;
+    this.captureFilePath = null;
+    this.captureWriteFailed = false;
   }
 }

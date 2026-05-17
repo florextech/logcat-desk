@@ -64,6 +64,25 @@ export class SettingsStore {
   private mergeWithDefaults(partial: Partial<AppSettings>): AppSettings {
     const defaultAi = DEFAULT_AI_CONFIG;
     const partialAi = partial.analysis?.ai;
+    const normalizedPresets = (partial.filterPresets ?? defaultSettings.filterPresets).map((preset) => ({
+      ...preset,
+      filters: {
+        ...defaultSettings.filters,
+        ...preset.filters
+      }
+    }));
+    const normalizedProjectSessions = Object.fromEntries(
+      Object.entries(partial.projectSessions ?? defaultSettings.projectSessions).map(([projectId, snapshot]) => [
+        projectId,
+        {
+          ...snapshot,
+          filters: {
+            ...defaultSettings.filters,
+            ...snapshot.filters
+          }
+        }
+      ])
+    );
 
     return {
       ...defaultSettings,
@@ -84,7 +103,10 @@ export class SettingsStore {
           apiKey: partialAi?.apiKey ?? defaultAi.apiKey,
           model: partialAi?.model ?? defaultAi.model
         }
-      }
+      },
+      filterPresets: normalizedPresets,
+      projectSessions: normalizedProjectSessions,
+      savedSnippets: partial.savedSnippets ?? defaultSettings.savedSnippets
     };
   }
 

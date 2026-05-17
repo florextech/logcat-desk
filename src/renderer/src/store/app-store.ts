@@ -20,6 +20,7 @@ const FALLBACK_AI_CONFIG = {
 } as const;
 
 interface AppState {
+  activeProjectId: string;
   adbStatus: AdbStatus;
   devices: DeviceInfo[];
   logs: LogEntry[];
@@ -42,9 +43,17 @@ interface AppState {
   selectDevice: (deviceId: string) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
+  setActiveProjectId: (projectId: string) => void;
+  saveFilterPreset: (name: string) => void;
+  applyFilterPreset: (presetId: string) => void;
+  deleteFilterPreset: (presetId: string) => void;
+  saveSessionSnapshot: () => void;
+  restoreSessionSnapshot: () => void;
+  addSnippet: (logId: string) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
+  activeProjectId: 'default',
   adbStatus: {
     available: false,
     resolvedPath: null,
@@ -155,5 +164,98 @@ export const useAppStore = create<AppState>((set, get) => ({
   setSessionState: (sessionState) => set({ sessionState }),
   selectDevice: (deviceId) => set({ selectedDeviceId: deviceId }),
   setError: (error) => set({ error }),
-  clearError: () => set({ error: null })
+  clearError: () => set({ error: null }),
+  setActiveProjectId: (projectId) => set({ activeProjectId: projectId }),
+  saveFilterPreset: (name) =>
+    set((state) => {
+      const trimmed = name.trim();
+      if (!trimmed) {
+        return state;
+      }
+
+      const now = new Date().toISOString();
+      return {
+        settings: {
+          ...state.settings,
+          filterPresets: [
+            {
+              id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+              name: trimmed,
+              filters: { ...state.filters },
+              updatedAt: now
+            },
+            ...state.settings.filterPresets
+          ]
+        }
+      };
+    }),
+  applyFilterPreset: (presetId) =>
+    set((state) => {
+      const preset = state.settings.filterPresets.find((entry) => entry.id === presetId);
+      if (!preset) {
+        return state;
+      }
+
+      return {
+        filters: { ...preset.filters }
+      };
+    }),
+  deleteFilterPreset: (presetId) =>
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        filterPresets: state.settings.filterPresets.filter((entry) => entry.id !== presetId)
+      }
+    })),
+  saveSessionSnapshot: () =>
+    set((state) => ({
+      settings: {
+        ...state.settings,
+        projectSessions: {
+          ...state.settings.projectSessions,
+          [state.activeProjectId]: {
+            filters: { ...state.filters },
+            lastDeviceId: state.selectedDeviceId,
+            updatedAt: new Date().toISOString()
+          }
+        }
+      }
+    })),
+  restoreSessionSnapshot: () =>
+    set((state) => {
+      const snapshot = state.settings.projectSessions[state.activeProjectId];
+      if (!snapshot) {
+        return state;
+      }
+
+      return {
+        filters: { ...snapshot.filters },
+        selectedDeviceId: snapshot.lastDeviceId
+      };
+    }),
+  addSnippet: (logId) =>
+    set((state) => {
+      const target = state.logs.find((entry) => entry.id === logId);
+      if (!target) {
+        return state;
+      }
+
+      return {
+        settings: {
+          ...state.settings,
+          savedSnippets: [
+            {
+              id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+              createdAt: new Date().toISOString(),
+              deviceId: target.deviceId,
+              level: target.level,
+              tag: target.tag,
+              message: target.message,
+              raw: target.raw
+            },
+            ...state.settings.savedSnippets
+          ].slice(0, 300)
+        }
+      };
+    })
 }));

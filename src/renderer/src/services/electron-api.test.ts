@@ -11,6 +11,7 @@ describe('renderer electronApi service', () => {
     const module = await import('@renderer/services/electron-api');
 
     expect(module.hasElectronApi).toBe(false);
+    await expect(module.electronApi.getAppContext()).resolves.toEqual({ projectId: 'default' });
     await expect(module.electronApi.getSettings()).resolves.toEqual(defaultSettings);
     await expect(module.electronApi.updateSettings({ locale: 'en' })).resolves.toEqual(defaultSettings);
     await expect(module.electronApi.getAdbStatus()).resolves.toMatchObject({

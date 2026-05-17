@@ -191,6 +191,9 @@ export const GroupedLogConsole = ({
                     <div className="min-w-0 truncate">
                       <span className="text-(--foreground)">{representative.tag}</span>
                       <span className="ml-2 text-[rgb(118_183_61)]">x{group.count}</span>
+                      {representative.packageName ? (
+                        <span className="ml-2 text-[rgb(110_126_113)]">{representative.packageName}</span>
+                      ) : null}
                     </div>
                     <div className="min-w-0 break-all text-(--foreground)">
                       {enableHighlight && representative.highlight && representative.category ? (
@@ -208,6 +211,9 @@ export const GroupedLogConsole = ({
                     <div className="min-w-0 truncate">
                       <span className="text-(--foreground)">{representative.tag}</span>
                       <span className="ml-2 text-[rgb(118_183_61)]">x{group.count}</span>
+                      {representative.packageName ? (
+                        <span className="ml-2 text-[rgb(110_126_113)]">{representative.packageName}</span>
+                      ) : null}
                     </div>
                     <div className="min-w-0 break-all text-(--foreground)">
                       {enableHighlight && representative.highlight && representative.category ? (
@@ -293,6 +299,9 @@ export const GroupedLogConsole = ({
                             <div className="min-w-0 truncate">
                               <span className="text-(--foreground)">{entry.tag}</span>
                               {entry.pid ? <span className="ml-2 text-[rgb(118_183_61)]">#{entry.pid}</span> : null}
+                              {entry.packageName ? (
+                                <span className="ml-2 text-[rgb(110_126_113)]">{entry.packageName}</span>
+                              ) : null}
                             </div>
                             <div className="min-w-0 break-all text-(--foreground)">
                               {highlightText(entry.message || entry.raw, searchQuery)}
@@ -307,6 +316,9 @@ export const GroupedLogConsole = ({
                             <div className="min-w-0 truncate">
                               <span className="text-(--foreground)">{entry.tag}</span>
                               {entry.pid ? <span className="ml-2 text-[rgb(118_183_61)]">#{entry.pid}</span> : null}
+                              {entry.packageName ? (
+                                <span className="ml-2 text-[rgb(110_126_113)]">{entry.packageName}</span>
+                              ) : null}
                             </div>
                             <div className="min-w-0 break-all text-(--foreground)">
                               {highlightText(entry.message || entry.raw, searchQuery)}

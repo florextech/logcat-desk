@@ -3,6 +3,7 @@ import { ipcChannels } from '@shared/ipc';
 
 describe('ipcChannels', () => {
   it('defines stable invoke channels and event channels', () => {
+    expect(ipcChannels.appContextGet).toBe('app-context:get');
     expect(ipcChannels.settingsGet).toBe('settings:get');
     expect(ipcChannels.logcatStart).toBe('logcat:start');
     expect(ipcChannels.analysisEnhanceSummary).toBe('analysis:enhance-summary');

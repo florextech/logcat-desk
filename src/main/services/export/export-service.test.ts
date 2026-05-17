@@ -25,7 +25,8 @@ describe('ExportService', () => {
       })
     };
     const sessionManager = {
-      getAllLogsAsText: vi.fn().mockReturnValue('full log output')
+      getAllLogsAsText: vi.fn().mockReturnValue('full log output'),
+      getAllEntries: vi.fn().mockReturnValue([])
     };
 
     const service = new ExportService(sessionManager as never);
@@ -57,7 +58,8 @@ describe('ExportService', () => {
       })
     };
     const sessionManager = {
-      getAllLogsAsText: vi.fn()
+      getAllLogsAsText: vi.fn(),
+      getAllEntries: vi.fn().mockReturnValue([])
     };
 
     const service = new ExportService(sessionManager as never);
@@ -71,6 +73,34 @@ describe('ExportService', () => {
     await expect(readFile(filePath, 'utf8')).resolves.toBe('visible only');
   });
 
+  it('exports structured json using provided entries', async () => {
+    const filePath = join(tempDir, 'visible.json');
+    const dialog = {
+      showSaveDialog: vi.fn().mockResolvedValue({
+        canceled: false,
+        filePath
+      })
+    };
+    const sessionManager = {
+      getAllLogsAsText: vi.fn(),
+      getAllEntries: vi.fn().mockReturnValue([])
+    };
+
+    const service = new ExportService(sessionManager as never);
+
+    await service.exportWithDialog(
+      {
+        scope: 'visible',
+        format: 'json',
+        suggestedName: 'capture',
+        entries: [{ id: '1', raw: 'x' }] as never
+      },
+      dialog as never
+    );
+
+    await expect(readFile(filePath, 'utf8')).resolves.toContain('"id": "1"');
+  });
+
   it('returns canceled when the dialog is dismissed', async () => {
     const dialog = {
       showSaveDialog: vi.fn().mockResolvedValue({
@@ -79,7 +109,7 @@ describe('ExportService', () => {
       })
     };
 
-    const service = new ExportService({ getAllLogsAsText: vi.fn() } as never);
+    const service = new ExportService({ getAllLogsAsText: vi.fn(), getAllEntries: vi.fn() } as never);
 
     await expect(
       service.exportWithDialog(
@@ -87,5 +117,33 @@ describe('ExportService', () => {
         dialog as never
       )
     ).resolves.toEqual({ canceled: true });
+  });
+
+  it('exports all logs as json from session manager entries', async () => {
+    const filePath = join(tempDir, 'full.json');
+    const dialog = {
+      showSaveDialog: vi.fn().mockResolvedValue({
+        canceled: false,
+        filePath
+      })
+    };
+    const sessionManager = {
+      getAllLogsAsText: vi.fn(),
+      getAllEntries: vi.fn().mockReturnValue([{ id: 'full-1', raw: 'all' }])
+    };
+
+    const service = new ExportService(sessionManager as never);
+
+    await service.exportWithDialog(
+      {
+        scope: 'all',
+        format: 'json',
+        suggestedName: 'capture'
+      },
+      dialog as never
+    );
+
+    expect(sessionManager.getAllEntries).toHaveBeenCalledTimes(1);
+    await expect(readFile(filePath, 'utf8')).resolves.toContain('"full-1"');
   });
 });

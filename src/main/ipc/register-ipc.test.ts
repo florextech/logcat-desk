@@ -17,12 +17,14 @@ const {
   clearLogcatBufferMock,
   listDevicesMock,
   resolveAdbStatusMock,
+  resolvePidMapMock,
   enhanceAnalysisSummaryMock,
   askAnalysisAssistantMock
 } = vi.hoisted(() => ({
   clearLogcatBufferMock: vi.fn(),
   listDevicesMock: vi.fn(),
   resolveAdbStatusMock: vi.fn(),
+  resolvePidMapMock: vi.fn(),
   enhanceAnalysisSummaryMock: vi.fn(),
   askAnalysisAssistantMock: vi.fn()
 }));
@@ -53,6 +55,12 @@ vi.mock('@main/services/adb/adb-resolver', () => ({
   resolveAdbStatus: resolveAdbStatusMock
 }));
 
+vi.mock('@main/services/adb/adb-package-resolver', () => ({
+  AdbPackageResolver: class {
+    resolvePidMap = resolvePidMapMock;
+  }
+}));
+
 vi.mock('@main/services/analysis/analysis-ai-service', () => ({
   enhanceAnalysisSummary: enhanceAnalysisSummaryMock,
   askAnalysisAssistant: askAnalysisAssistantMock
@@ -66,6 +74,7 @@ describe('registerIpc', () => {
     clearLogcatBufferMock.mockReset();
     listDevicesMock.mockReset();
     resolveAdbStatusMock.mockReset();
+    resolvePidMapMock.mockReset();
     enhanceAnalysisSummaryMock.mockReset();
     askAnalysisAssistantMock.mockReset();
     handleMock.mockReset();
@@ -127,6 +136,7 @@ describe('registerIpc', () => {
       source: 'settings'
     });
     listDevicesMock.mockResolvedValue([{ id: 'device-1', state: 'device' }]);
+    resolvePidMapMock.mockResolvedValue(new Map([[101, 'com.demo.app']]));
     enhanceAnalysisSummaryMock.mockResolvedValue('enhanced summary');
     askAnalysisAssistantMock.mockResolvedValue('assistant answer');
 
@@ -140,6 +150,7 @@ describe('registerIpc', () => {
 
     expect(removeHandlerMock).toHaveBeenCalled();
     expect(handlers.has(ipcChannels.settingsGet)).toBe(true);
+    expect(handlers.has(ipcChannels.appContextGet)).toBe(true);
     expect(handlers.has(ipcChannels.logcatStart)).toBe(true);
     expect(handlers.has(ipcChannels.analysisEnhanceSummary)).toBe(true);
     expect(handlers.has(ipcChannels.analysisAskAssistant)).toBe(true);
@@ -172,7 +183,8 @@ describe('registerIpc', () => {
     expect(settingsStore.update).toHaveBeenCalledWith({ lastDeviceId: 'device-1' });
     expect(sessionManager.start).toHaveBeenCalledWith({
       adbPath: '/resolved/adb',
-      deviceId: 'device-1'
+      deviceId: 'device-1',
+      pidToPackage: expect.any(Map)
     });
 
     await handlers.get(ipcChannels.logcatPause)?.({});

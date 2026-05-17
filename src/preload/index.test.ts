@@ -37,6 +37,9 @@ describe('preload api exposure', () => {
     const [, api] = exposeInMainWorldMock.mock.calls[0] as [string, RendererApi];
     expect(exposeInMainWorldMock.mock.calls[0]?.[0]).toBe('logcatDesk');
 
+    api.getAppContext();
+    expect(invokeMock).toHaveBeenCalledWith(ipcChannels.appContextGet);
+
     api.getSettings();
     expect(invokeMock).toHaveBeenCalledWith(ipcChannels.settingsGet);
 
@@ -67,11 +70,17 @@ describe('preload api exposure', () => {
     api.checkForUpdates();
     expect(invokeMock).toHaveBeenCalledWith(ipcChannels.updatesCheck);
 
-    api.exportLogs({ scope: 'visible', format: 'txt', suggestedName: 'capture' });
+    api.exportLogs({
+      scope: 'visible',
+      format: 'txt',
+      suggestedName: 'capture',
+      entries: []
+    });
     expect(invokeMock).toHaveBeenCalledWith(ipcChannels.exportLogs, {
       scope: 'visible',
       format: 'txt',
-      suggestedName: 'capture'
+      suggestedName: 'capture',
+      entries: []
     });
 
     api.enhanceAnalysisSummary({

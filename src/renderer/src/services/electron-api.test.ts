@@ -40,6 +40,9 @@ describe('renderer electronApi service', () => {
     await expect(module.electronApi.clearLogcatBuffer({ deviceId: 'device-1' })).rejects.toThrow(
       'The Electron preload API is unavailable.'
     );
+    await expect(module.electronApi.getPerformanceStats({ deviceId: 'device-1' })).rejects.toThrow(
+      'The Electron preload API is unavailable.'
+    );
     await expect(module.electronApi.checkForUpdates()).rejects.toThrow(
       'The Electron preload API is unavailable.'
     );

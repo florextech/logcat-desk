@@ -184,6 +184,38 @@ export interface UpdateCheckResult {
   releaseUrl: string;
 }
 
+export interface DeviceProcessUsage {
+  pid: number;
+  name: string;
+  cpuPercent: number;
+  rssKb: number | null;
+}
+
+export interface DevicePerformanceSnapshot {
+  timestamp: string;
+  deviceId: string;
+  cpuTotalPercent: number;
+  cpuUserPercent: number;
+  cpuKernelPercent: number;
+  cpuIoWaitPercent: number;
+  memoryUsedMb: number;
+  memoryFreeMb: number;
+  memoryAvailableMb: number;
+  memoryTotalMb: number;
+  swapUsedMb: number;
+  swapTotalMb: number;
+  loadAverage1m: number;
+  loadAverage5m: number;
+  loadAverage15m: number;
+  uptimeSeconds: number;
+  topProcesses: DeviceProcessUsage[];
+}
+
+export interface GetDevicePerformanceInput {
+  deviceId: string;
+  adbPath?: string;
+}
+
 export interface LogBatchPayload {
   entries: LogEntry[];
 }
@@ -199,6 +231,7 @@ export interface RendererApi {
   pauseLogcat: () => Promise<SessionState>;
   resumeLogcat: () => Promise<SessionState>;
   clearLogcatBuffer: (input: ClearBufferInput) => Promise<void>;
+  getPerformanceStats: (input: GetDevicePerformanceInput) => Promise<DevicePerformanceSnapshot>;
   checkForUpdates: () => Promise<UpdateCheckResult>;
   exportLogs: (input: ExportLogsInput) => Promise<ExportLogsResult>;
   enhanceAnalysisSummary: (input: EnhanceAnalysisSummaryInput) => Promise<string>;

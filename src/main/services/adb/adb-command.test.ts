@@ -28,4 +28,14 @@ describe('runCommand', () => {
   it('rejects when the process cannot be spawned', async () => {
     await expect(runCommand('/definitely/missing-command', [])).rejects.toThrow();
   });
+
+  it('falls back to exit code 0 when process exits by signal', async () => {
+    await expect(
+      runCommand(process.execPath, ['-e', 'process.kill(process.pid, "SIGTERM")'])
+    ).resolves.toEqual({
+      stdout: '',
+      stderr: '',
+      code: 0
+    });
+  });
 });

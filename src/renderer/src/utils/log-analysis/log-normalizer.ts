@@ -25,7 +25,7 @@ export const createLogFingerprint = (normalizedMessage: string): string => {
   let hash = 0x811c9dc5;
 
   for (const symbol of normalizedMessage) {
-    hash ^= symbol.codePointAt(0) ?? 0;
+    hash ^= symbol.codePointAt(0)!;
     hash = Math.imul(hash, 0x01000193);
   }
 

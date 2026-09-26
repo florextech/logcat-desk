@@ -13,6 +13,7 @@ const api: RendererApi = {
   pauseLogcat: () => ipcRenderer.invoke(ipcChannels.logcatPause),
   resumeLogcat: () => ipcRenderer.invoke(ipcChannels.logcatResume),
   clearLogcatBuffer: (input) => ipcRenderer.invoke(ipcChannels.logcatClearBuffer, input),
+  getPerformanceStats: (input) => ipcRenderer.invoke(ipcChannels.performanceGet, input),
   checkForUpdates: () => ipcRenderer.invoke(ipcChannels.updatesCheck),
   exportLogs: (input) => ipcRenderer.invoke(ipcChannels.exportLogs, input),
   enhanceAnalysisSummary: (input) => ipcRenderer.invoke(ipcChannels.analysisEnhanceSummary, input),

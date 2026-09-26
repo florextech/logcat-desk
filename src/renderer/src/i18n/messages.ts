@@ -26,6 +26,35 @@ export interface I18nMessages {
     visibleCount: StringFactory<[count: string]>;
     projectLabel: StringFactory<[projectId: string]>;
   };
+  tabs: {
+    logs: string;
+    performance: string;
+  };
+  performance: {
+    title: string;
+    cpuTotal: StringFactory<[value: string]>;
+    cpuBreakdown: StringFactory<[user: string, kernel: string, ioWait: string]>;
+    memoryUsed: StringFactory<[used: string, total: string]>;
+    memoryAvailable: StringFactory<[value: string]>;
+    swap: StringFactory<[used: string, total: string]>;
+    loadAverage: StringFactory<[one: string, five: string, fifteen: string]>;
+    uptime: StringFactory<[value: string]>;
+    topProcesses: string;
+    processName: string;
+    processPid: string;
+    processCpu: string;
+    processRss: string;
+    unavailable: string;
+    help: {
+      cpuTotal: string;
+      cpuBreakdown: string;
+      memory: string;
+      swap: string;
+      load: string;
+      uptime: string;
+      topProcesses: string;
+    };
+  };
   filters: {
     title: string;
     helper: string;
@@ -220,6 +249,35 @@ const en: I18nMessages = {
     selectedDevice: (name) => `Device: ${name}`,
     visibleCount: (count) => `${count} visible`,
     projectLabel: (projectId) => `Project: ${projectId}`
+  },
+  tabs: {
+    logs: 'Logs',
+    performance: 'Performance'
+  },
+  performance: {
+    title: 'Device Performance',
+    cpuTotal: (value) => `CPU total ${value}%`,
+    cpuBreakdown: (user, kernel, ioWait) => `user ${user}% / kernel ${kernel}% / iowait ${ioWait}%`,
+    memoryUsed: (used, total) => `Memory ${used} / ${total} MB`,
+    memoryAvailable: (value) => `Available ${value} MB`,
+    swap: (used, total) => `Swap ${used} / ${total} MB`,
+    loadAverage: (one, five, fifteen) => `Load ${one} / ${five} / ${fifteen}`,
+    uptime: (value) => `Uptime ${value}`,
+    topProcesses: 'Top CPU Processes',
+    processName: 'Process',
+    processPid: 'PID',
+    processCpu: 'CPU %',
+    processRss: 'RSS MB',
+    unavailable: 'Select a connected device to load performance metrics.',
+    help: {
+      cpuTotal: 'Current total CPU activity on the Android device.',
+      cpuBreakdown: 'CPU split by user apps, kernel work, and I/O wait.',
+      memory: 'RAM usage on the device (used and total).',
+      swap: 'Compressed/virtual memory usage used when RAM is pressured.',
+      load: 'System load average for 1, 5, and 15 minutes (not CPU percent).',
+      uptime: 'How long the Android system has been running.',
+      topProcesses: 'Processes currently consuming the most CPU.'
+    }
   },
   filters: {
     title: 'Filters',
@@ -439,6 +497,35 @@ const es: I18nMessages = {
     selectedDevice: (name) => `Dispositivo: ${name}`,
     visibleCount: (count) => `${count} visibles`,
     projectLabel: (projectId) => `Proyecto: ${projectId}`
+  },
+  tabs: {
+    logs: 'Logs',
+    performance: 'Rendimiento'
+  },
+  performance: {
+    title: 'Rendimiento del dispositivo',
+    cpuTotal: (value) => `CPU total ${value}%`,
+    cpuBreakdown: (user, kernel, ioWait) => `user ${user}% / kernel ${kernel}% / iowait ${ioWait}%`,
+    memoryUsed: (used, total) => `Memoria ${used} / ${total} MB`,
+    memoryAvailable: (value) => `Disponible ${value} MB`,
+    swap: (used, total) => `Swap ${used} / ${total} MB`,
+    loadAverage: (one, five, fifteen) => `Carga ${one} / ${five} / ${fifteen}`,
+    uptime: (value) => `Activo ${value}`,
+    topProcesses: 'Procesos con mayor CPU',
+    processName: 'Proceso',
+    processPid: 'PID',
+    processCpu: 'CPU %',
+    processRss: 'RSS MB',
+    unavailable: 'Selecciona un dispositivo conectado para cargar metricas de rendimiento.',
+    help: {
+      cpuTotal: 'Actividad total de CPU actual en el dispositivo Android.',
+      cpuBreakdown: 'CPU separada en apps usuario, kernel y espera de I/O.',
+      memory: 'Uso de RAM del dispositivo (usada y total).',
+      swap: 'Uso de memoria virtual/comprimida cuando hay presion de RAM.',
+      load: 'Promedio de carga del sistema en 1, 5 y 15 minutos (no es % de CPU).',
+      uptime: 'Tiempo que lleva encendido el sistema Android.',
+      topProcesses: 'Procesos que mas CPU estan consumiendo ahora mismo.'
+    }
   },
   filters: {
     title: 'Filtros',

@@ -116,4 +116,49 @@ describe('resolveAdbStatus', () => {
     expect(status.source).toBe('missing');
     expect(status.error).toContain('common install locations');
   });
+
+  it('falls back to env when PATH candidate is not executable', async () => {
+    const status = await resolveAdbStatus(undefined, {
+      resolveFromPathFn: async () => '/tmp/path-adb',
+      envCandidates: ['/tmp/env-adb'],
+      commonCandidates: ['/tmp/common-adb'],
+      isExecutableFn: async (candidate) => candidate === '/tmp/env-adb'
+    });
+
+    expect(status).toEqual({
+      available: true,
+      resolvedPath: '/tmp/env-adb',
+      source: 'env'
+    });
+  });
+
+  it('uses common candidate when path and env are unavailable', async () => {
+    const status = await resolveAdbStatus(undefined, {
+      resolveFromPathFn: async () => '/tmp/path-adb',
+      envCandidates: ['/tmp/env-adb'],
+      commonCandidates: ['/tmp/common-adb'],
+      isExecutableFn: async (candidate) => candidate === '/tmp/common-adb'
+    });
+
+    expect(status).toEqual({
+      available: true,
+      resolvedPath: '/tmp/common-adb',
+      source: 'common'
+    });
+  });
+
+  it('ignores blank preferred path and duplicate candidates', async () => {
+    const status = await resolveAdbStatus('   ', {
+      resolveFromPathFn: async () => null,
+      envCandidates: ['   ', '/tmp/env-adb', '/tmp/env-adb'],
+      commonCandidates: ['/tmp/common-adb', '/tmp/common-adb'],
+      isExecutableFn: async (candidate) => candidate === '/tmp/env-adb'
+    });
+
+    expect(status).toEqual({
+      available: true,
+      resolvedPath: '/tmp/env-adb',
+      source: 'env'
+    });
+  });
 });

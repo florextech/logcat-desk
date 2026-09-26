@@ -6,6 +6,7 @@ describe('ipcChannels', () => {
     expect(ipcChannels.appContextGet).toBe('app-context:get');
     expect(ipcChannels.settingsGet).toBe('settings:get');
     expect(ipcChannels.logcatStart).toBe('logcat:start');
+    expect(ipcChannels.performanceGet).toBe('performance:get');
     expect(ipcChannels.analysisEnhanceSummary).toBe('analysis:enhance-summary');
     expect(ipcChannels.analysisAskAssistant).toBe('analysis:ask-assistant');
     expect(ipcChannels.events.logBatch).toBe('events:log-batch');

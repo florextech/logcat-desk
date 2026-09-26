@@ -28,4 +28,15 @@ describe('i18n messages', () => {
     expect(messages.en.modals.actions.exportVisibleJsonLabel).toBe('Export visible .json');
     expect(messages.es.modals.actions.exportVisibleJsonLabel).toBe('Exportar visible .json');
   });
+
+  it('provides localized performance copy', () => {
+    expect(messages.en.tabs.performance).toBe('Performance');
+    expect(messages.es.tabs.performance).toBe('Rendimiento');
+    expect(messages.en.performance.title).toBe('Device Performance');
+    expect(messages.es.performance.title).toBe('Rendimiento del dispositivo');
+    expect(messages.en.performance.cpuTotal('33.5')).toContain('33.5');
+    expect(messages.es.performance.unavailable).toContain('Selecciona');
+    expect(messages.en.performance.help.load).toContain('not CPU percent');
+    expect(messages.es.performance.help.swap).toContain('memoria');
+  });
 });

@@ -2,7 +2,7 @@ import { app, clipboard, dialog, ipcMain, shell } from 'electron';
 import type { BrowserWindow } from 'electron';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
-import { clearLogcatBuffer, listDevices } from '@main/services/adb/device-service';
+import { clearLogcatBuffer, getDevicePerformanceSnapshot, listDevices } from '@main/services/adb/device-service';
 import { resolveAdbStatus } from '@main/services/adb/adb-resolver';
 import { AdbPackageResolver } from '@main/services/adb/adb-package-resolver';
 import { askAnalysisAssistant, enhanceAnalysisSummary } from '@main/services/analysis/analysis-ai-service';
@@ -18,6 +18,7 @@ import type {
   ClearBufferInput,
   EnhanceAnalysisSummaryInput,
   ExportLogsInput,
+  GetDevicePerformanceInput,
   StartSessionInput
 } from '@shared/types';
 
@@ -121,6 +122,11 @@ export const registerIpc = ({
   safeHandle(ipcChannels.logcatClearBuffer, async (_, input: ClearBufferInput) => {
     const adbStatus = await resolveConfiguredAdb(settingsStore, input.adbPath);
     await clearLogcatBuffer(adbStatus.resolvedPath as string, input.deviceId);
+  });
+
+  safeHandle(ipcChannels.performanceGet, async (_, input: GetDevicePerformanceInput) => {
+    const adbStatus = await resolveConfiguredAdb(settingsStore, input.adbPath);
+    return getDevicePerformanceSnapshot(adbStatus.resolvedPath as string, input.deviceId);
   });
 
   safeHandle(ipcChannels.updatesCheck, async () => {

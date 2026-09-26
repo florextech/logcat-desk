@@ -7,6 +7,7 @@ import { CommandBar } from '@renderer/components/command-bar';
 import { DeviceModal } from '@renderer/components/device-modal';
 import { EmptyState } from '@renderer/components/empty-state';
 import { GroupedLogConsole } from '@renderer/components/grouped-log-console';
+import { HelpTooltip } from '@renderer/components/help-tooltip';
 import { IconButton } from '@renderer/components/icon-button';
 import { useI18n } from '@renderer/i18n/provider';
 import { LogConsole } from '@renderer/components/log-console';
@@ -26,7 +27,7 @@ import {
 import { processLogsForRender } from '@renderer/utils/log-analysis/log-processing';
 import type { EnrichedLog } from '@renderer/utils/log-analysis/types';
 import { filterLogs } from '@renderer/utils/log-filtering';
-import type { AnalysisChatTurn, AnalysisConfig, Locale } from '@shared/types';
+import type { AnalysisChatTurn, AnalysisConfig, DevicePerformanceSnapshot, Locale } from '@shared/types';
 
 const analysisAskAssistantErrorPattern =
   /^Error invoking remote method 'analysis:ask-assistant': Error: (.+)$/s;
@@ -34,6 +35,39 @@ const analysisAskAssistantErrorPattern =
 const unwrapAnalysisChatIpcError = (message: string): string => {
   const match = analysisAskAssistantErrorPattern.exec(message);
   return match?.[1]?.trim() || message.trim();
+};
+
+const formatDuration = (totalSeconds: number): string => {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m ${seconds}s`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+
+  return `${seconds}s`;
+};
+
+const buildLinePath = (values: number[], width: number, height: number): string => {
+  if (values.length === 0) {
+    return '';
+  }
+
+  const stepX = values.length === 1 ? 0 : width / (values.length - 1);
+
+  return values
+    .map((value, index) => {
+      const safeValue = Math.max(0, Math.min(100, value));
+      const x = index * stepX;
+      const y = height - (safeValue / 100) * height;
+      return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
+    })
+    .join(' ');
 };
 
 interface RunAnalysisForLogsHandlerDeps {
@@ -257,6 +291,10 @@ export const App = (): JSX.Element => {
   const [isChatRequestPending, setIsChatRequestPending] = useState(false);
   const [analysisChatMessages, setAnalysisChatMessages] = useState<AnalysisChatTurn[]>([]);
   const [presetDraftName, setPresetDraftName] = useState('');
+  const [activePanel, setActivePanel] = useState<'logs' | 'performance'>('logs');
+  const [performance, setPerformance] = useState<DevicePerformanceSnapshot | null>(null);
+  const [cpuHistory, setCpuHistory] = useState<number[]>([]);
+  const [memoryHistory, setMemoryHistory] = useState<number[]>([]);
 
   useEffect(() => {
     setAdbPathDraft(settings.adbPath);
@@ -329,6 +367,54 @@ export const App = (): JSX.Element => {
     setError,
     setSettings
   ]);
+
+  useEffect(() => {
+    if (!ready) {
+      return;
+    }
+
+    if (!selectedDeviceId) {
+      setPerformance(null);
+      return;
+    }
+
+    let disposed = false;
+
+    const pullStats = (): void => {
+      electronApi
+        .getPerformanceStats({ deviceId: selectedDeviceId })
+        .then((snapshot) => {
+          if (!disposed) {
+            setPerformance(snapshot);
+          }
+        })
+        .catch(() => {
+          if (!disposed) {
+            setPerformance(null);
+          }
+        });
+    };
+
+    pullStats();
+    const intervalId = globalThis.setInterval(pullStats, 2000);
+
+    return () => {
+      disposed = true;
+      globalThis.clearInterval(intervalId);
+    };
+  }, [ready, selectedDeviceId]);
+
+  useEffect(() => {
+    if (!performance) {
+      return;
+    }
+
+    const memoryPercent =
+      performance.memoryTotalMb > 0 ? (performance.memoryUsedMb / performance.memoryTotalMb) * 100 : 0;
+
+    setCpuHistory((current) => [...current, performance.cpuTotalPercent].slice(-36));
+    setMemoryHistory((current) => [...current, memoryPercent].slice(-36));
+  }, [performance]);
 
   const filteredLogs = useMemo(() => filterLogs(logs, filters), [logs, filters]);
   const processedLogs = useMemo(
@@ -609,6 +695,15 @@ export const App = (): JSX.Element => {
 
   const streaming = sessionState.status === 'streaming';
   const paused = sessionState.status === 'paused';
+  const memoryPercent =
+    performance && performance.memoryTotalMb > 0
+      ? Math.min(100, (performance.memoryUsedMb / performance.memoryTotalMb) * 100)
+      : 0;
+  const cpuTrendPath = buildLinePath(cpuHistory, 720, 120);
+  const memoryTrendPath = buildLinePath(memoryHistory, 720, 120);
+  const hasCpuBreakdown =
+    performance !== null &&
+    (performance.cpuUserPercent > 0 || performance.cpuKernelPercent > 0 || performance.cpuIoWaitPercent > 0);
   const sessionLabel =
     sessionState.status === 'error' || sessionState.status === 'disconnected'
       ? sessionState.message ?? copy.status[sessionState.status]
@@ -681,7 +776,7 @@ export const App = (): JSX.Element => {
               </div>
             </div>
 
-            <div className="drag-region mt-3 flex items-center gap-3 text-sm text-(--muted)">
+            <div className="drag-region mt-3 flex flex-wrap items-center gap-3 text-sm text-(--muted)">
               <span>
                 {selectedDevice
                   ? copy.header.selectedDevice(selectedDevice.model ?? selectedDevice.id)
@@ -689,6 +784,22 @@ export const App = (): JSX.Element => {
               </span>
               <span className="text-[rgb(88_102_90)]">/</span>
               <span>{copy.header.visibleCount(filteredLogs.length.toLocaleString(locale))}</span>
+              {performance ? <span className="text-[rgb(88_102_90)]">/</span> : null}
+              {performance ? (
+                <span className="rounded-xl border border-(--border) bg-[rgb(12_15_13/0.62)] px-2 py-0.5 text-[11px]">
+                  {copy.performance.cpuTotal(performance.cpuTotalPercent.toFixed(1))}
+                </span>
+              ) : null}
+              {performance ? (
+                <span className="rounded-xl border border-(--border) bg-[rgb(12_15_13/0.62)] px-2 py-0.5 text-[11px]">
+                  {copy.performance.memoryUsed(performance.memoryUsedMb.toFixed(1), performance.memoryTotalMb.toFixed(1))}
+                </span>
+              ) : null}
+              {performance ? (
+                <span className="rounded-xl border border-(--border) bg-[rgb(12_15_13/0.62)] px-2 py-0.5 text-[11px]">
+                  {copy.performance.uptime(formatDuration(performance.uptimeSeconds))}
+                </span>
+              ) : null}
             </div>
           </header>
 
@@ -699,93 +810,251 @@ export const App = (): JSX.Element => {
             </div>
           ) : null}
 
-          <CommandBar
-            canAnalyze={settings.analysis.enableAnalysis && processedLogs.enrichedLogs.length > 0}
-            canStart={Boolean(selectedDeviceId) && adbStatus.available}
-            canClearLogs={filteredLogs.length > 0}
-            filters={filters}
-            isAnalyzePending={isAnalyzing}
-            isPausePending={isPausePending}
-            isPaused={paused}
-            isStopPending={isStopPending}
-            isStreaming={streaming}
-            onAnalyze={handleOpenAnalyzeOptions}
-            onClearLogs={clearLogs}
-            onPauseResume={handlePauseResume}
-            onSetFilters={setFilters}
-            onStart={handleStartSession}
-            onStop={handleStopSession}
-            presets={settings.filterPresets.map((preset) => ({ id: preset.id, name: preset.name }))}
-            onSavePreset={handleSavePreset}
-            onApplyPreset={applyFilterPreset}
-            onDeletePreset={deleteFilterPreset}
-          />
-
-          <div className="mx-6 mt-3 flex flex-wrap items-center gap-2 text-xs text-(--muted)">
-            <span className="rounded-xl border border-(--border) bg-[rgb(12_15_13/0.78)] px-3 py-1">
-              {copy.header.projectLabel(activeProjectId)}
-            </span>
-            {devices.map((device) => (
-              <button
-                key={device.id}
-                className={`rounded-xl border px-3 py-1 transition ${
-                  selectedDeviceId === device.id
-                    ? 'border-[rgb(189_241_70/0.5)] bg-[rgb(189_241_70/0.12)] text-(--brand-700)'
-                    : 'border-(--border) bg-[rgb(12_15_13/0.58)] text-(--muted) hover:text-(--foreground)'
-                }`}
-                onClick={() => selectDevice(device.id)}
-                type="button"
-              >
-                {device.model ?? device.id}
-              </button>
-            ))}
-            <input
-              className="rounded-xl border border-(--border) bg-[rgb(12_15_13/0.78)] px-2 py-1 text-xs text-(--foreground) outline-none"
-              placeholder={copy.filters.presetNamePlaceholder}
-              value={presetDraftName}
-              onChange={(event) => setPresetDraftName(event.target.value)}
-            />
+          <div className="mx-6 mt-2 inline-flex w-fit items-center rounded-2xl border border-(--border) bg-[rgb(12_15_13/0.82)] p-1 text-sm">
+            <button
+              className={`rounded-xl px-3 py-1.5 transition ${
+                activePanel === 'logs'
+                  ? 'bg-[rgb(189_241_70/0.16)] text-(--brand-700)'
+                  : 'text-(--muted) hover:text-(--foreground)'
+              }`}
+              type="button"
+              onClick={() => setActivePanel('logs')}
+            >
+              {copy.tabs.logs}
+            </button>
+            <button
+              className={`rounded-xl px-3 py-1.5 transition ${
+                activePanel === 'performance'
+                  ? 'bg-[rgb(189_241_70/0.16)] text-(--brand-700)'
+                  : 'text-(--muted) hover:text-(--foreground)'
+              }`}
+              type="button"
+              onClick={() => setActivePanel('performance')}
+            >
+              {copy.tabs.performance}
+            </button>
           </div>
 
-          <section className="min-h-0 flex-1 px-6 pb-6 pt-4">
-            {filteredLogs.length === 0 ? (
-              <EmptyState
-                hasDevice={Boolean(selectedDeviceId)}
-                isStreaming={streaming || paused}
-                title={logs.length > 0 ? copy.empty.noLogsMatch : copy.empty.noLogsYet}
-                description={
-                  logs.length > 0
-                    ? copy.empty.relaxFilters
-                    : selectedDeviceId
-                      ? copy.empty.startSession
-                      : copy.empty.chooseDevice
-                }
+          {activePanel === 'logs' ? (
+            <>
+              <CommandBar
+                canAnalyze={settings.analysis.enableAnalysis && processedLogs.enrichedLogs.length > 0}
+                canStart={Boolean(selectedDeviceId) && adbStatus.available}
+                canClearLogs={filteredLogs.length > 0}
+                filters={filters}
+                isAnalyzePending={isAnalyzing}
+                isPausePending={isPausePending}
+                isPaused={paused}
+                isStopPending={isStopPending}
+                isStreaming={streaming}
+                onAnalyze={handleOpenAnalyzeOptions}
+                onClearLogs={clearLogs}
+                onPauseResume={handlePauseResume}
+                onSetFilters={setFilters}
+                onStart={handleStartSession}
+                onStop={handleStopSession}
+                presets={settings.filterPresets.map((preset) => ({ id: preset.id, name: preset.name }))}
+                onSavePreset={handleSavePreset}
+                onApplyPreset={applyFilterPreset}
+                onDeletePreset={deleteFilterPreset}
               />
-            ) : (
-              settings.logAnalysis.enableGrouping ? (
-                <GroupedLogConsole
-                  autoScroll={settings.autoScroll}
-                  enableHighlight={settings.logAnalysis.enableHighlight}
-                  groups={processedLogs.groupedLogs}
-                  searchQuery={filters.search}
-                  selectedLogId={selectedLogId}
-                  onAnalyzeLog={handleAnalyzeSingleLog}
-                  onSelectLog={setSelectedLogId}
-                  onCopyLine={(line) => electronApi.copyToClipboard(line)}
+
+              <div className="mx-6 mt-3 flex flex-wrap items-center gap-2 text-xs text-(--muted)">
+                <span className="rounded-xl border border-(--border) bg-[rgb(12_15_13/0.78)] px-3 py-1">
+                  {copy.header.projectLabel(activeProjectId)}
+                </span>
+                {devices.map((device) => (
+                  <button
+                    key={device.id}
+                    className={`rounded-xl border px-3 py-1 transition ${
+                      selectedDeviceId === device.id
+                        ? 'border-[rgb(189_241_70/0.5)] bg-[rgb(189_241_70/0.12)] text-(--brand-700)'
+                        : 'border-(--border) bg-[rgb(12_15_13/0.58)] text-(--muted) hover:text-(--foreground)'
+                    }`}
+                    onClick={() => selectDevice(device.id)}
+                    type="button"
+                  >
+                    {device.model ?? device.id}
+                  </button>
+                ))}
+                <input
+                  className="rounded-xl border border-(--border) bg-[rgb(12_15_13/0.78)] px-2 py-1 text-xs text-(--foreground) outline-none"
+                  placeholder={copy.filters.presetNamePlaceholder}
+                  value={presetDraftName}
+                  onChange={(event) => setPresetDraftName(event.target.value)}
                 />
+              </div>
+
+              <section className="min-h-0 flex-1 px-6 pb-6 pt-4">
+                {filteredLogs.length === 0 ? (
+                  <EmptyState
+                    hasDevice={Boolean(selectedDeviceId)}
+                    isStreaming={streaming || paused}
+                    title={logs.length > 0 ? copy.empty.noLogsMatch : copy.empty.noLogsYet}
+                    description={
+                      logs.length > 0
+                        ? copy.empty.relaxFilters
+                        : selectedDeviceId
+                          ? copy.empty.startSession
+                          : copy.empty.chooseDevice
+                    }
+                  />
+                ) : (
+                  settings.logAnalysis.enableGrouping ? (
+                    <GroupedLogConsole
+                      autoScroll={settings.autoScroll}
+                      enableHighlight={settings.logAnalysis.enableHighlight}
+                      groups={processedLogs.groupedLogs}
+                      searchQuery={filters.search}
+                      selectedLogId={selectedLogId}
+                      onAnalyzeLog={handleAnalyzeSingleLog}
+                      onSelectLog={setSelectedLogId}
+                      onCopyLine={(line) => electronApi.copyToClipboard(line)}
+                    />
+                  ) : (
+                    <LogConsole
+                      autoScroll={settings.autoScroll}
+                      enableHighlight={settings.logAnalysis.enableHighlight}
+                      logs={settings.logAnalysis.enableHighlight ? processedLogs.enrichedLogs : filteredLogs}
+                      searchQuery={filters.search}
+                      selectedLogId={selectedLogId}
+                      onSelectLog={setSelectedLogId}
+                      onCopyLine={(line) => electronApi.copyToClipboard(line)}
+                    />
+                  )
+                )}
+              </section>
+            </>
+          ) : (
+            <section className="min-h-0 flex-1 overflow-auto px-6 pb-6 pt-4">
+              {performance ? (
+                <div className="space-y-4">
+                  <div className="flx-card rounded-2xl border border-(--border) bg-[linear-gradient(125deg,rgba(18,26,23,0.92),rgba(13,19,17,0.94))] p-5">
+                    <p className="text-xs uppercase tracking-[0.24em] text-(--brand-500)">{copy.performance.title}</p>
+                    {hasCpuBreakdown ? (
+                      <p className="mt-2 flex items-center gap-2 text-base text-(--foreground)">
+                        {copy.performance.cpuBreakdown(
+                          performance.cpuUserPercent.toFixed(1),
+                          performance.cpuKernelPercent.toFixed(1),
+                          performance.cpuIoWaitPercent.toFixed(1)
+                        )}
+                        <HelpTooltip text={copy.performance.help.cpuBreakdown} tone="muted" />
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    <div className="flx-card rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
+                      <p className="flex items-center gap-2 text-xs text-emerald-200">
+                        {copy.performance.cpuTotal(performance.cpuTotalPercent.toFixed(1))}
+                        <HelpTooltip text={copy.performance.help.cpuTotal} tone="brand" />
+                      </p>
+                      <div className="mt-2 h-2 rounded-full bg-emerald-950/60">
+                        <div className="h-2 rounded-full bg-emerald-300" style={{ width: `${Math.min(100, performance.cpuTotalPercent)}%` }} />
+                      </div>
+                    </div>
+
+                    <div className="flx-card rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-4">
+                      <p className="flex items-center gap-2 text-xs text-cyan-100">
+                        {copy.performance.memoryUsed(performance.memoryUsedMb.toFixed(1), performance.memoryTotalMb.toFixed(1))}
+                        <HelpTooltip text={copy.performance.help.memory} tone="cyan" />
+                      </p>
+                      <div className="mt-2 h-2 rounded-full bg-cyan-950/60">
+                        <div className="h-2 rounded-full bg-cyan-300" style={{ width: `${memoryPercent}%` }} />
+                      </div>
+                    </div>
+
+                    <div className="flx-card rounded-2xl border border-orange-400/20 bg-orange-500/10 p-4 text-xs text-orange-100">
+                      <p className="flex items-center gap-2">
+                        {copy.performance.swap(performance.swapUsedMb.toFixed(1), performance.swapTotalMb.toFixed(1))}
+                        <HelpTooltip text={copy.performance.help.swap} tone="amber" />
+                      </p>
+                    </div>
+
+                    <div className="flx-card rounded-2xl border border-fuchsia-400/20 bg-fuchsia-500/10 p-4 text-xs text-fuchsia-100">
+                      <p className="flex items-center gap-2">
+                        {copy.performance.loadAverage(
+                          performance.loadAverage1m.toFixed(2),
+                          performance.loadAverage5m.toFixed(2),
+                          performance.loadAverage15m.toFixed(2)
+                        )}
+                        <HelpTooltip text={copy.performance.help.load} tone="violet" />
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                    <div className="flx-card rounded-2xl border border-(--border) bg-[linear-gradient(180deg,rgba(10,19,15,0.9),rgba(10,14,12,0.86))] p-4">
+                      <div className="mb-3 flex items-center justify-between text-xs text-(--muted)">
+                        <span className="flex items-center gap-2">
+                          {copy.performance.cpuTotal(performance.cpuTotalPercent.toFixed(1))}
+                          <HelpTooltip text={copy.performance.help.cpuTotal} tone="brand" />
+                        </span>
+                        <span className="flex items-center gap-2">
+                          {copy.performance.uptime(formatDuration(performance.uptimeSeconds))}
+                          <HelpTooltip text={copy.performance.help.uptime} tone="muted" />
+                        </span>
+                      </div>
+                      <div className="rounded-xl border border-emerald-500/30 bg-[rgb(7_18_14/0.72)] p-2">
+                        <svg aria-hidden="true" className="h-28 w-full" viewBox="0 0 720 120" preserveAspectRatio="none">
+                          <path d="M0 119.5 L720 119.5" fill="none" stroke="rgba(110,231,183,0.25)" strokeWidth="1" />
+                          <path d={cpuTrendPath} fill="none" stroke="rgba(110,231,183,0.95)" strokeWidth="3" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    <div className="flx-card rounded-2xl border border-(--border) bg-[linear-gradient(180deg,rgba(9,16,22,0.9),rgba(9,13,18,0.86))] p-4">
+                      <div className="mb-3 flex items-center justify-between text-xs text-(--muted)">
+                        <span>{copy.performance.memoryAvailable(performance.memoryAvailableMb.toFixed(1))}</span>
+                        <span>{copy.performance.memoryUsed(performance.memoryUsedMb.toFixed(1), performance.memoryTotalMb.toFixed(1))}</span>
+                      </div>
+                      <div className="rounded-xl border border-cyan-500/30 bg-[rgb(8_15_22/0.72)] p-2">
+                        <svg aria-hidden="true" className="h-28 w-full" viewBox="0 0 720 120" preserveAspectRatio="none">
+                          <path d="M0 119.5 L720 119.5" fill="none" stroke="rgba(125,211,252,0.25)" strokeWidth="1" />
+                          <path d={memoryTrendPath} fill="none" stroke="rgba(125,211,252,0.95)" strokeWidth="3" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flx-card rounded-2xl border border-(--border) bg-[linear-gradient(180deg,rgba(11,14,13,0.9),rgba(10,12,11,0.88))] p-4">
+                    <p className="mb-3 flex items-center gap-2 text-sm font-medium text-(--foreground)">
+                      {copy.performance.topProcesses}
+                      <HelpTooltip text={copy.performance.help.topProcesses} tone="muted" />
+                    </p>
+                    <div className="overflow-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="text-(--muted)">
+                            <th className="pb-2">{copy.performance.processName}</th>
+                            <th className="pb-2">{copy.performance.processPid}</th>
+                            <th className="pb-2">{copy.performance.processCpu}</th>
+                            <th className="pb-2">{copy.performance.processRss}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {performance.topProcesses.map((proc) => (
+                            <tr key={`${proc.pid}-${proc.name}`} className="border-t border-(--border)">
+                              <td className="py-2 text-(--foreground)">{proc.name}</td>
+                              <td className="py-2 font-mono text-(--muted)">{proc.pid}</td>
+                              <td className="py-2 text-emerald-200">{proc.cpuPercent.toFixed(1)}</td>
+                              <td className="py-2 text-cyan-200">
+                                {proc.rssKb === null ? '-' : (proc.rssKb / 1024).toFixed(1)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <LogConsole
-                  autoScroll={settings.autoScroll}
-                  enableHighlight={settings.logAnalysis.enableHighlight}
-                  logs={settings.logAnalysis.enableHighlight ? processedLogs.enrichedLogs : filteredLogs}
-                  searchQuery={filters.search}
-                  selectedLogId={selectedLogId}
-                  onSelectLog={setSelectedLogId}
-                  onCopyLine={(line) => electronApi.copyToClipboard(line)}
-                />
-              )
-            )}
-          </section>
+                <div className="rounded-2xl border border-(--border) bg-[rgb(12_15_13/0.78)] p-6 text-sm text-(--muted)">
+                  {copy.performance.unavailable}
+                </div>
+              )}
+            </section>
+          )}
         </main>
       </div>
 

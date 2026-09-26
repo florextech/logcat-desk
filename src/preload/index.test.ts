@@ -67,6 +67,9 @@ describe('preload api exposure', () => {
     api.clearLogcatBuffer({ deviceId: 'device-1' });
     expect(invokeMock).toHaveBeenCalledWith(ipcChannels.logcatClearBuffer, { deviceId: 'device-1' });
 
+    api.getPerformanceStats({ deviceId: 'device-1' });
+    expect(invokeMock).toHaveBeenCalledWith(ipcChannels.performanceGet, { deviceId: 'device-1' });
+
     api.checkForUpdates();
     expect(invokeMock).toHaveBeenCalledWith(ipcChannels.updatesCheck);
 

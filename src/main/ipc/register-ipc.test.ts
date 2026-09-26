@@ -15,6 +15,7 @@ const { clipboardWriteTextMock, dialogObject, handleMock, removeHandlerMock, ope
 
 const {
   clearLogcatBufferMock,
+  getDevicePerformanceSnapshotMock,
   listDevicesMock,
   resolveAdbStatusMock,
   resolvePidMapMock,
@@ -22,6 +23,7 @@ const {
   askAnalysisAssistantMock
 } = vi.hoisted(() => ({
   clearLogcatBufferMock: vi.fn(),
+  getDevicePerformanceSnapshotMock: vi.fn(),
   listDevicesMock: vi.fn(),
   resolveAdbStatusMock: vi.fn(),
   resolvePidMapMock: vi.fn(),
@@ -48,6 +50,7 @@ vi.mock('electron', () => ({
 
 vi.mock('@main/services/adb/device-service', () => ({
   clearLogcatBuffer: clearLogcatBufferMock,
+  getDevicePerformanceSnapshot: getDevicePerformanceSnapshotMock,
   listDevices: listDevicesMock
 }));
 
@@ -73,6 +76,7 @@ describe('registerIpc', () => {
     clipboardWriteTextMock.mockReset();
     clearLogcatBufferMock.mockReset();
     listDevicesMock.mockReset();
+    getDevicePerformanceSnapshotMock.mockReset();
     resolveAdbStatusMock.mockReset();
     resolvePidMapMock.mockReset();
     enhanceAnalysisSummaryMock.mockReset();
@@ -136,6 +140,27 @@ describe('registerIpc', () => {
       source: 'settings'
     });
     listDevicesMock.mockResolvedValue([{ id: 'device-1', state: 'device' }]);
+    getDevicePerformanceSnapshotMock.mockResolvedValue({
+      timestamp: new Date().toISOString(),
+      deviceId: 'device-1',
+      cpuTotalPercent: 24.5,
+      cpuUserPercent: 14,
+      cpuKernelPercent: 8,
+      cpuIoWaitPercent: 2.5,
+      memoryUsedMb: 3120,
+      memoryFreeMb: 820,
+      memoryAvailableMb: 1280,
+      memoryTotalMb: 4096,
+      swapUsedMb: 128,
+      swapTotalMb: 512,
+      loadAverage1m: 1.2,
+      loadAverage5m: 1.1,
+      loadAverage15m: 1,
+      uptimeSeconds: 12345,
+      topProcesses: [
+        { pid: 1000, name: 'system_server', cpuPercent: 22.5, rssKb: null }
+      ]
+    });
     resolvePidMapMock.mockResolvedValue(new Map([[101, 'com.demo.app']]));
     enhanceAnalysisSummaryMock.mockResolvedValue('enhanced summary');
     askAnalysisAssistantMock.mockResolvedValue('assistant answer');
@@ -152,6 +177,7 @@ describe('registerIpc', () => {
     expect(handlers.has(ipcChannels.settingsGet)).toBe(true);
     expect(handlers.has(ipcChannels.appContextGet)).toBe(true);
     expect(handlers.has(ipcChannels.logcatStart)).toBe(true);
+    expect(handlers.has(ipcChannels.performanceGet)).toBe(true);
     expect(handlers.has(ipcChannels.analysisEnhanceSummary)).toBe(true);
     expect(handlers.has(ipcChannels.analysisAskAssistant)).toBe(true);
     expect(handlers.has(ipcChannels.updatesCheck)).toBe(true);
@@ -196,6 +222,29 @@ describe('registerIpc', () => {
 
     await handlers.get(ipcChannels.logcatClearBuffer)?.({}, { deviceId: 'device-1' });
     expect(clearLogcatBufferMock).toHaveBeenCalledWith('/resolved/adb', 'device-1');
+
+    await expect(handlers.get(ipcChannels.performanceGet)?.({}, { deviceId: 'device-1' })).resolves.toEqual(
+      expect.objectContaining({
+        timestamp: expect.any(String),
+        deviceId: 'device-1',
+        cpuTotalPercent: expect.any(Number),
+        cpuUserPercent: expect.any(Number),
+        cpuKernelPercent: expect.any(Number),
+        cpuIoWaitPercent: expect.any(Number),
+        memoryUsedMb: expect.any(Number),
+        memoryFreeMb: expect.any(Number),
+        memoryAvailableMb: expect.any(Number),
+        memoryTotalMb: expect.any(Number),
+        swapUsedMb: expect.any(Number),
+        swapTotalMb: expect.any(Number),
+        loadAverage1m: expect.any(Number),
+        loadAverage5m: expect.any(Number),
+        loadAverage15m: expect.any(Number),
+        uptimeSeconds: expect.any(Number),
+        topProcesses: expect.any(Array)
+      })
+    );
+    expect(getDevicePerformanceSnapshotMock).toHaveBeenCalledWith('/resolved/adb', 'device-1');
 
     await expect(handlers.get(ipcChannels.updatesCheck)?.({})).resolves.toEqual({
       currentVersion: '0.1.0',
